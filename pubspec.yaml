@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^2.2.4
 
 dev_dependencies:
   flutter_test:
@@ -20,6 +21,15 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+
+  fonts:
+    - family: Vertigo
+      fonts:
+        - asset: assets/fonts/vertigo.ttf
+    - family: Gpkn
+      fonts:
+        - asset: assets/fonts/gpkn.ttf
+    
 
 flutter_launcher_icons:
   android: true
