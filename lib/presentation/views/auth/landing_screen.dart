@@ -1,4 +1,5 @@
 import 'package:conquest/core/app_colors.dart';
+import 'package:conquest/presentation/views/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -16,9 +17,12 @@ class LandingScreen extends StatelessWidget {
           Positioned(
             bottom: 0,
             left: -(screenWidth / 2),
-            child: SvgPicture.asset(
-              'assets/images/logo_screen.svg',
-              width: screenWidth * 2,
+            child: Hero(
+              tag: 'logo',
+              child: SvgPicture.asset(
+                'assets/images/logo_screen.svg',
+                width: screenWidth * 2,
+              ),
             ),
           ),
 
@@ -51,7 +55,18 @@ class LandingScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          transitionDuration: const Duration(milliseconds: 800),
+                          reverseTransitionDuration: const Duration(
+                            milliseconds: 800,
+                          ),
+                          pageBuilder: (_, __, ___) => const LoginScreen(),
+                        ),
+                      );
+                    },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(color: AppColors.greenish_4),

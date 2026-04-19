@@ -1,4 +1,4 @@
-import 'package:conquest/landing_screen.dart';
+import 'package:conquest/presentation/views/auth/landing_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
