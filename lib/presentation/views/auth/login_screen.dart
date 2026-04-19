@@ -1,17 +1,22 @@
+import 'package:conquest/core/app_colors.dart';
+import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fade;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -21,7 +26,6 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(milliseconds: 400),
     );
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) _controller.forward();
     });
@@ -30,6 +34,8 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -37,6 +43,22 @@ class _LoginScreenState extends State<LoginScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+
+    ref.listen(authViewModelProvider, (previous, next) {
+      next.when(
+        data: (_) {
+          if (previous is AsyncLoading) {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        },
+        loading: () {},
+        error: (e, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid email or password')),
+          );
+        },
+      );
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -53,7 +75,6 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
           ),
-
           FadeTransition(
             opacity: _fade,
             child: Padding(
@@ -66,11 +87,13 @@ class _LoginScreenState extends State<LoginScreen>
                     style: TextStyle(
                       fontSize: 24,
                       fontFamily: 'Vertigo',
-                      letterSpacing: 10
+                      letterSpacing: 10,
                     ),
                   ),
                   const SizedBox(height: 32),
                   TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       hintText: 'Email',
                       border: OutlineInputBorder(
@@ -80,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                   const SizedBox(height: 16),
                   TextField(
+                    controller: _passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       hintText: 'Password',
@@ -92,14 +116,29 @@ class _LoginScreenState extends State<LoginScreen>
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: ref.watch(authViewModelProvider).isLoading
+                          ? null
+                          : () {
+                              ref
+                                  .read(authViewModelProvider.notifier)
+                                  .login(
+                                    _emailController.text.trim(),
+                                    _passwordController.text.trim(),
+                                  );
+                            },
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.greenish_3,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Login'),
+                      child: ref.watch(authViewModelProvider).isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Login',
+                              style: TextStyle(color: Colors.white),
+                            ),
                     ),
                   ),
                 ],

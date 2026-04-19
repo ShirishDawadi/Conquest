@@ -48,3 +48,4 @@ app.*.map.json
 .env
 *.env
 lib/core/constants/secrets.dart
+lib/core/config.dart

@@ -1,8 +1,9 @@
 import 'package:conquest/presentation/views/auth/landing_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 class MainApp extends StatelessWidget {
@@ -10,11 +11,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: LandingScreen()
-      ),
+      home: const LandingScreen(),
+      routes: {
+        '/home': (context) => const Scaffold(body: Center(child: Text('Home'))),
+      },
     );
   }
 }
