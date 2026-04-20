@@ -18,4 +18,17 @@ class AuthRemoteSource {
       rethrow;
     }
   }
+
+  Future<void> register(String username, String email, String password) async {
+    try {
+      await _dio.post(
+        '/auth/register',
+        data: {'username': username, 'email': email, 'password': password},
+      );
+      log('Register success', name: 'AuthRemoteSource');
+    } catch (e) {
+      log('Register error: $e', name: 'AuthRemoteSource');
+      rethrow;
+    }
+  }
 }

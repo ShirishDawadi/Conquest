@@ -1,5 +1,6 @@
 import 'package:conquest/core/app_colors.dart';
 import 'package:conquest/presentation/views/auth/login_screen.dart';
+import 'package:conquest/presentation/views/auth/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -84,7 +85,18 @@ class LandingScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          transitionDuration: const Duration(milliseconds: 800),
+                          reverseTransitionDuration: const Duration(
+                            milliseconds: 800,
+                          ),
+                          pageBuilder: (_, __, ___) => const RegisterScreen(),
+                        ),
+                      );
+                    },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(color: AppColors.greenish_2),

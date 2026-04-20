@@ -16,6 +16,16 @@ class AuthViewModel extends AsyncNotifier<void> {
       await _storage.write(key: 'refresh_token', value: auth.refreshToken);
     });
   }
+
+  Future<void> register(String username, String email, String password) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await AuthRemoteSource().register(username, email, password);
+      final auth = await AuthRemoteSource().login(email, password);
+      await _storage.write(key: 'access_token', value: auth.accessToken);
+      await _storage.write(key: 'refresh_token', value: auth.refreshToken);
+    });
+  }
 }
 
 final authViewModelProvider = AsyncNotifierProvider<AuthViewModel, void>(

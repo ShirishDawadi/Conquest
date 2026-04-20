@@ -17,3 +17,17 @@ class AuthModel {
     );
   }
 }
+
+class RegisterModel {
+  final String message;
+  final int userId;
+
+  RegisterModel({required this.message, required this.userId});
+
+  factory RegisterModel.fromJson(Map<String, dynamic> json) {
+    return RegisterModel(
+      message: json['message'],
+      userId: json['user_id'],
+    );
+  }
+}

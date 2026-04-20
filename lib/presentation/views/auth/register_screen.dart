@@ -4,17 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen>
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fade;
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -34,6 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -54,7 +56,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         loading: () {},
         error: (e, _) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid email or password')),
+            const SnackBar(content: Text('Registration failed')),
           );
         },
       );
@@ -65,7 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       body: Stack(
         children: [
           Positioned(
-            bottom: -(screenHeight * 0.75),
+            bottom: -(screenHeight*0.75),
             left: -(screenWidth),
             child: Hero(
               tag: 'logo',
@@ -83,7 +85,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'login',
+                    'sign up',
                     style: TextStyle(
                       fontSize: 24,
                       fontFamily: 'Vertigo',
@@ -91,6 +93,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                   ),
                   const SizedBox(height: 32),
+                  TextField(
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      hintText: 'Username',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -121,7 +133,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           : () {
                               ref
                                   .read(authViewModelProvider.notifier)
-                                  .login(
+                                  .register(
+                                    _usernameController.text.trim(),
                                     _emailController.text.trim(),
                                     _passwordController.text.trim(),
                                   );
@@ -136,7 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       child: ref.watch(authViewModelProvider).isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                              'Login',
+                              'Sign Up',
                               style: TextStyle(color: Colors.white),
                             ),
                     ),
