@@ -45,10 +45,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final screenHeight = MediaQuery.of(context).size.height;
 
     ref.listen(authViewModelProvider, (previous, next) {
+      if (previous is! AsyncLoading) return;
       next.when(
-        data: (_) {
-          if (previous is AsyncLoading) {
-            Navigator.pushReplacementNamed(context, '/home');
+        data: (success) {
+          if (success) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
           }
         },
         loading: () {},

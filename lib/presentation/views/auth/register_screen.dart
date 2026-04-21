@@ -47,17 +47,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     final screenHeight = MediaQuery.of(context).size.height;
 
     ref.listen(authViewModelProvider, (previous, next) {
+      if (previous is! AsyncLoading) return;
       next.when(
-        data: (_) {
-          if (previous is AsyncLoading) {
-            Navigator.pushReplacementNamed(context, '/home');
+        data: (success) {
+          if (success) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
           }
         },
         loading: () {},
         error: (e, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration failed')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Registration Failed')));
         },
       );
     });
@@ -67,7 +72,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       body: Stack(
         children: [
           Positioned(
-            bottom: -(screenHeight*0.75),
+            bottom: -(screenHeight * 0.75),
             left: -(screenWidth),
             child: Hero(
               tag: 'logo',
