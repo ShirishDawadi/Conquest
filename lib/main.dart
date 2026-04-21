@@ -1,4 +1,5 @@
 import 'package:conquest/presentation/views/auth/landing_screen.dart';
+import 'package:conquest/presentation/views/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +16,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const LandingScreen(),
       routes: {
-        '/home': (context) => const Scaffold(body: Center(child: Text('Home'))),
+        '/home': (context) => const MainScreen(),
       },
     );
   }
