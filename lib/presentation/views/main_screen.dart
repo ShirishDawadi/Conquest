@@ -4,7 +4,7 @@ import 'package:conquest/presentation/views/map_screen.dart';
 import 'package:conquest/presentation/views/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:conquest/core/app_colors.dart';
+import 'package:conquest/core/theme/app_colors.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

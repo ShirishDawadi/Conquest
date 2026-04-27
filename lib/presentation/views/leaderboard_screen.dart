@@ -1,4 +1,4 @@
-import 'package:conquest/core/app_colors.dart';
+import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/jwt_utils.dart';
 import 'package:conquest/data/models/leaderboard_model.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';

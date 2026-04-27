@@ -1,4 +1,4 @@
-import 'package:conquest/core/app_colors.dart';
+import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/views/auth/login_screen.dart';
 import 'package:conquest/presentation/views/auth/register_screen.dart';
 import 'package:flutter/material.dart';

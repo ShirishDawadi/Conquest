@@ -1,4 +1,4 @@
-import 'package:conquest/core/app_colors.dart';
+import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
