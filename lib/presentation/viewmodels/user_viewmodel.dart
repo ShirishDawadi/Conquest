@@ -12,3 +12,10 @@ class UserViewModel extends AsyncNotifier<UserModel> {
 final userProvider = AsyncNotifierProvider<UserViewModel, UserModel>(
   UserViewModel.new,
 );
+
+final otherUserProvider = FutureProvider.autoDispose.family<UserModel, int>((
+  ref,
+  userId,
+) {
+  return UserRemoteSource().getUserById(userId);
+});

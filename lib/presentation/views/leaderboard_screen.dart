@@ -2,6 +2,7 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/jwt_utils.dart';
 import 'package:conquest/data/models/leaderboard_model.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
+import 'package:conquest/presentation/views/widgets/profile_dialog.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -231,34 +232,46 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: order.map((e) {
         final isFirst = e.rank == 1;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Column(
-            children: [
-              if (isFirst)
-                SvgPicture.asset(
-                  'assets/icons/crown.svg',
-                  width: 20,
-                  height: 20,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.amber,
-                    BlendMode.srcIn,
+        return GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.all(0),
+                child: ProfileDialog(userId: e.userId),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              children: [
+                if (isFirst)
+                  SvgPicture.asset(
+                    'assets/icons/crown.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.amber,
+                      BlendMode.srcIn,
+                    ),
                   ),
+                CircleAvatar(
+                  radius: isFirst ? 36 : 28,
+                  backgroundImage: e.profilePhoto != null
+                      ? NetworkImage(e.profilePhoto!)
+                      : const AssetImage('assets/images/default-avatar.png')
+                            as ImageProvider,
                 ),
-              CircleAvatar(
-                radius: isFirst ? 36 : 28,
-                backgroundImage: e.profilePhoto != null
-                    ? NetworkImage(e.profilePhoto!)
-                    : const AssetImage('assets/images/default-avatar.png')
-                          as ImageProvider,
-              ),
-              const SizedBox(height: 4),
-              Text(e.username, style: const TextStyle(fontSize: 12)),
-              Text(
-                '${e.points} points',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(e.username, style: const TextStyle(fontSize: 12)),
+                Text(
+                  '${e.points} points',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),
@@ -266,42 +279,54 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 
   Widget _buildTile(LeaderboardEntry entry, bool isCurrentUser) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            '${entry.rank}.',
-            style: TextStyle(
-              color: isCurrentUser ? Colors.white : AppColors.greenish_4,
-              fontWeight: FontWeight.bold,
-            ),
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (_) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(0),
+            child: ProfileDialog(userId: entry.userId),
           ),
-          const SizedBox(width: 12),
-          CircleAvatar(
-            radius: 16,
-            backgroundImage: entry.profilePhoto != null
-                ? NetworkImage(entry.profilePhoto!)
-                : const AssetImage('assets/images/default-avatar.png')
-                      as ImageProvider,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              isCurrentUser ? '${entry.username} (YOU)' : entry.username,
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Text(
+              '${entry.rank}.',
               style: TextStyle(
                 color: isCurrentUser ? Colors.white : AppColors.greenish_4,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-          Text(
-            '${entry.points}',
-            style: TextStyle(
-              color: isCurrentUser ? Colors.white : AppColors.greenish_4,
-              fontWeight: FontWeight.bold,
+            const SizedBox(width: 12),
+            CircleAvatar(
+              radius: 16,
+              backgroundImage: entry.profilePhoto != null
+                  ? NetworkImage(entry.profilePhoto!)
+                  : const AssetImage('assets/images/default-avatar.png')
+                        as ImageProvider,
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                isCurrentUser ? '${entry.username} (YOU)' : entry.username,
+                style: TextStyle(
+                  color: isCurrentUser ? Colors.white : AppColors.greenish_4,
+                ),
+              ),
+            ),
+            Text(
+              '${entry.points}',
+              style: TextStyle(
+                color: isCurrentUser ? Colors.white : AppColors.greenish_4,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

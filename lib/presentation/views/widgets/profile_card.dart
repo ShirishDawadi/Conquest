@@ -62,12 +62,23 @@ class ProfileCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (isOwnProfile)
-              GestureDetector(
-                onTap: onEdit,
-                child: SvgPicture.asset(
-                  'assets/icons/edit.svg',
-                  width: 20,
-                  height: 20,
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: onEdit,
+                  child: SvgPicture.asset(
+                    'assets/icons/edit.svg',
+                    width: 20,
+                    height: 20,
+                  ),
+                ),
+              ),
+            if (!isOwnProfile)
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context), 
+                  child: Icon(Icons.close, color: Colors.black, size: 20),
                 ),
               ),
             Row(

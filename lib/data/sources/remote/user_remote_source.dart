@@ -14,4 +14,14 @@ class UserRemoteSource {
       rethrow;
     }
   }
+
+  Future<UserModel> getUserById(int id) async {
+    try {
+      final response = await _dio.get('/users/$id');
+      return UserModel.fromJson(response.data);
+    } catch (e) {
+      log('Error fetching user: $e', name: 'UserRemoteSource');
+      rethrow;
+    }
+  }
 }
