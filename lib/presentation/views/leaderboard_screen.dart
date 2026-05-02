@@ -1,3 +1,4 @@
+import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/jwt_utils.dart';
 import 'package:conquest/data/models/leaderboard_model.dart';
@@ -50,9 +51,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
             _buildTabs(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
             Expanded(
               child: leaderboardState.when(
                 loading: () => const Center(
@@ -183,13 +184,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         const SizedBox(height: 16),
         Expanded(
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.greenish_1,
-              borderRadius: BorderRadius.circular(16),
-            ),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
             child: ListView.separated(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.only(
+                left: 8,
+                right: 8,
+                top: 8,
+                bottom: _selectedType==LeaderboardType.weekly? 0: AppConstants.navBarBottomPadding(context),
+              ),
               itemCount: rest.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (_, i) =>
@@ -200,7 +202,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         if (_selectedType == LeaderboardType.weekly) ...[
           const SizedBox(height: 8),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            margin: EdgeInsets.fromLTRB(
+              16,
+              0,
+              16,
+              AppConstants.navBarBottomPadding(context),
+            ),
             decoration: BoxDecoration(
               color: AppColors.greenish_4,
               borderRadius: BorderRadius.circular(16),
@@ -290,42 +297,48 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            Text(
-              '${entry.rank}.',
-              style: TextStyle(
-                color: isCurrentUser ? Colors.white : AppColors.greenish_4,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 12),
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: entry.profilePhoto != null
-                  ? NetworkImage(entry.profilePhoto!)
-                  : const AssetImage('assets/images/default-avatar.png')
-                        as ImageProvider,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                isCurrentUser ? '${entry.username} (YOU)' : entry.username,
+      child: Container(
+        decoration: BoxDecoration(
+            color: isCurrentUser? AppColors.greenish_4: AppColors.greenish_1,
+            borderRadius: BorderRadius.circular(16),
+          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Text(
+                '${entry.rank}.',
                 style: TextStyle(
-                  color: isCurrentUser ? Colors.white : AppColors.greenish_4,
+                  color: isCurrentUser ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            Text(
-              '${entry.points}',
-              style: TextStyle(
-                color: isCurrentUser ? Colors.white : AppColors.greenish_4,
-                fontWeight: FontWeight.bold,
+              const SizedBox(width: 12),
+              CircleAvatar(
+                radius: 16,
+                backgroundImage: entry.profilePhoto != null
+                    ? NetworkImage(entry.profilePhoto!)
+                    : const AssetImage('assets/images/default-avatar.png')
+                          as ImageProvider,
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isCurrentUser ? '${entry.username} (YOU)' : entry.username,
+                  style: TextStyle(
+                    color: isCurrentUser ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+              Text(
+                '${entry.points}',
+                style: TextStyle(
+                  color: isCurrentUser ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

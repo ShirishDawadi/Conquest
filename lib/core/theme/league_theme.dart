@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:conquest/core/theme/app_colors.dart';
+
 enum League { bronze, silver, gold, platinum, diamond, master, legend }
 
 class LeagueTheme {
@@ -16,42 +18,41 @@ class LeagueTheme {
 
 const leagueThemes = {
   League.bronze: LeagueTheme(
-    light: Color(0xFFEFB49B),
-    mid: Color(0xFFBE7D63),
-    dark: Color(0xFF6C2B11),
+    light: AppColors.bronze_light,
+    mid: AppColors.bronze_mid,
+    dark: AppColors.bronze_dark,
   ),
   League.silver: LeagueTheme(
-    light: Color(0xFF8D9CA4),
-    mid: Color(0xFF829199),
-    dark: Color(0xFF2E3D45),
+    light: AppColors.silver_light,
+    mid: AppColors.silver_mid,
+    dark: AppColors.silver_dark,
   ),
   League.gold: LeagueTheme(
-    light: Color(0xFFD9A846),
-    mid: Color(0xFFB78323),
-    dark: Color(0xFF553700),
+    light: AppColors.gold_light,
+    mid: AppColors.gold_mid,
+    dark: AppColors.gold_dark,
   ),
   League.platinum: LeagueTheme(
-    light: Color(0xFFAE74FE),
-    mid: Color(0xFF8679FF),
-    dark: Color(0xFF70118C),
+    light: AppColors.platinum_light,
+    mid: AppColors.platinum_mid,
+    dark: AppColors.platinum_dark,
   ),
   League.diamond: LeagueTheme(
-    light: Color(0xFFCBE2F0),
-    mid: Color(0xFFB8D8E7),
-    dark: Color(0xFF3998CB),
+    light: AppColors.diamond_light,
+    mid: AppColors.diamond_mid,
+    dark: AppColors.diamond_dark,
   ),
   League.master: LeagueTheme(
-    light: Color(0xFF8F3C44),
-    mid: Color(0xFF720A15),
-    dark: Color(0xFF3F060C),
+    light: AppColors.master_light,
+    mid: AppColors.master_mid,
+    dark: AppColors.master_dark,
   ),
   League.legend: LeagueTheme(
-    light: Color(0xFF8EB69B),
-    mid: Color(0xFF235347),
-    dark: Color(0xFF051F20),
+    light: AppColors.legend_light,
+    mid: AppColors.legend_mid,
+    dark: AppColors.legend_dark,
   ),
 };
-
 League leagueFromString(String league) {
   return League.values.firstWhere(
     (l) => l.name.toLowerCase() == league.toLowerCase(),
