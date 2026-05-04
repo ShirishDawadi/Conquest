@@ -1,5 +1,5 @@
 import 'package:conquest/presentation/views/auth/landing_screen.dart';
-import 'package:conquest/presentation/views/main_screen.dart';
+import 'package:conquest/presentation/views/shell/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

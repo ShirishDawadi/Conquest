@@ -1,6 +1,6 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
-import 'package:conquest/presentation/views/widgets/profile_card.dart';
+import 'package:conquest/presentation/views/shared_widgets/profile_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

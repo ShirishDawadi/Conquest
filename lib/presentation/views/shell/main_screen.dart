@@ -1,10 +1,10 @@
-import 'package:conquest/presentation/views/home_screen.dart';
-import 'package:conquest/presentation/views/leaderboard_screen.dart';
-import 'package:conquest/presentation/views/map_screen.dart';
-import 'package:conquest/presentation/views/profile_screen.dart';
-import 'package:conquest/presentation/views/widgets/navigation/glass_nav_bar.dart';
-import 'package:conquest/presentation/views/widgets/navigation/lazy_indexed_stack.dart';
-import 'package:conquest/presentation/views/widgets/navigation/run_button.dart';
+import 'package:conquest/presentation/views/home/home_screen.dart';
+import 'package:conquest/presentation/views/leaderboard/leaderboard_screen.dart';
+import 'package:conquest/presentation/views/map/map_screen.dart';
+import 'package:conquest/presentation/views/profile/profile_screen.dart';
+import 'package:conquest/presentation/views/shell/widgets/glass_nav_bar.dart';
+import 'package:conquest/presentation/views/shell/widgets/lazy_indexed_stack.dart';
+import 'package:conquest/presentation/views/shell/widgets/run_button.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {
