@@ -1,4 +1,5 @@
 import 'package:conquest/core/theme/league_theme.dart';
+import 'package:conquest/presentation/views/shared_widgets/level_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -45,8 +46,6 @@ class ProfileCard extends StatelessWidget {
         ? League.values[leagueEnum.index + 1]
         : null;
 
-    final totalXpForLevel = allTimeXp + xpToNextLevel;
-    final xpProgress = totalXpForLevel > 0 ? allTimeXp / totalXpForLevel : 0.0;
 
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -77,7 +76,7 @@ class ProfileCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
-                  onTap: () => Navigator.pop(context), 
+                  onTap: () => Navigator.pop(context),
                   child: Icon(Icons.close, color: Colors.black, size: 20),
                 ),
               ),
@@ -172,49 +171,11 @@ class ProfileCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 5),
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: LinearProgressIndicator(
-                              value: xpProgress.clamp(0.0, 1.0),
-                              borderRadius: BorderRadius.circular(20),
-                              backgroundColor: theme.mid,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                theme.dark,
-                              ),
-                              minHeight: 20,
-                            ),
-                          ),
-
-                          Positioned(
-                            left: 8,
-                            child: Text(
-                              "$level",
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-
-                          Text(
-                            '${allTimeXp.toInt()} / $totalXpForLevel',
-                            style: TextStyle(fontSize: 8, color: Colors.white),
-                          ),
-
-                          Positioned(
-                            right: 8,
-                            child: Text(
-                              "${(level).toInt() + 1}",
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
+                      LevelBar(
+                        level: level,
+                        theme: theme,
+                        allTimeXp: allTimeXp,
+                        xpToNextLevel: xpToNextLevel,
                       ),
                     ],
                   ),

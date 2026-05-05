@@ -27,6 +27,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/images/league/
+    - assets/images/character/
 
   fonts:
     - family: Vertigo
