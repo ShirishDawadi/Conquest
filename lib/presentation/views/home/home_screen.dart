@@ -44,9 +44,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'good morning,';
-    if (hour < 17) return 'good afternoon,';
-    return 'good evening,';
+    if (hour < 12) return 'Good Morning,';
+    if (hour < 17) return 'Good Afternoon,';
+    return 'Good Evening,';
   }
 
   @override

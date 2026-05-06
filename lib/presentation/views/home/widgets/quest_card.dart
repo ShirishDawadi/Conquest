@@ -90,7 +90,7 @@ class QuestCard extends StatelessWidget {
                                 '${(progress * 100).toInt()}% Completed',
                                 style: TextStyle(
                                   fontSize: screenWidth * 0.028,
-                                  color: Colors.black,
+                                  color: Colors.black.withValues(alpha: 0.5),
                                 ),
                               ),
                             ],
@@ -113,7 +113,7 @@ class QuestCard extends StatelessWidget {
                         valueColor: AlwaysStoppedAnimation<Color>(
                           AppColors.greenish_3,
                         ),
-                        minHeight: screenHeight * 0.02,
+                        minHeight: screenWidth * 0.04,
                       ),
                     ),
 
@@ -130,14 +130,17 @@ class QuestCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: screenHeight * 0.015),
-          Text(
-            'Scan the following objects:',
-            style: TextStyle(
-              fontSize: screenWidth * 0.035,
-              color: Colors.black54,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Scan the following objects:',
+              style: TextStyle(
+                fontSize: screenWidth * 0.035,
+                color: Colors.black,
+              ),
             ),
           ),
-          SizedBox(height: screenHeight * 0.01),
+          SizedBox(height: screenHeight * 0.005),
           Row(
             children: [
               if (quest.object1 != null)

@@ -1,65 +1,72 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ObjectCard extends StatelessWidget {
   final QuestObjectModel object;
   final bool completed;
 
-  const ObjectCard({
-    super.key,
-    required this.object,
-    required this.completed,
-  });
+  const ObjectCard({super.key, required this.object, required this.completed});
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final difficultyColor = object.difficulty == 'easy'
-        ? AppColors.greenish_3
+    final difficultyXP = object.difficulty == 'easy'
+        ? 10
         : object.difficulty == 'medium'
-            ? Colors.orange
-            : Colors.red;
+        ? 15
+        : 20;
 
     return Container(
-      padding: EdgeInsets.all(screenWidth * 0.03),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: difficultyColor.withValues(alpha: 0.3)),
+        color: AppColors.greenish_2,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          Icon(Icons.crop_free, size: screenWidth * 0.05, color: Colors.black54),
-          SizedBox(width: screenWidth * 0.02),
+          SizedBox(width: screenWidth * 0.01),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  object.label,
+                  object.label[0].toUpperCase() +
+                      object.label.substring(1).toLowerCase(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: screenWidth * 0.035,
+                    fontSize: screenWidth * 0.04,
                   ),
                 ),
                 Text(
-                  '10 XP',
-                  style: TextStyle(fontSize: screenWidth * 0.025, color: Colors.grey),
+                  '$difficultyXP XP',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.025,
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
                 ),
               ],
             ),
           ),
-          Container(
-            width: screenWidth * 0.05,
-            height: screenWidth * 0.05,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: completed ? AppColors.greenish_3 : Colors.black,
-            ),
-            child: completed
-                ? Icon(Icons.check, color: Colors.white, size: screenWidth * 0.03)
-                : null,
+
+          SizedBox(width: screenWidth * 0.02),
+
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SvgPicture.asset(
+                'assets/icons/scan.svg',
+                width: screenWidth * 0.08,
+                height: screenWidth * 0.08,
+              ),
+
+              if (completed)
+                SvgPicture.asset(
+                  'assets/icons/check.svg',
+                  width: screenWidth * 0.025,
+                ),
+            ],
           ),
         ],
       ),
