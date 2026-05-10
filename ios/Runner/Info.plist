@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<key>NSMotionUsageDescription</key>
+	<string>Conquest needs motion data to count your steps</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Conquest reads your step count to track daily activity</string>
 </dict>
 </plist>
