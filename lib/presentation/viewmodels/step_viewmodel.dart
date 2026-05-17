@@ -1,12 +1,18 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:conquest/core/services/step_service.dart';
+import 'package:conquest/data/models/activity_model.dart';
+import 'package:conquest/data/sources/remote/activity_remote_source.dart';
+import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class StepViewModel extends AsyncNotifier<int> {
   StepService get _service => StepService();
+  final _activitySource = ActivityRemoteSource();
 
   StreamSubscription<int>? _subscription;
   bool _initialized = false;
+  DateTime? _lastSync;
 
   @override
   Future<int> build() async {
@@ -21,8 +27,11 @@ class StepViewModel extends AsyncNotifier<int> {
       _initialized = true;
     }
 
+    _syncToBackend(_service.todaySteps);
+
     _subscription = _service.stepStream.listen((steps) {
       state = AsyncData(steps);
+      _syncToBackend(steps);
     });
 
     ref.onDispose(() {
@@ -31,6 +40,33 @@ class StepViewModel extends AsyncNotifier<int> {
     });
 
     return _service.todaySteps;
+  }
+
+  void _syncToBackend(int steps) {
+    if (steps <= 0) return;
+
+    final now = DateTime.now();
+    if (_lastSync != null &&
+        now.difference(_lastSync!) < const Duration(minutes: 5)) {
+      return;
+    }
+    _lastSync = now;
+
+    final today = now.toIso8601String().substring(0, 10);
+    final quest = ref.read(questProvider).value;
+
+    _activitySource
+        .syncActivity(ActivitySyncRequest(date: today, steps: steps))
+        .then((_) {
+          if (quest == null || quest.id == null) return;
+          if (!(quest.stepsCompleted ?? false) &&
+              steps >= (quest.stepGoal ?? 0)) {
+            ref.read(questProvider.notifier).markStepsCompleted();
+          }
+        })
+        .onError((e, _) {
+          log('Activity sync failed: $e', name: 'StepViewModel');
+        });
   }
 
   Future<void> refresh() async {
