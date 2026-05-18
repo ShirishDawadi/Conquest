@@ -23,7 +23,7 @@ class AuthRemoteSource {
     try {
       await _dio.post(
         '/auth/register',
-        data: {'username': username, 'email': email, 'password': password},
+        data: {'full_name': username, 'email': email, 'password': password},
       );
       log('Register success', name: 'AuthRemoteSource');
     } catch (e) {

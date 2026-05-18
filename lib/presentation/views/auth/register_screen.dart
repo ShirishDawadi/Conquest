@@ -17,7 +17,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   late AnimationController _controller;
   late Animation<double> _fade;
 
-  final _usernameController = TextEditingController();
+  final _fullnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -42,7 +42,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   @override
   void dispose() {
     _controller.dispose();
-    _usernameController.dispose();
+    _fullnameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -132,12 +132,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               ),
                               const SizedBox(height: 32),
                               TextField(
-                                controller: _usernameController,
+                                controller: _fullnameController,
                                 cursorColor: Theme.of(
                                   context,
                                 ).colorScheme.onSurface,
                                 decoration: InputDecoration(
-                                  hintText: 'Username',
+                                  hintText: 'Full Name',
                                   border: _border(
                                     Theme.of(context).dividerColor,
                                   ),
@@ -200,7 +200,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                                 authViewModelProvider.notifier,
                                               )
                                               .register(
-                                                _usernameController.text.trim(),
+                                                _fullnameController.text.trim(),
                                                 _emailController.text.trim(),
                                                 _passwordController.text.trim(),
                                               );
