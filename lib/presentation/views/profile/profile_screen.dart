@@ -15,7 +15,6 @@ class ProfileScreen extends ConsumerWidget {
     final userState = ref.watch(userProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(
@@ -30,7 +29,6 @@ class ProfileScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'Vertigo',
                   fontSize: 24,
-                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 24),

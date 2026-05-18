@@ -46,21 +46,25 @@ class StepArc extends StatelessWidget {
                     fontSize: screenWidth * 0.055,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Gpkn',
-                    color: Colors.black,
+                    // color: Colors.black,
                   ),
                 ),
                 Text(
                   '${(steps * 0.00067).toStringAsFixed(1)} km',
                   style: TextStyle(
                     fontSize: screenWidth * 0.035,
-                    color: Colors.grey,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 Text(
                   '${(steps * 0.04).toStringAsFixed(0)} kcal',
                   style: TextStyle(
                     fontSize: screenWidth * 0.035,
-                    color: Colors.grey,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -90,15 +94,12 @@ class _ArcPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final progressPaint = Paint()
-      ..shader =
-          LinearGradient(
-            colors: [AppColors.greenish_2, AppColors.greenish_5,],
-            begin: Alignment.bottomLeft,
-            stops: [0.4,1.0],
-            end: Alignment.bottomRight,
-          ).createShader(
-            Rect.fromLTWH(0, 0, size.width, size.height),
-          )
+      ..shader = LinearGradient(
+        colors: [AppColors.greenish_2, AppColors.greenish_5],
+        begin: Alignment.bottomLeft,
+        stops: [0.4, 1.0],
+        end: Alignment.bottomRight,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;

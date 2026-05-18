@@ -6,7 +6,6 @@ import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_podium.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tabs.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tile.dart';
-// import 'package:conquest/presentation/views/leaderboard/widgets/profile_dialog.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +38,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final leaderboardState = ref.watch(leaderboardProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -49,7 +47,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               style: TextStyle(
                 fontFamily: 'Vertigo',
                 fontSize: 24,
-                color: Colors.black,
               ),
             ),
             const SizedBox(height: 15),
@@ -81,7 +78,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           Text(
                             'You\'re in the waiting room',
                             style: TextStyle(
-                              color: Colors.black,
                               fontFamily: 'Gpkn',
                               fontSize: 16,
                             ),
@@ -90,7 +86,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           Text(
                             'You\'ll be assigned to a group on Monday',
                             style: TextStyle(
-                              color: Colors.black,
                               fontFamily: 'Gpkn',
                               fontSize: 12,
                             ),

@@ -73,7 +73,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(

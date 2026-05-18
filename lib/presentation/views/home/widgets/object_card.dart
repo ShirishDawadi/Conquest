@@ -1,4 +1,3 @@
-import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -21,7 +20,7 @@ class ObjectCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(screenWidth * 0.04),
       decoration: BoxDecoration(
-        color: AppColors.greenish_2,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -36,14 +35,16 @@ class ObjectCard extends StatelessWidget {
                       object.label.substring(1).toLowerCase(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: screenWidth * 0.04,
+                    fontSize: screenWidth * 0.035,
                   ),
                 ),
                 Text(
                   '$difficultyXP XP',
                   style: TextStyle(
                     fontSize: screenWidth * 0.025,
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -59,12 +60,20 @@ class ObjectCard extends StatelessWidget {
                 'assets/icons/scan.svg',
                 width: screenWidth * 0.08,
                 height: screenWidth * 0.08,
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).iconTheme.color!,
+                  BlendMode.srcIn,
+                ),
               ),
 
               if (completed)
                 SvgPicture.asset(
                   'assets/icons/check.svg',
                   width: screenWidth * 0.025,
+                  colorFilter: ColorFilter.mode(
+                    Theme.of(context).iconTheme.color!,
+                    BlendMode.srcIn,
+                  ),
                 ),
             ],
           ),

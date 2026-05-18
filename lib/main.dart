@@ -1,3 +1,4 @@
+import 'package:conquest/core/theme/app_theme.dart';
 import 'package:conquest/presentation/views/auth/landing_screen.dart';
 import 'package:conquest/presentation/views/shell/main_screen.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,10 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      
       home: isLoggedIn ? const MainScreen() : const LandingScreen(),
       routes: {
         '/home': (context) => const MainScreen(),

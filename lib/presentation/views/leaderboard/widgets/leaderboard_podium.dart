@@ -38,19 +38,28 @@ class LeaderboardPodium extends StatelessWidget {
                     'assets/icons/crown.svg',
                     width: 20,
                     height: 20,
-                    colorFilter: const ColorFilter.mode(Colors.amber, BlendMode.srcIn),
+                    colorFilter: const ColorFilter.mode(
+                      Colors.amber,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 CircleAvatar(
                   radius: isFirst ? 36 : 28,
                   backgroundImage: e.profilePhoto != null
                       ? NetworkImage(e.profilePhoto!)
-                      : const AssetImage('assets/images/default-avatar.png') as ImageProvider,
+                      : const AssetImage('assets/images/default-avatar.png')
+                            as ImageProvider,
                 ),
                 const SizedBox(height: 4),
                 Text(e.username, style: const TextStyle(fontSize: 12)),
                 Text(
                   '${e.points} points',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ],
             ),

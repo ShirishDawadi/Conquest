@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  //light
+  static const lightBackground = Color(0xFFFFFFFF);
+  static const lightText = Color(0xFF000000);
+  static const lightCard = Color(0xFFFFFFFF);
+
+  //dark
+  static const darkBackground = Color(0xFF000000);
+  static const darkText = Color(0xFFFFFFFF);
+  static const darkCard = Color(0xFF1E1E1E);
+
+  //green variants
   static const Color greenish_1 = Color(0xFFDAF1DE);
   static const Color greenish_2 = Color(0xFF8EB69B);
   static const Color greenish_3 = Color(0xFF235347);
@@ -8,6 +19,7 @@ class AppColors {
   static const Color greenish_5 = Color(0xFF0B2B26);
   static const Color greenish_6 = Color(0xFF051F20);
 
+  //league
   static const Color bronze_light = Color(0xFFEFB49B);
   static const Color bronze_mid   = Color(0xFFBE7D63);
   static const Color bronze_dark  = Color(0xFF6C2B11);

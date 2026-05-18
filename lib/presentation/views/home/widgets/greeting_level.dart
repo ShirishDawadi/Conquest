@@ -29,7 +29,6 @@ class GreetingLevel extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Vertigo',
                       fontSize: screenWidth * 0.05,
-                      color: Colors.black,
                     ),
                   ),
                   Text(
@@ -37,7 +36,6 @@ class GreetingLevel extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Vertigo',
                       fontSize: screenWidth * 0.06,
-                      color: Colors.black,
                     ),
                   ),
                 ],
