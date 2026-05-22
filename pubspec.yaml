@@ -7,6 +7,7 @@ environment:
   sdk: ^3.9.2
 
 dependencies:
+  camera: ^0.12.0+1
   dart_jsonwebtoken: ^3.4.1
   dio: ^5.9.2
   flutter:
@@ -15,9 +16,11 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   flutter_svg: ^2.2.4
   health: ^13.3.1
+  image: ^4.8.0
   pedometer: ^4.2.0
   permission_handler: ^12.0.1
   shared_preferences: ^2.5.5
+  tflite_flutter: ^0.12.1
   url_launcher: ^6.3.2
 
 dev_dependencies:
@@ -33,6 +36,8 @@ flutter:
     - assets/icons/
     - assets/images/league/
     - assets/images/character/
+    - assets/models/labelmap.txt
+    - assets/models/yolov8n.tflite
 
   fonts:
     - family: Vertigo

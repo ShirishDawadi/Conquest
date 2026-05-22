@@ -148,7 +148,6 @@ class QuestCard extends StatelessWidget {
                 'Scan the following objects:',
                 style: TextStyle(
                   fontSize: screenWidth * 0.035,
-                  // color: Colors.black,
                 ),
               ),
             ),

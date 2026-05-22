@@ -50,5 +50,7 @@
 	<string>Conquest needs motion data to count your steps</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Conquest reads your step count to track daily activity</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Conquest needs camera access to scan objects for your quest.</string>
 </dict>
 </plist>

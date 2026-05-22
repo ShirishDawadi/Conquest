@@ -22,14 +22,14 @@ class QuestViewModel extends AsyncNotifier<QuestModel> {
     });
   }
 
-  Future<void> markObjectCompleted(int objectNumber) async {
+  Future<void> markObjectCompleted(int objectId) async {
     final quest = state.value;
     if (quest == null || quest.id == null) return;
     state = await AsyncValue.guard(() async {
       await _source.markQuest(
         questId: quest.id!,
-        object1Completed: objectNumber == 1,
-        object2Completed: objectNumber == 2,
+        object1Completed: objectId == quest.object1?.id,
+        object2Completed: objectId == quest.object2?.id,
       );
       return _source.getTodayQuest();
     });
