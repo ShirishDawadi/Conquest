@@ -23,8 +23,8 @@ class ObjectDetectionService {
   static const _confidenceThreshold = 0.1;
   static const _iouThreshold = 0.45;
 
-  static const _inputSize = 320;
-  static const _maxDetections = 2100;
+  static const _inputSize = 192;
+  static const _maxDetections = 756;
 
   Interpreter? _interpreter;
   List<String> _labels = [];
@@ -172,7 +172,6 @@ class ObjectDetectionService {
       final cy = output[1][i];
       final w = output[2][i];
       final h = output[3][i];
-
 
       double bestClassScore = 0.0;
       int bestClass = -1;

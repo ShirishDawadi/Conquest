@@ -28,13 +28,22 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   bool _cameraReady = false;
   String? _error;
 
-  DateTime? _lastFrameTime;
+  DateTime _lastFrameTime = DateTime.now();
   List<DetectionResult> _currentDetections = [];
 
   int _sensorOrientation = 90;
   bool _isFrontCamera = false;
 
-  static const _holdDuration = Duration(seconds: 2);
+  double _lastLuma = 0.0;
+  bool _isCameraStable = false;
+  DateTime _lastLumaCheck = DateTime.now();
+
+  int _missCount = 0;
+  double _confidenceAccumulator = 0.0;
+  static const _maxMisses = 3;
+  static const _confirmationThreshold = 1.5;
+
+  static const _holdDuration = Duration(seconds: 1);
   Timer? _holdTimer;
   double _holdProgress = 0.0;
 
@@ -77,11 +86,44 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     setState(() => _cameraReady = true);
   }
 
+  double _calculateLuma(CameraImage image) {
+    final yPlane = image.planes[0].bytes;
+    int sum = 0;
+    for (int i = 0; i < yPlane.length; i += 20) {
+      sum += yPlane[i];
+    }
+    return sum / (yPlane.length / 20);
+  }
+
   void _onFrame(CameraImage image) async {
-    if (_isProcessing || _detected) return;
+    if (_detected) return;
+
     final now = DateTime.now();
-    if (_lastFrameTime != null &&
-        now.difference(_lastFrameTime!) < const Duration(milliseconds: 800)) {
+
+    if (now.difference(_lastLumaCheck).inMilliseconds >= 100) {
+      _lastLumaCheck = now;
+
+      final luma = _calculateLuma(image);
+      final lumaDiff = (luma - _lastLuma).abs();
+      _lastLuma = luma;
+      final stable = lumaDiff < 1.5;
+
+      if (mounted && stable != _isCameraStable) {
+        setState(() => _isCameraStable = stable);
+      }
+
+      if (!stable) {
+        _missCount = 0;
+        _confidenceAccumulator = 0.0;
+        _cancelHoldTimer();
+        return;
+      }
+    } else if (!_isCameraStable) {
+      return;
+    }
+
+    if (_isProcessing) return;
+    if (now.difference(_lastFrameTime) < const Duration(milliseconds: 300)) {
       return;
     }
     _lastFrameTime = now;
@@ -94,20 +136,29 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     );
 
     if (mounted) {
-      setState(() {
-        _currentDetections = results;
-      });
+      setState(() => _currentDetections = results);
     }
 
     final targetLabel = widget.object.label.toLowerCase();
-    final matched = results.any(
-      (r) => r.label == targetLabel && r.confidence >= 0.5,
-    );
+    final targetResults = results.where((r) => r.label == targetLabel).toList();
 
-    if (matched) {
+    if (targetResults.isNotEmpty) {
+      _missCount = 0;
+      _confidenceAccumulator += targetResults.first.confidence;
       _startHoldTimer();
+
+      if (_confidenceAccumulator >= _confirmationThreshold) {
+        _isProcessing = false;
+        _onObjectConfirmed();
+        return;
+      }
     } else {
-      _cancelHoldTimer();
+      _missCount++;
+      if (_missCount >= _maxMisses) {
+        _missCount = 0;
+        _confidenceAccumulator = 0.0;
+        _cancelHoldTimer();
+      }
     }
 
     _isProcessing = false;
@@ -143,7 +194,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     if (_detected) return;
     setState(() => _detected = true);
 
-    await _cameraController?.stopImageStream();
+    if (_cameraController?.value.isStreamingImages == true) {
+      await _cameraController?.stopImageStream();
+    }
 
     await ref
         .read(questProvider.notifier)
@@ -158,7 +211,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   @override
   void dispose() {
     _holdTimer?.cancel();
-    _cameraController?.stopImageStream();
+    if (_cameraController?.value.isStreamingImages == true) {
+      _cameraController?.stopImageStream();
+    }
     _cameraController?.dispose();
     _detectionService.dispose();
     super.dispose();
@@ -262,6 +317,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                   ? StatusChip(
                       label: '$label found! ✓',
                       color: AppColors.greenish_3,
+                    )
+                  : !_isCameraStable
+                  ? StatusChip(
+                      label: 'Hold camera still...',
+                      color: Colors.black54,
                     )
                   : _holdProgress > 0
                   ? StatusChip(
