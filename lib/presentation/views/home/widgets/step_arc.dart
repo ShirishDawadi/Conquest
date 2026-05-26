@@ -6,12 +6,14 @@ class StepArc extends StatelessWidget {
   final int steps;
   final int goal;
   final int walkFrame;
+  final bool isWalking;
 
   const StepArc({
     super.key,
     required this.steps,
     required this.goal,
     required this.walkFrame,
+    required this.isWalking,
   });
 
   @override
@@ -19,6 +21,7 @@ class StepArc extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final progress = (steps / goal).clamp(0.0, 1.0);
     final arcSize = screenWidth * 0.75;
+    
 
     return SizedBox(
       height: arcSize * 0.65,
@@ -34,9 +37,9 @@ class StepArc extends StatelessWidget {
             child: Column(
               children: [
                 Image.asset(
-                  'assets/images/character/walk_$walkFrame.png',
-                  width: screenWidth * 0.25,
-                  height: screenWidth * 0.25,
+                  'assets/images/character/${isWalking ? 'walk' : 'stand'}_$walkFrame.png',
+                  width: screenWidth * 0.3,
+                  height: screenWidth * 0.3,
                   fit: BoxFit.fill,
                   filterQuality: FilterQuality.none,
                 ),
@@ -46,7 +49,6 @@ class StepArc extends StatelessWidget {
                     fontSize: screenWidth * 0.055,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Gpkn',
-                    // color: Colors.black,
                   ),
                 ),
                 Text(
@@ -97,7 +99,7 @@ class _ArcPainter extends CustomPainter {
       ..shader = LinearGradient(
         colors: [AppColors.greenish_2, AppColors.greenish_5],
         begin: Alignment.bottomLeft,
-        stops: [0.4, 1.0],
+        stops: const [0.4, 1.0],
         end: Alignment.bottomRight,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.stroke

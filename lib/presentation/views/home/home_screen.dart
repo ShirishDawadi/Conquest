@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
@@ -11,6 +12,7 @@ import 'package:conquest/presentation/views/home/widgets/tracking_banner.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pedometer/pedometer.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,27 +25,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _walkController;
   int _walkFrame = 0;
+  bool _isWalking = false;
+  Timer? _walkTimer;
+  StreamSubscription<StepCount>? _pedometerSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _walkController =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 600),
-        )..addListener(() {
-          setState(() {
-            _walkFrame = (_walkController.value * 4).floor().clamp(0, 3);
-          });
+
+    _walkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..addListener(() {
+      setState(() {
+        _walkFrame = (_walkController.value * 4).floor().clamp(0, 3);
+      });
+    })..repeat();
+
+    _pedometerSubscription = Pedometer.stepCountStream.listen(
+      (event) {
+        if (!_isWalking) setState(() => _isWalking = true);
+        _walkTimer?.cancel();
+        _walkTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _isWalking = false);
         });
-    _walkController.repeat();
+      },
+      onError: (e) {
+      },
+    );
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _walkTimer?.cancel();
     _walkController.dispose();
+    _pedometerSubscription?.cancel();
     super.dispose();
   }
 
@@ -110,6 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           steps: steps,
                           goal: quest.stepGoal ?? 1,
                           walkFrame: _walkFrame,
+                          isWalking: _isWalking,
                         ),
                         const SizedBox(height: 40),
                         QuestCard(quest: quest, steps: steps),
