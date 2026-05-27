@@ -18,33 +18,49 @@ class GreetingLevel extends StatelessWidget {
     return Column(
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            CircleAvatar(
+              radius: (screenWidth * 0.09),
+              backgroundImage: user.profilePhoto != null
+                  ? NetworkImage(user.profilePhoto!)
+                  : const AssetImage('assets/images/default-avatar.png')
+                        as ImageProvider,
+            ),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    greeting,
-                    style: TextStyle(
-                      fontFamily: 'Vertigo',
-                      fontSize: screenWidth * 0.05,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: TextStyle(
+                        fontFamily: 'Vertigo',
+                        fontSize: screenWidth * 0.03,
+                      ),
                     ),
-                  ),
-                  Text(
-                    user.fullName ?? user.username,
-                    style: TextStyle(
-                      fontFamily: 'Vertigo',
-                      fontSize: screenWidth * 0.06,
+                    Text(
+                      user.fullName ?? user.username,
+                      style: TextStyle(
+                        fontFamily: 'Vertigo',
+                        fontSize: screenWidth * 0.045,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      '@${user.username}',
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.02,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             SvgPicture.asset(
               'assets/images/league/${user.league.toLowerCase()}.svg',
-              width: screenWidth * 0.15,
-              height: screenWidth * 0.15,
+              width: screenWidth * 0.175,
+              height: screenWidth * 0.175,
             ),
           ],
         ),
@@ -68,21 +84,29 @@ class GreetingLevel extends StatelessWidget {
                 xpToNextLevel: user.xpToNextLevel,
               ),
             ),
+            const SizedBox(width: 20),
+            SvgPicture.asset(
+              'assets/icons/weekly_point.svg',
+              width: screenWidth * 0.05,
+            ),
+            Text(
+              '${user.weeklyPoints}',
+              style: TextStyle(
+                fontSize: screenWidth * 0.035,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(width: 12),
-            Column(
-              children: [
-                SvgPicture.asset(
-                  'assets/icons/streak.svg',
-                  width: screenWidth * 0.065,
-                ),
-                Text(
-                  '${user.currentStreak}',
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.035,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            SvgPicture.asset(
+              'assets/icons/streak.svg',
+              width: screenWidth * 0.05,
+            ),
+            Text(
+              '${user.currentStreak}',
+              style: TextStyle(
+                fontSize: screenWidth * 0.035,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),

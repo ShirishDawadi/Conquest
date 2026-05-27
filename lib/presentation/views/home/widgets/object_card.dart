@@ -1,5 +1,6 @@
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/presentation/views/object_scan/scan_screen.dart';
+import 'package:conquest/presentation/views/shared_widgets/quest_reward.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -15,8 +16,8 @@ class ObjectCard extends StatelessWidget {
     final difficultyXP = object.difficulty == 'easy'
         ? 10
         : object.difficulty == 'medium'
-            ? 15
-            : 20;
+        ? 15
+        : 20;
     final iconColor = Theme.of(context).iconTheme.color!;
 
     return Container(
@@ -40,15 +41,11 @@ class ObjectCard extends StatelessWidget {
                     fontSize: sw * 0.035,
                   ),
                 ),
-                Text(
-                  '$difficultyXP XP',
-                  style: TextStyle(
-                    fontSize: sw * 0.025,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
+                QuestReward(
+                  amount: '$difficultyXP',
+                  isXp: true,
+                  isWeekly: true,
+                  width: sw * 0.025,
                 ),
               ],
             ),

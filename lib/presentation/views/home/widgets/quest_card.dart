@@ -2,6 +2,7 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/presentation/views/home/widgets/object_card.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:conquest/presentation/views/shared_widgets/quest_reward.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -85,15 +86,11 @@ class QuestCard extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  '10 XP',
-                                  style: TextStyle(
-                                    fontSize: screenWidth * 0.028,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.5),
-                                  ),
+                                QuestReward(
+                                  amount: '10',
+                                  isXp: true,
+                                  isWeekly: true,
+                                  width: screenWidth * 0.028,
                                 ),
                                 Text(
                                   '${(progress * 100).toInt()}% Completed',
@@ -146,9 +143,7 @@ class QuestCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Scan the following objects:',
-                style: TextStyle(
-                  fontSize: screenWidth * 0.035,
-                ),
+                style: TextStyle(fontSize: screenWidth * 0.035),
               ),
             ),
             SizedBox(height: screenHeight * 0.005),

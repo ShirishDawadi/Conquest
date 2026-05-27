@@ -1,5 +1,4 @@
 import 'package:conquest/core/theme/league_theme.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class LevelBar extends StatelessWidget {
