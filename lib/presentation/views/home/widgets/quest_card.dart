@@ -118,7 +118,7 @@ class QuestCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: progress,
                           borderRadius: BorderRadius.circular(10),
-                          backgroundColor: AppColors.silver_light,
+                          backgroundColor: AppColors.progressBarBackground(context),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             AppColors.greenish_3,
                           ),

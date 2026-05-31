@@ -117,7 +117,7 @@ class _BackgroundTrackingDialogState
                     'Complete the steps below to count steps even when the app is closed.',
                     style: TextStyle(
                       fontSize: screenWidth * 0.032,
-                      color: Colors.black.withValues(alpha: 0.4),
+                      color: Colors.grey,
                     ),
                   ),
                   SizedBox(height: screenWidth * 0.05),

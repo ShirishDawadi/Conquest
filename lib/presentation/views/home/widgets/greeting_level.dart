@@ -1,6 +1,5 @@
-import 'package:conquest/core/theme/league_theme.dart';
+import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/user_model.dart';
-import 'package:conquest/presentation/views/shared_widgets/level_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -13,15 +12,19 @@ class GreetingLevel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final leagueEnum = leagueFromString(user.league);
-    final theme = leagueThemes[leagueEnum]!;
+
+    final totalXpForLevel = user.allTimeXp + user.xpToNextLevel;
+    final xpProgress = totalXpForLevel > 0
+        ? user.allTimeXp / totalXpForLevel
+        : 0.0;
+
     return Column(
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
-              radius: (screenWidth * 0.09),
+              radius: (screenWidth * 0.08),
               backgroundImage: user.profilePhoto != null
                   ? NetworkImage(user.profilePhoto!)
                   : const AssetImage('assets/images/default-avatar.png')
@@ -49,9 +52,7 @@ class GreetingLevel extends StatelessWidget {
                     ),
                     Text(
                       '@${user.username}',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.02,
-                      ),
+                      style: TextStyle(fontSize: screenWidth * 0.02),
                     ),
                   ],
                 ),
@@ -59,29 +60,50 @@ class GreetingLevel extends StatelessWidget {
             ),
             SvgPicture.asset(
               'assets/images/league/${user.league.toLowerCase()}.svg',
-              width: screenWidth * 0.175,
-              height: screenWidth * 0.175,
+              width: screenWidth * 0.15,
+              height: screenWidth * 0.15,
             ),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            CircleAvatar(
-              radius: 12,
-              backgroundColor: theme.dark,
-              child: Text(
-                '${user.level}',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/xp.svg',
+                  width: screenWidth * 0.05,
+                ),
+                Text(
+                  '${user.level}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.03,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 6),
             Expanded(
-              child: LevelBar(
-                allTimeXp: user.allTimeXp,
-                level: user.level,
-                theme: theme,
-                xpToNextLevel: user.xpToNextLevel,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(screenWidth * 0.06),
+                    child: LinearProgressIndicator(
+                      value: xpProgress.clamp(0.0, 1.0),
+                      borderRadius: BorderRadius.circular(screenWidth * 0.06),
+                      backgroundColor: AppColors.progressBarBackground(context),
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.diamond_dark),
+                      minHeight: screenWidth * 0.045,
+                    ),
+                  ),
+                  Text(
+                    '${user.allTimeXp.toInt()} / $totalXpForLevel',
+                    style: TextStyle(fontSize: 8, color: Colors.white),
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 20),

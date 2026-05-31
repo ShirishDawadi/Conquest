@@ -23,7 +23,7 @@ class QuestReward extends StatelessWidget {
         SizedBox(width: 5),
         if (isWeekly)
           SvgPicture.asset(
-            'assets/icons/weekly_point.svg',
+            'assets/icons/xp.svg',
             width: width,
             height: width,
           ),

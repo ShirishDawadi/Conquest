@@ -30,7 +30,7 @@ class StepArc extends StatelessWidget {
         children: [
           CustomPaint(
             size: Size(arcSize, arcSize),
-            painter: _ArcPainter(progress: progress),
+            painter: _ArcPainter(progress: progress, context: context),
           ),
           Positioned(
             bottom: 0,
@@ -80,17 +80,18 @@ class StepArc extends StatelessWidget {
 
 class _ArcPainter extends CustomPainter {
   final double progress;
+  final BuildContext context;
 
-  _ArcPainter({required this.progress});
+  _ArcPainter({required this.progress, required this.context});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 10;
-    const strokeWidth = 24.0;
+    const strokeWidth = 20.0;
 
     final bgPaint = Paint()
-      ..color = AppColors.silver_light
+      ..color = AppColors.progressBarBackground(context)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;

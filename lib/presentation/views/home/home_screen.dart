@@ -108,6 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   data: (user) =>
                       GreetingLevel(user: user, greeting: _getGreeting()),
                 ),
+                SizedBox(height: 10),
                 if (stepAsync.hasValue) TrackingBanner(mode: trackingMode),
                 SizedBox(height: screenHeight * 0.04),
                 questState.when(

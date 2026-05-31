@@ -46,7 +46,6 @@ class ProfileCard extends StatelessWidget {
         ? League.values[leagueEnum.index + 1]
         : null;
 
-
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
@@ -117,16 +116,32 @@ class ProfileCard extends StatelessWidget {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: theme.dark,
-                            child: Text(
-                              '$level',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
+                          // CircleAvatar(
+                          //   radius: 12,
+                          //   backgroundColor: theme.dark,
+                          //   child: Text(
+                          //     '$level',
+                          //     style: const TextStyle(
+                          //       color: Colors.white,
+                          //       fontSize: 12,
+                          //     ),
+                          //   ),
+                          // ),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/icons/xp.svg',
+                                width: screenWidth * 0.06,
                               ),
-                            ),
+                              Text(
+                                '$level',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.03,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(width: 10),
                           Column(
@@ -273,10 +288,22 @@ class ProfileCard extends StatelessWidget {
               ),
             ),
             if (label == 'Highest Streak')
-              SvgPicture.asset(
-                'assets/icons/streak.svg',
-                width: 15,
-                height: 15,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal:5),
+                child: SvgPicture.asset(
+                  'assets/icons/streak.svg',
+                  width: 15,
+                  height: 15,
+                ),
+              ),
+            if (label == 'Weekly Points')
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal:5),
+                child: SvgPicture.asset(
+                  'assets/icons/weekly_point.svg',
+                  width: 15,
+                  height: 15,
+                ),
               ),
           ],
         ),

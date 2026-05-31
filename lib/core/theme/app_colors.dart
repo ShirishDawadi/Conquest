@@ -11,6 +11,12 @@ class AppColors {
   static const darkText = Color(0xFFFFFFFF);
   static const darkCard = Color(0xFF1E1E1E);
 
+  static Color progressBarBackground(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Color(0xFF8D9CA4)
+        :Color(0xFFD4D4D4);
+  }
+
   //green variants
   static const Color greenish_1 = Color(0xFFDAF1DE);
   static const Color greenish_2 = Color(0xFF8EB69B);
