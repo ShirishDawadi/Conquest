@@ -24,7 +24,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _walkController;
-  int _walkFrame = 0;
   bool _isWalking = false;
   Timer? _walkTimer;
   StreamSubscription<StepCount>? _pedometerSubscription;
@@ -37,23 +36,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _walkController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    )..addListener(() {
-      setState(() {
-        _walkFrame = (_walkController.value * 4).floor().clamp(0, 3);
-      });
-    })..repeat();
+    )..repeat();
 
-    _pedometerSubscription = Pedometer.stepCountStream.listen(
-      (event) {
-        if (!_isWalking) setState(() => _isWalking = true);
-        _walkTimer?.cancel();
-        _walkTimer = Timer(const Duration(seconds: 2), () {
-          if (mounted) setState(() => _isWalking = false);
-        });
-      },
-      onError: (e) {
-      },
-    );
+    _pedometerSubscription = Pedometer.stepCountStream.listen((event) {
+      if (!_isWalking) setState(() => _isWalking = true);
+      _walkTimer?.cancel();
+      _walkTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _isWalking = false);
+      });
+    }, onError: (e) {});
   }
 
   @override
@@ -127,9 +118,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         const SizedBox(height: 40),
                         StepArc(
                           steps: steps,
-                          goal: quest.stepGoal ?? 1,
-                          walkFrame: _walkFrame,
+                          goal: quest.stepGoal ?? 500,
                           isWalking: _isWalking,
+                          walkController: _walkController,
                         ),
                         const SizedBox(height: 40),
                         QuestCard(quest: quest, steps: steps),

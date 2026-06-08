@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 class StepArc extends StatelessWidget {
   final int steps;
   final int goal;
-  final int walkFrame;
   final bool isWalking;
+  final AnimationController walkController;
 
   const StepArc({
     super.key,
     required this.steps,
     required this.goal,
-    required this.walkFrame,
     required this.isWalking,
+    required this.walkController,
   });
 
   @override
@@ -21,7 +21,6 @@ class StepArc extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final progress = (steps / goal).clamp(0.0, 1.0);
     final arcSize = screenWidth * 0.75;
-    
 
     return SizedBox(
       height: arcSize * 0.65,
@@ -36,12 +35,21 @@ class StepArc extends StatelessWidget {
             bottom: 0,
             child: Column(
               children: [
-                Image.asset(
-                  'assets/images/character/${isWalking ? 'walk' : 'stand'}_$walkFrame.png',
-                  width: screenWidth * 0.3,
-                  height: screenWidth * 0.3,
-                  fit: BoxFit.fill,
-                  filterQuality: FilterQuality.none,
+                AnimatedBuilder(
+                  animation: walkController,
+                  builder: (context, child) {
+                    final frame = (walkController.value * 4).floor().clamp(
+                      0,
+                      3,
+                    );
+                    return Image.asset(
+                      'assets/images/character/${isWalking ? 'walk' : 'stand'}_$frame.png',
+                      width: screenWidth * 0.3,
+                      height: screenWidth * 0.3,
+                      fit: BoxFit.fill,
+                      filterQuality: FilterQuality.none,
+                    );
+                  },
                 ),
                 Text(
                   '$steps steps',

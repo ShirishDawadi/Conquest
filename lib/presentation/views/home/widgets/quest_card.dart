@@ -20,6 +20,7 @@ class QuestCard extends StatelessWidget {
     final progress = (steps / goal).clamp(0.0, 1.0);
 
     return GlassContainer(
+      blur: 0,
       child: Container(
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
@@ -118,7 +119,9 @@ class QuestCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: progress,
                           borderRadius: BorderRadius.circular(10),
-                          backgroundColor: AppColors.progressBarBackground(context),
+                          backgroundColor: AppColors.progressBarBackground(
+                            context,
+                          ),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             AppColors.greenish_3,
                           ),
