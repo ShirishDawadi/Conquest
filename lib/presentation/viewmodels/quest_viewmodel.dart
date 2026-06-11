@@ -8,6 +8,8 @@ class QuestViewModel extends AsyncNotifier<QuestModel> {
   @override
   Future<QuestModel> build() async => _source.getTodayQuest();
 
+  void refresh() => ref.invalidateSelf();
+
   Future<void> setupQuest(int stepGoal) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _source.setupQuest(stepGoal));

@@ -5,11 +5,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class LeaderboardViewModel extends AsyncNotifier<List<LeaderboardEntry>> {
   final _source = LeaderboardRemoteSource();
   final _cache = <LeaderboardType, List<LeaderboardEntry>>{};
+  LeaderboardType? _lastType;
 
   @override
   Future<List<LeaderboardEntry>> build() async => [];
 
+  Future<void> refresh() {
+  _cache.clear();
+  if (_lastType != null) return load(_lastType!);
+  return load(LeaderboardType.weekly);
+}
+
   Future<void> load(LeaderboardType type) async {
+    _lastType = type;
     if (_cache.containsKey(type)) {
       state = AsyncData(_cache[type]!);
       return;

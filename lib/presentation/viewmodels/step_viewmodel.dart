@@ -70,9 +70,12 @@ class StepViewModel extends AsyncNotifier<int> {
   }
 
   Future<void> refresh() async {
+    log('StepViewModel refresh called, mode=${_service.mode}, state=$state', name: 'StepViewModel');
     if (_service.mode == StepTrackingMode.unavailable) return;
     if (state is AsyncLoading) return;
+    await _service.retryHealthConnect();
     await _service.refresh();
+    state = const AsyncLoading();
     state = AsyncData(_service.todaySteps);
   }
 

@@ -1,3 +1,7 @@
+import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/home/home_screen.dart';
 import 'package:conquest/presentation/views/leaderboard/leaderboard_screen.dart';
 import 'package:conquest/presentation/views/map/map_screen.dart';
@@ -6,59 +10,92 @@ import 'package:conquest/presentation/views/shell/widgets/glass_nav_bar.dart';
 import 'package:conquest/presentation/views/shell/widgets/lazy_indexed_stack.dart';
 import 'package:conquest/presentation/views/shell/widgets/run_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen> {
   int _currentIndex = 0;
+
+  final List<GlobalKey> _pageKeys = List.generate(4, (_) => GlobalKey());
+
+  void _onNavTap(int index) {
+    if (index == _currentIndex) {
+      _refreshCurrentPage(index);
+    }
+    setState(() => _currentIndex = index);
+  }
+
+  void _refreshCurrentPage(int index) {
+  switch (index) {
+    case 0:
+      ref.read(userProvider.notifier).refresh();
+      ref.read(questProvider.notifier).refresh();
+      ref.read(stepProvider.notifier).refresh();
+      break;
+    case 1:
+      break;
+    case 2:
+      ref.read(leaderboardProvider.notifier).refresh();
+      break;
+    case 3:
+      ref.read(userProvider.notifier).refresh();
+      break;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          LazyIndexedStack(
-            index: _currentIndex,
-            children: const [
-              HomeScreen(),
-              MapScreen(),
-              LeaderboardScreen(),
-              ProfileScreen(),
-            ],
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                0,
-                20,
-                MediaQuery.of(context).padding.bottom + 25,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GlassNavBar(
-                      currentIndex: _currentIndex,
-                      onTap: (index) => setState(() => _currentIndex = index),
+
+    return Theme(
+      data: _currentIndex == 1 ? ThemeData.light() : Theme.of(context),
+      child: Scaffold(
+        extendBody: true,
+        body: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            LazyIndexedStack(
+              index: _currentIndex,
+              children: [
+                HomeScreen(key: _pageKeys[0]),
+                MapScreen(key: _pageKeys[1]),
+                LeaderboardScreen(key: _pageKeys[2]),
+                ProfileScreen(key: _pageKeys[3]),
+              ],
+            ),
+
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  MediaQuery.of(context).padding.bottom + 25,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GlassNavBar(
+                        currentIndex: _currentIndex,
+                        onTap: _onNavTap,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  const RunButton(),
-                ],
+                    const SizedBox(width: 10),
+                    const RunButton(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

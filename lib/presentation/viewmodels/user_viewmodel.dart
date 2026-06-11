@@ -7,6 +7,8 @@ class UserViewModel extends AsyncNotifier<UserModel> {
 
   @override
   Future<UserModel> build() async => _source.getMe();
+
+  void refresh() => ref.invalidateSelf();
 }
 
 final userProvider = AsyncNotifierProvider<UserViewModel, UserModel>(

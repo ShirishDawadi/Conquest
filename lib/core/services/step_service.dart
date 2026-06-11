@@ -50,14 +50,23 @@ class StepService {
       final status = await _health.getHealthConnectSdkStatus();
       if (status != HealthConnectSdkStatus.sdkAvailable) return false;
 
-      final hasPermsAlready = await _health.hasPermissions(types, permissions: permissions);
+      final hasPermsAlready = await _health.hasPermissions(
+        types,
+        permissions: permissions,
+      );
 
       if (hasPermsAlready != true) {
-        final requested = await _health.requestAuthorization(types, permissions: permissions);
+        final requested = await _health.requestAuthorization(
+          types,
+          permissions: permissions,
+        );
         if (!requested) return false;
       }
 
-      final hasPerms = await _health.hasPermissions(types, permissions: permissions);
+      final hasPerms = await _health.hasPermissions(
+        types,
+        permissions: permissions,
+      );
       if (hasPerms != true) return false;
 
       return await _fetchInitialHealthSteps();
@@ -122,13 +131,10 @@ class StepService {
 
       await _pedometerSubscription?.cancel();
 
-      _pedometerSubscription = Pedometer.stepCountStream.listen(
-        (event) async {
-          await _baselineCompleter?.future;
-          await _handlePedometerStep(event.steps);
-        },
-        onError: (_) => _mode = StepTrackingMode.unavailable,
-      );
+      _pedometerSubscription = Pedometer.stepCountStream.listen((event) async {
+        await _baselineCompleter?.future;
+        await _handlePedometerStep(event.steps);
+      }, onError: (_) => _mode = StepTrackingMode.unavailable);
     } catch (e) {
       log('Pedometer init failed: $e', name: 'StepService');
       _mode = StepTrackingMode.unavailable;
@@ -166,14 +172,21 @@ class StepService {
   }
 
   Future<void> retryHealthConnect() async {
-    if (_mode == StepTrackingMode.health) return;
-
     try {
       final types = [HealthDataType.STEPS];
       final permissions = [HealthDataAccess.READ];
 
-      final hasPerms = await _health.hasPermissions(types, permissions: permissions);
-      if (hasPerms != true) return;
+      final hasPerms = await _health.hasPermissions(
+        types,
+        permissions: permissions,
+      );
+
+      if (hasPerms != true) {
+        _mode = StepTrackingMode.pedometer;
+        _healthPollTimer?.cancel();
+        await _tryInitPedometer();
+        return;
+      }
 
       await _pedometerSubscription?.cancel();
       _pedometerSubscription = null;
