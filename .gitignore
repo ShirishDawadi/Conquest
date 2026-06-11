@@ -49,3 +49,6 @@ app.*.map.json
 *.env
 lib/core/constants/secrets.dart
 lib/core/config.dart
+
+devtools_options.yaml
+problems-report.html

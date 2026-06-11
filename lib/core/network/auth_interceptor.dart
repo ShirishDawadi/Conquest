@@ -21,13 +21,20 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
+      log(
+        '401 received for ${err.requestOptions.path}',
+        name: 'AuthInterceptor',
+      );
       try {
         final refreshToken = await _storage.read(key: 'refresh_token');
+        log('Refresh token: $refreshToken', name: 'AuthInterceptor');
         if (refreshToken == null) {
+          log('No refresh token found, logging out', name: 'AuthInterceptor');
           handler.next(err);
           return;
         }
 
+        log('Attempting token refresh...', name: 'AuthInterceptor');
         final dio = Dio(BaseOptions(baseUrl: Config.baseUrl));
         final response = await dio.post(
           '/auth/refresh',
@@ -46,7 +53,7 @@ class AuthInterceptor extends Interceptor {
         final retryResponse = await dio.fetch(retryOptions);
         handler.resolve(retryResponse);
       } catch (e) {
-        log('Refresh failed: $e', name: 'AuthInterceptor');
+        log('LOGOUT: refresh failed: $e', name: 'AuthInterceptor');
         await _storage.deleteAll();
         handler.next(err);
       }

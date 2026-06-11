@@ -1,4 +1,5 @@
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
@@ -9,6 +10,7 @@ import 'package:conquest/presentation/views/profile/profile_screen.dart';
 import 'package:conquest/presentation/views/shell/widgets/glass_nav_bar.dart';
 import 'package:conquest/presentation/views/shell/widgets/lazy_indexed_stack.dart';
 import 'package:conquest/presentation/views/shell/widgets/run_button.dart';
+import 'package:conquest/presentation/views/shell/widgets/tracking_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,6 +41,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       ref.read(stepProvider.notifier).refresh();
       break;
     case 1:
+      ref.read(mapProvider.notifier).refresh();
       break;
     case 2:
       ref.read(leaderboardProvider.notifier).refresh();
@@ -51,6 +54,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isTracking = ref.watch(mapProvider).isTracking;
 
     return Theme(
       data: _currentIndex == 1 ? ThemeData.light() : Theme.of(context),
@@ -68,6 +72,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ProfileScreen(key: _pageKeys[3]),
               ],
             ),
+
+            if (isTracking)
+              Positioned(
+                bottom:
+                    MediaQuery.of(context).padding.bottom +
+                    MediaQuery.of(context).size.height * 0.065 +
+                    50,
+                left: 20,
+                right: 20,
+                child: const TrackingBar(),
+              ),
 
             Positioned(
               bottom: 0,

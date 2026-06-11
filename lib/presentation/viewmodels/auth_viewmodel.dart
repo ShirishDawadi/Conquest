@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:conquest/data/sources/remote/auth_remote_source.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -30,6 +31,7 @@ class AuthViewModel extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
+    log('LOGOUT: manual logout called', name: 'AuthViewModel');
     await _storage.deleteAll();
     if (ref.mounted) {
       state = const AsyncData(false);
