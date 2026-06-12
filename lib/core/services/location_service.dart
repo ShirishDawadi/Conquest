@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
@@ -10,9 +12,11 @@ class LocationService {
   LocationService._internal();
 
   StreamSubscription<Position>? _positionSubscription;
+  Timer? _notificationTimer;
   final List<GpsPoint> _currentPoints = [];
   DateTime? _sessionStart;
   bool _isTracking = false;
+  double _lastSpeedKmh = 0.0;
 
   static const _minDistanceMeters = 5.0;
   GpsPoint? _lastPoint;
@@ -68,6 +72,7 @@ class LocationService {
 
     _currentPoints.clear();
     _lastPoint = null;
+    _lastSpeedKmh = 0.0;
     _sessionStart = DateTime.now();
     _isTracking = true;
 
@@ -75,23 +80,41 @@ class LocationService {
       serviceId: 1000,
       notificationTitle: 'Conquest',
       notificationText: 'Tracking your route...',
+      notificationIcon: const NotificationIcon(
+        metaDataName: 'conquest_tracking_icon',
+        backgroundColor: AppColors.greenish_2,
+      ),
     );
 
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 5, 
+        distanceFilter: 15,
       ),
     ).listen(
       _onPosition,
       onError: (e) => log('Position stream error: $e', name: 'LocationService'),
     );
 
+    _notificationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!_isTracking) return;
+      final elapsed = DateTime.now().difference(_sessionStart!);
+      final distanceStr = TrackingUtils.distanceKm(_currentPoints).toStringAsFixed(2);
+      final timeStr = TrackingUtils.formatDuration(elapsed);
+      FlutterForegroundTask.updateService(
+        notificationTitle: 'Conquest',
+        notificationText: '${_lastSpeedKmh.toStringAsFixed(1)}km/h • ${distanceStr}km • $timeStr',
+      );
+    });
+
     log('Tracking started', name: 'LocationService');
     return true;
   }
 
   void _onPosition(Position position) {
+    if (position.accuracy > 20.0) return;
+    if (position.speed < 0.5) return;
+
     final point = GpsPoint(lat: position.latitude, lng: position.longitude);
 
     if (_lastPoint != null) {
@@ -105,19 +128,9 @@ class LocationService {
     }
 
     _lastPoint = point;
+    _lastSpeedKmh = (position.speed * 3.6).clamp(0.0, double.infinity);
     _currentPoints.add(point);
     _pointController.add(List.unmodifiable(_currentPoints));
-
-    final session = GpsSession(
-      sessionId: 0,
-      startedAt: _sessionStart!,
-      points: _currentPoints,
-    );
-    final distanceStr = session.distanceKm.toStringAsFixed(2);
-    FlutterForegroundTask.updateService(
-      notificationTitle: 'Conquest',
-      notificationText: '${distanceStr}km tracked',
-    );
   }
 
   Future<GpsSession?> stopTracking() async {
@@ -125,6 +138,8 @@ class LocationService {
 
     await _positionSubscription?.cancel();
     _positionSubscription = null;
+    _notificationTimer?.cancel();
+    _notificationTimer = null;
     _isTracking = false;
 
     await FlutterForegroundTask.stopService();
@@ -143,6 +158,7 @@ class LocationService {
 
     _currentPoints.clear();
     _lastPoint = null;
+    _lastSpeedKmh = 0.0;
     _sessionStart = null;
 
     log(
@@ -168,6 +184,7 @@ class LocationService {
 
   void dispose() {
     _positionSubscription?.cancel();
+    _notificationTimer?.cancel();
     _pointController.close();
   }
 }

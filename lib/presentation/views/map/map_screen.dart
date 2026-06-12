@@ -57,7 +57,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         setState(() {
           _currentLocation = LatLng(position.latitude, position.longitude);
           _initialCenter = _currentLocation;
-          _locating = false; 
+          _locating = false;
         });
         if (_mapReady) _safeMoveMap(_currentLocation!, 15);
       }
@@ -225,6 +225,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   if (state.dayLog != null)
                     PolylineLayer(
                       polylines: state.dayLog!.sessions
+                          .where((s) => s.points.isNotEmpty)
+                          .where(
+                            (s) => s.latLngs.every(
+                              (p) =>
+                                  p.latitude.isFinite && p.longitude.isFinite,
+                            ),
+                          )
                           .where(
                             (s) =>
                                 s.sessionId != state.focusedSession?.sessionId,
@@ -242,7 +249,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           .toList(),
                     ),
 
-                  if (state.focusedSession != null)
+                  if (state.focusedSession != null &&
+                      state.focusedSession!.points.isNotEmpty &&
+                      state.focusedSession!.latLngs.every(
+                        (p) => p.latitude.isFinite && p.longitude.isFinite,
+                      ))
                     PolylineLayer(
                       polylines: [
                         Polyline(
