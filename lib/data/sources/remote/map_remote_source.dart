@@ -42,4 +42,14 @@ class MapRemoteSource {
       return [];
     }
   }
+
+  Future<void> deleteSession(DateTime date, int sessionId) async {
+    try {
+      final dateStr = date.toIso8601String().substring(0, 10);
+      await ApiClient.instance.delete('/map/$dateStr/session/$sessionId');
+    } catch (e) {
+      log('MapRemoteSource deleteSession failed: $e', name: 'MapRemoteSource');
+      rethrow;
+    }
+  }
 }

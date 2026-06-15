@@ -1,11 +1,10 @@
 import 'dart:developer';
-import 'package:conquest/core/config.dart';
-import 'package:dio/dio.dart';
+import 'package:conquest/core/network/api_client.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:dio/dio.dart';
 
 class AuthInterceptor extends Interceptor {
   static const _storage = FlutterSecureStorage();
-
   static Future<String?>? _refreshFuture;
 
   @override
@@ -22,55 +21,61 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      log('401 received for ${err.requestOptions.path}', name: 'AuthInterceptor');
-      try {
-        final refreshToken = await _storage.read(key: 'refresh_token');
-        if (refreshToken == null) {
-          log('No refresh token found, logging out', name: 'AuthInterceptor');
-          handler.next(err);
-          return;
-        }
+    if (err.response?.statusCode != 401) {
+      handler.next(err);
+      return;
+    }
 
-        _refreshFuture ??= _doRefresh();
-        final newToken = await _refreshFuture;
-        _refreshFuture = null;
+    try {
+      final refreshToken = await _storage.read(key: 'refresh_token');
+      if (refreshToken == null) {
+        handler.next(err);
+        return;
+      }
 
-        if (newToken == null) {
-          log('LOGOUT: refresh returned null', name: 'AuthInterceptor');
-          await _storage.deleteAll();
-          handler.next(err);
-          return;
-        }
+      _refreshFuture ??= _doRefresh(refreshToken);
+      final newToken = await _refreshFuture;
+      _refreshFuture = null;
 
-        final retryOptions = err.requestOptions;
-        retryOptions.headers['Authorization'] = 'Bearer $newToken';
-        final dio = Dio(BaseOptions(baseUrl: Config.baseUrl));
-        final retryResponse = await dio.fetch(retryOptions);
-        handler.resolve(retryResponse);
-      } catch (e) {
-        log('LOGOUT: refresh failed: $e', name: 'AuthInterceptor');
-        _refreshFuture = null;
+      if (newToken == null) {
         await _storage.deleteAll();
         handler.next(err);
+        return;
       }
-    } else {
+
+      final options = Options(
+        method: err.requestOptions.method,
+        headers: {
+          ...err.requestOptions.headers,
+          'Authorization': 'Bearer $newToken',
+        },
+      );
+
+      final response = await ApiClient.instance.request(
+        err.requestOptions.path,
+        data: err.requestOptions.data,
+        queryParameters: err.requestOptions.queryParameters,
+        options: options,
+      );
+
+      handler.resolve(response);
+    } catch (e) {
+      _refreshFuture = null;
+      await _storage.deleteAll();
       handler.next(err);
     }
   }
 
-  static Future<String?> _doRefresh() async {
+  static Future<String?> _doRefresh(String refreshToken) async {
     try {
-      final refreshToken = await _storage.read(key: 'refresh_token');
-      if (refreshToken == null) return null;
-
-      final dio = Dio(BaseOptions(baseUrl: Config.baseUrl));
-      final response = await dio.post(
+      final response = await ApiClient.instance.post(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
       );
+
       final newToken = response.data['access_token'] as String;
       await _storage.write(key: 'access_token', value: newToken);
+
       log('New access token: $newToken', name: 'AuthInterceptor');
       return newToken;
     } catch (e) {

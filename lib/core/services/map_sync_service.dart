@@ -58,15 +58,26 @@ class MapSyncService {
     try {
       final remote = await _remote.getDayLog(date);
       if (remote != null) {
-        await _local.upsertSyncedLog(
-          remote.date,
-          remote.sessions,
-        );
+        await _local.upsertSyncedLog(remote.date, remote.sessions);
       }
       return remote;
     } catch (e) {
       log('MapSyncService getLog remote failed: $e', name: 'MapSyncService');
       return null;
+    }
+  }
+
+  Future<void> deleteSession(DateTime date, int sessionId) async {
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      if (!connectivity.contains(ConnectivityResult.none)) {
+        await _remote.deleteSession(date, sessionId);
+      }
+    } catch (e) {
+      log(
+        'MapSyncService deleteSession remote failed: $e',
+        name: 'MapSyncService',
+      );
     }
   }
 

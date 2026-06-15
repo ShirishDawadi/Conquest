@@ -159,6 +159,8 @@ class MapViewModel extends Notifier<MapState> {
       await _syncService.saveAndSync(updatedLog);
       state = state.copyWith(dayLog: updatedLog, clearFocusedSession: true);
     }
+
+    await _syncService.deleteSession(state.selectedDate, session.sessionId);
   }
 
   Future<void> refresh() async {
