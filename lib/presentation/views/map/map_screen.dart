@@ -142,7 +142,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     ref.listen(mapProvider, (prev, next) {
       if (!_mapReady) return;
       if (next.focusedSession != null &&
-          prev?.focusedSession?.sessionId != next.focusedSession?.sessionId) {
+          (prev?.focusedSession?.backendId ?? prev?.focusedSession?.localId) !=
+              (next.focusedSession?.backendId ??
+                  next.focusedSession?.localId)) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
           if (mounted) _flyToSession(next.focusedSession!);
         });
@@ -155,7 +157,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         body: Stack(
           children: [
             if (_locating)
-              const Positioned.fill(
+              const Center(
                 child: Center(
                   child: CupertinoActivityIndicator(
                     radius: 12,
@@ -234,7 +236,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           )
                           .where(
                             (s) =>
-                                s.sessionId != state.focusedSession?.sessionId,
+                                (s.backendId ?? s.localId) !=
+                                (state.focusedSession?.backendId ??
+                                    state.focusedSession?.localId),
                           )
                           .map(
                             (s) => Polyline(

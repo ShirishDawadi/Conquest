@@ -17,26 +17,38 @@ class GpsPoint {
 }
 
 class GpsSession {
-  final int sessionId;
+  final int? localId;
+  final int? backendId;
   final DateTime startedAt;
   final DateTime? endedAt;
   final List<GpsPoint> points;
+  final double distanceKm;
 
   const GpsSession({
-    required this.sessionId,
+    this.localId,
+    this.backendId,
     required this.startedAt,
     this.endedAt,
     required this.points,
+    required this.distanceKm,
   });
 
-  double get distanceKm {
-    if (points.length < 2) return 0.0;
-    const distance = Distance();
-    double total = 0.0;
-    for (int i = 0; i < points.length - 1; i++) {
-      total += distance(points[i].toLatLng(), points[i + 1].toLatLng());
-    }
-    return total / 1000;
+  GpsSession copyWith({
+    int? localId,
+    int? backendId,
+    DateTime? startedAt,
+    DateTime? endedAt,
+    List<GpsPoint>? points,
+    double? distanceKm,
+  }) {
+    return GpsSession(
+      localId: localId ?? this.localId,
+      backendId: backendId ?? this.backendId,
+      startedAt: startedAt ?? this.startedAt,
+      endedAt: endedAt ?? this.endedAt,
+      points: points ?? this.points,
+      distanceKm: distanceKm ?? this.distanceKm,
+    );
   }
 
   Duration get duration {
@@ -45,22 +57,22 @@ class GpsSession {
   }
 
   String get speedString {
-  if (duration.inSeconds == 0) return '0.0';
-  final hours = duration.inSeconds / 3600;
-  return (distanceKm / hours).toStringAsFixed(1);
-}
+    if (duration.inSeconds == 0) return '0.0';
+    final hours = duration.inSeconds / 3600;
+    return (distanceKm / hours).toStringAsFixed(1);
+  }
 
   List<LatLng> get latLngs => points.map((p) => p.toLatLng()).toList();
 
   Map<String, dynamic> toJson() => {
-    'session_id': sessionId,
     'started_at': startedAt.toIso8601String(),
     'ended_at': endedAt?.toIso8601String(),
     'points': points.map((p) => p.toJson()).toList(),
+    'distance': distanceKm,
   };
 
   factory GpsSession.fromJson(Map<String, dynamic> json) => GpsSession(
-    sessionId: json['session_id'] as int,
+    backendId: json['id'] as int?,
     startedAt: DateTime.parse(json['started_at'] as String),
     endedAt: json['ended_at'] != null
         ? DateTime.parse(json['ended_at'] as String)
@@ -68,6 +80,7 @@ class GpsSession {
     points: (json['points'] as List)
         .map((p) => GpsPoint.fromJson(p as Map<String, dynamic>))
         .toList(),
+    distanceKm: (json['distance'] as num).toDouble(),
   );
 }
 
@@ -76,16 +89,4 @@ class GpsLog {
   final List<GpsSession> sessions;
 
   const GpsLog({required this.date, required this.sessions});
-
-  Map<String, dynamic> toJson() => {
-    'date': date.toIso8601String().substring(0, 10),
-    'path': sessions.map((s) => s.toJson()).toList(),
-  };
-
-  factory GpsLog.fromJson(Map<String, dynamic> json) => GpsLog(
-    date: DateTime.parse(json['date'] as String),
-    sessions: (json['path'] as List)
-        .map((s) => GpsSession.fromJson(s as Map<String, dynamic>))
-        .toList(),
-  );
 }

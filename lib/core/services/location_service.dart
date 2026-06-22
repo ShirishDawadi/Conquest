@@ -18,8 +18,6 @@ class LocationService {
   bool _isTracking = false;
   double _lastSpeedKmh = 0.0;
 
-  static const _minDistanceMeters = 5.0;
-  GpsPoint? _lastPoint;
 
   bool get isTracking => _isTracking;
   List<GpsPoint> get currentPoints => List.unmodifiable(_currentPoints);
@@ -71,7 +69,6 @@ class LocationService {
     if (!hasPermission) return false;
 
     _currentPoints.clear();
-    _lastPoint = null;
     _lastSpeedKmh = 0.0;
     _sessionStart = DateTime.now();
     _isTracking = true;
@@ -86,24 +83,28 @@ class LocationService {
       ),
     );
 
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 15,
-      ),
-    ).listen(
-      _onPosition,
-      onError: (e) => log('Position stream error: $e', name: 'LocationService'),
-    );
+    _positionSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        ).listen(
+          _onPosition,
+          onError: (e) =>
+              log('Position stream error: $e', name: 'LocationService'),
+        );
 
     _notificationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_isTracking) return;
       final elapsed = DateTime.now().difference(_sessionStart!);
-      final distanceStr = TrackingUtils.distanceKm(_currentPoints).toStringAsFixed(2);
+      final distanceStr = TrackingUtils.distanceKm(
+        _currentPoints,
+      ).toStringAsFixed(2);
       final timeStr = TrackingUtils.formatDuration(elapsed);
       FlutterForegroundTask.updateService(
         notificationTitle: 'Conquest',
-        notificationText: '${_lastSpeedKmh.toStringAsFixed(1)}km/h • ${distanceStr}km • $timeStr',
+        notificationText:
+            '${_lastSpeedKmh.toStringAsFixed(1)}km/h • ${distanceStr}km • $timeStr',
       );
     });
 
@@ -112,22 +113,9 @@ class LocationService {
   }
 
   void _onPosition(Position position) {
-    if (position.accuracy > 20.0) return;
-    if (position.speed < 0.5) return;
+    if (position.accuracy > 25.0) return;
 
     final point = GpsPoint(lat: position.latitude, lng: position.longitude);
-
-    if (_lastPoint != null) {
-      final distance = Geolocator.distanceBetween(
-        _lastPoint!.lat,
-        _lastPoint!.lng,
-        point.lat,
-        point.lng,
-      );
-      if (distance < _minDistanceMeters) return;
-    }
-
-    _lastPoint = point;
     _lastSpeedKmh = (position.speed * 3.6).clamp(0.0, double.infinity);
     _currentPoints.add(point);
     _pointController.add(List.unmodifiable(_currentPoints));
@@ -150,14 +138,13 @@ class LocationService {
     }
 
     final session = GpsSession(
-      sessionId: DateTime.now().millisecondsSinceEpoch,
       startedAt: _sessionStart!,
       endedAt: DateTime.now(),
       points: List.from(_currentPoints),
+      distanceKm: TrackingUtils.distanceKm(_currentPoints),
     );
 
     _currentPoints.clear();
-    _lastPoint = null;
     _lastSpeedKmh = 0.0;
     _sessionStart = null;
 
