@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -39,36 +40,35 @@ class TrackingUtils {
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  static List<GpsPoint> rdp(List<GpsPoint> points, {double epsilon = 0.0001}) {
+  static List<GpsPoint> rdp(List<GpsPoint> points, {double epsilon = 3}) {
     if (points.length < 3) return points;
 
-    final start = points.first;
-    final end = points.last;
-    final sameEndpoints = start.lat == end.lat && start.lng == end.lng;
+    final origin = points.first;
 
-    double perpendicularDistance(GpsPoint p, GpsPoint p1, GpsPoint p2) {
-      if (sameEndpoints) {
-        final dx = p.lng - p1.lng;
-        final dy = p.lat - p1.lat;
-        return (dx * dx + dy * dy);
-      }
+    final meterPoints = points.map((p) {
+      final x = (p.lng - origin.lng) * 111320 * cos(origin.lat * pi / 180);
+      final y = (p.lat - origin.lat) * 111320;
+      return (x, y);
+    }).toList();
 
-      // cross product magnitude: |(P2 - P1) × (P1 - P0)|
-      final dx = p2.lng - p1.lng;
-      final dy = p2.lat - p1.lat;
-      final lineLength = (dx * dx + dy * dy);
+    return _rdpRecursive(points, meterPoints, epsilon);
+  }
 
-      if (lineLength == 0) return 0;
+  static List<GpsPoint> _rdpRecursive(
+    List<GpsPoint> original,
+    List<(double, double)> meterPoints,
+    double epsilon,
+  ) {
+    if (original.length < 3) return original;
 
-      final cross = ((p.lng - p1.lng) * dy - (p.lat - p1.lat) * dx).abs();
-      return cross / lineLength; // normalized perpendicular distance
-    }
+    final start = meterPoints.first;
+    final end = meterPoints.last;
 
     double maxDist = 0;
     int maxIndex = 0;
 
-    for (int i = 1; i < points.length - 1; i++) {
-      final d = perpendicularDistance(points[i], start, end);
+    for (int i = 1; i < meterPoints.length - 1; i++) {
+      final d = _perpendicularDistance(meterPoints[i], start, end);
       if (d > maxDist) {
         maxDist = d;
         maxIndex = i;
@@ -76,11 +76,39 @@ class TrackingUtils {
     }
 
     if (maxDist > epsilon) {
-      final left = rdp(points.sublist(0, maxIndex + 1), epsilon: epsilon);
-      final right = rdp(points.sublist(maxIndex), epsilon: epsilon);
+      final left = _rdpRecursive(
+        original.sublist(0, maxIndex + 1),
+        meterPoints.sublist(0, maxIndex + 1),
+        epsilon,
+      );
+      final right = _rdpRecursive(
+        original.sublist(maxIndex),
+        meterPoints.sublist(maxIndex),
+        epsilon,
+      );
       return [...left.sublist(0, left.length - 1), ...right];
     }
 
-    return [start, end];
+    return [original.first, original.last];
+  }
+
+  static double _perpendicularDistance(
+    (double, double) p,
+    (double, double) p1,
+    (double, double) p2,
+  ) {
+    final dx = p2.$1 - p1.$1;
+    final dy = p2.$2 - p1.$2;
+
+    final lineLength = sqrt(dx * dx + dy * dy);
+
+    if (lineLength == 0) {
+      return sqrt(
+        (p.$1 - p1.$1) * (p.$1 - p1.$1) + (p.$2 - p1.$2) * (p.$2 - p1.$2),
+      );
+    }
+
+    final cross = ((p.$1 - p1.$1) * dy - (p.$2 - p1.$2) * dx).abs();
+    return cross / lineLength;
   }
 }

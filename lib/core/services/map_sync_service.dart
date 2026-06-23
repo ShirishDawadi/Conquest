@@ -1,9 +1,9 @@
 import 'dart:developer';
+import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/data/sources/local/map_local_source.dart';
 import 'package:conquest/data/sources/remote/map_remote_source.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 
 class MapSyncService {
   static final MapSyncService _instance = MapSyncService._internal();
@@ -26,8 +26,7 @@ class MapSyncService {
 
   Future<int?> _trySync(DateTime date, GpsSession session) async {
     try {
-      final connectivity = await Connectivity().checkConnectivity();
-      if (connectivity.contains(ConnectivityResult.none)) return null;
+      if (!await ConnectivityUtils.isOnline()) return null;
       final backendId = await _remote.syncSession(date, session);
       if (session.localId != null) {
         await _local.markSessionSynced(session.localId!, backendId);
@@ -41,8 +40,7 @@ class MapSyncService {
 
   Future<void> retryUnsynced() async {
     try {
-      final connectivity = await Connectivity().checkConnectivity();
-      if (connectivity.contains(ConnectivityResult.none)) return;
+      if (!await ConnectivityUtils.isOnline()) return;
 
       final unsynced = await _local.getUnsyncedSessions();
       for (final session in unsynced) {
@@ -85,46 +83,39 @@ class MapSyncService {
     }
   }
 
-  Future<void> deleteSession(GpsSession session, DateTime date) async {
-    log(
-      'deleteSession: localId=${session.localId} backendId=${session.backendId}',
-      name: 'MapSyncService',
-    );
+  Future<GpsLog?> refreshLog(DateTime date) async {
+    if (!await ConnectivityUtils.isOnline()) return getLog(date);
 
-    if (session.localId != null) {
-      await _local.deleteSession(session.localId!);
-      log('deleteSession: local deleted', name: 'MapSyncService');
-    } else {
+    try {
+      final remoteSessions = await _remote.getDaySessions(date);
+      if (remoteSessions == null || remoteSessions.isEmpty) return null;
+      await _local.insertSyncedSessions(date, remoteSessions);
+      return GpsLog(date: date, sessions: remoteSessions);
+    } catch (e) {
       log(
-        'deleteSession: no localId, skipping local delete',
+        'MapSyncService refreshLog failed, falling back to local: $e',
         name: 'MapSyncService',
       );
+      return getLog(date);
+    }
+  }
+
+  Future<void> deleteSession(GpsSession session, DateTime date) async {
+    if (session.localId != null) {
+      await _local.deleteSession(session.localId!);
     }
 
     if (session.backendId != null) {
       try {
-        final connectivity = await Connectivity().checkConnectivity();
-        log(
-          'deleteSession: connectivity=${connectivity}',
-          name: 'MapSyncService',
-        );
-        if (!connectivity.contains(ConnectivityResult.none)) {
+        if (await ConnectivityUtils.isOnline()) {
           await _remote.deleteSession(date, session.backendId!);
-          log('deleteSession: backend deleted', name: 'MapSyncService');
-        } else {
-          log(
-            'deleteSession: offline, skipping backend delete',
-            name: 'MapSyncService',
-          );
         }
       } catch (e) {
-        log('deleteSession: remote failed: $e', name: 'MapSyncService');
+        log(
+          'MapSyncService deleteSession remote failed: $e',
+          name: 'MapSyncService',
+        );
       }
-    } else {
-      log(
-        'deleteSession: no backendId, skipping backend delete',
-        name: 'MapSyncService',
-      );
     }
   }
 

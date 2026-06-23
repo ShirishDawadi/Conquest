@@ -44,7 +44,9 @@ class MapViewModel extends Notifier<MapState> {
 
     Future.microtask(() {
       _loadLog(initialState.selectedDate);
+      _syncService.cleanOldSessions();
     });
+
     return initialState;
   }
 
@@ -92,32 +94,32 @@ class MapViewModel extends Notifier<MapState> {
     return true;
   }
 
-  Future<void> deleteSession(GpsSession session) async {
-    log(
-      'MapViewModel deleteSession: localId=${session.localId} backendId=${session.backendId}',
-      name: 'MapViewModel',
-    );
-    final updatedSessions = state.dayLog?.sessions
-        .where(
-          (s) =>
-              (s.backendId ?? s.localId) !=
-              (session.backendId ?? session.localId),
-        )
-        .toList();
+  Future<void> stopTracking() async {
+    _durationTimer?.cancel();
+    _durationTimer = null;
 
-    if (updatedSessions == null) return;
-
-    if (updatedSessions.isEmpty) {
-      state = state.copyWith(clearDayLog: true, clearFocusedSession: true);
-    } else {
-      final updatedLog = GpsLog(
-        date: state.selectedDate,
-        sessions: updatedSessions,
-      );
-      state = state.copyWith(dayLog: updatedLog, clearFocusedSession: true);
+    final session = await _locationService.stopTracking();
+    if (session == null) {
+      state = state.copyWith(isTracking: false, clearFocusedSession: true);
+      return;
     }
 
-    await _syncService.deleteSession(session, state.selectedDate);
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+
+    final savedSession = await _syncService.saveAndSync(todayDate, session);
+
+    final existingSessions = state.dayLog?.sessions ?? [];
+    final updatedSessions = [...existingSessions, savedSession];
+    final updatedLog = GpsLog(date: todayDate, sessions: updatedSessions);
+
+    state = state.copyWith(
+      isTracking: false,
+      currentPoints: [],
+      sessionStart: null,
+      dayLog: updatedLog,
+      focusedSession: savedSession,
+    );
   }
 
   void navigateDate(int days) {
@@ -142,37 +144,41 @@ class MapViewModel extends Notifier<MapState> {
     state = state.copyWith(clearFocusedSession: true);
   }
 
-  Future<void> stopTracking() async {
-    _durationTimer?.cancel();
-    _durationTimer = null;
+  Future<void> deleteSession(GpsSession session) async {
+    final updatedSessions = state.dayLog?.sessions
+        .where(
+          (s) =>
+              (s.backendId ?? s.localId) !=
+              (session.backendId ?? session.localId),
+        )
+        .toList();
 
-    final session = await _locationService.stopTracking();
-    if (session == null) {
-      state = state.copyWith(isTracking: false, clearFocusedSession: true);
-      return;
+    if (updatedSessions == null) return;
+
+    if (updatedSessions.isEmpty) {
+      state = state.copyWith(clearDayLog: true, clearFocusedSession: true);
+    } else {
+      final updatedLog = GpsLog(
+        date: state.selectedDate,
+        sessions: updatedSessions,
+      );
+      state = state.copyWith(dayLog: updatedLog, clearFocusedSession: true);
     }
 
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-
-    // save and sync returns the session with localId and backendId filled in
-    final savedSession = await _syncService.saveAndSync(todayDate, session);
-
-    final existingSessions = state.dayLog?.sessions ?? [];
-    final updatedSessions = [...existingSessions, savedSession];
-    final updatedLog = GpsLog(date: todayDate, sessions: updatedSessions);
-
-    state = state.copyWith(
-      isTracking: false,
-      currentPoints: [],
-      sessionStart: null,
-      dayLog: updatedLog,
-      focusedSession: savedSession,
-    );
+    await _syncService.deleteSession(session, state.selectedDate);
   }
 
   Future<void> refresh() async {
-    await _loadLog(state.selectedDate);
+    final gen = ++_loadGeneration;
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final gpsLog = await _syncService.refreshLog(state.selectedDate);
+      if (gen != _loadGeneration) return;
+      state = state.copyWith(dayLog: gpsLog, isLoading: false);
+    } catch (e) {
+      if (gen != _loadGeneration) return;
+      state = state.copyWith(isLoading: false, error: 'Failed to load map');
+    }
   }
 }
 

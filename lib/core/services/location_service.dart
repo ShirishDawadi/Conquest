@@ -113,7 +113,7 @@ class LocationService {
   }
 
   void _onPosition(Position position) {
-    if (position.accuracy > 25.0) return;
+    if (position.accuracy > 20.0) return;
 
     final point = GpsPoint(lat: position.latitude, lng: position.longitude);
     _lastSpeedKmh = (position.speed * 3.6).clamp(0.0, double.infinity);

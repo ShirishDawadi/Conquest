@@ -90,8 +90,24 @@ class MapLocalSource {
   ) async {
     try {
       final db = await _db;
+
+      final existing = await db.query(
+        'gps_sessions',
+        columns: ['backend_id'],
+        where: 'date = ?',
+        whereArgs: [date.toIso8601String().substring(0, 10)],
+      );
+      final existingBackendIds = existing
+          .map((r) => r['backend_id'] as int?)
+          .whereType<int>()
+          .toSet();
+
       final batch = db.batch();
       for (final session in sessions) {
+        if (session.backendId != null &&
+            existingBackendIds.contains(session.backendId)) {
+          continue;
+        }
         batch.insert('gps_sessions', {
           'backend_id': session.backendId,
           'date': date.toIso8601String().substring(0, 10),
@@ -100,7 +116,7 @@ class MapLocalSource {
           'points': jsonEncode(session.points.map((p) => p.toJson()).toList()),
           'distance': session.distanceKm,
           'synced': 1,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        });
       }
       await batch.commit(noResult: true);
     } catch (e) {
