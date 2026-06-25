@@ -37,24 +37,35 @@ class ExpandedCard extends ConsumerWidget {
             Row(
               children: [
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: onCollapse,
-                  child: const Icon(Icons.close_fullscreen, size: 24),
+                  child: SvgPicture.asset(
+                    'assets/icons/collapse.svg',
+                    width: 24,
+                    height: 24,
+                  ),
                 ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () {
                     ref.read(mapProvider.notifier).deleteSession(session);
                   },
-                  child: const Icon(
-                    Icons.delete_outline,
-                    size: 24,
-                    color: Colors.red,
+                  behavior: HitTestBehavior.opaque,
+                  child: SvgPicture.asset(
+                    'assets/icons/delete.svg',
+                    width: 24,
+                    height: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
                 GestureDetector(
                   onTap: () {},
-                  child: const Icon(Icons.share_outlined, size: 24),
+                  behavior: HitTestBehavior.opaque,
+                  child: SvgPicture.asset(
+                    'assets/icons/share.svg',
+                    width: 24,
+                    height: 24,
+                  ),
                 ),
               ],
             ),
@@ -192,9 +203,15 @@ class _RoutePainter extends CustomPainter {
     const padding = 10.0;
     final drawSize = size.width - padding * 2;
 
+    // center offset so smaller dimension is centered
+    final lngOffset = (range - lngRange) / range * drawSize / 2;
+    final latOffset = (range - latRange) / range * drawSize / 2;
+
     Offset normalize(dynamic p) {
-      final x = padding + ((p.longitude - minLng) / range) * drawSize;
-      final y = padding + ((maxLat - p.latitude) / range) * drawSize;
+      final x =
+          padding + lngOffset + ((p.longitude - minLng) / range) * drawSize;
+      final y =
+          padding + latOffset + ((maxLat - p.latitude) / range) * drawSize;
       return Offset(x, y);
     }
 

@@ -5,6 +5,7 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/views/map/widgets/expanded_session_card.dart';
+import 'package:conquest/presentation/views/map/widgets/map_calendar.dart';
 import 'package:conquest/presentation/views/map/widgets/map_top_bar.dart';
 import 'package:conquest/presentation/views/map/widgets/session_card.dart';
 import 'package:conquest/presentation/views/map/widgets/session_list.dart';
@@ -31,6 +32,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _mapReady = false;
   bool _isExpanded = false;
   bool _locating = true;
+  bool _showCalendar = false;
 
   @override
   void initState() {
@@ -211,6 +213,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   onTap: (_, __) {
                     setState(() {
                       _isExpanded = false;
+                      _showCalendar = false;
                     });
                     ref.read(mapProvider.notifier).clearFocus();
                   },
@@ -301,7 +304,37 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 ],
               ),
 
-            const Positioned(top: 0, left: 0, right: 0, child: MapTopBar()),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Column(
+                children: [
+                  MapTopBar(
+                    onDateTap: () =>
+                        setState(() => _showCalendar = !_showCalendar),
+                  ),
+                  if (_showCalendar)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 225),
+                          child: MapCalendar(
+                            selectedDate: state.selectedDate,
+                            onDateSelected: (date) {
+                              final diff = date
+                                  .difference(state.selectedDate)
+                                  .inDays;
+                              ref.read(mapProvider.notifier).navigateDate(diff);
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
 
             if (_initialCenter != null &&
                 !state.isTracking &&

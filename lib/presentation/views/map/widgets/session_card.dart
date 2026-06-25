@@ -25,13 +25,17 @@ class SessionCard extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => onExpand(),
               child: Align(
                 alignment: AlignmentGeometry.centerLeft,
-                child: const Icon(Icons.open_in_full, size: 20),
+                child: SvgPicture.asset(
+                  'assets/icons/expand.svg',
+                  width: 16,
+                  height: 16,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
             Text(
               '$pace km/hr',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
