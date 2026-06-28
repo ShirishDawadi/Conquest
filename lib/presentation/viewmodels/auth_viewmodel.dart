@@ -1,5 +1,8 @@
-import 'dart:developer';
 import 'package:conquest/data/sources/remote/auth_remote_source.dart';
+import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -31,13 +34,17 @@ class AuthViewModel extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
-    log('LOGOUT: manual logout called', name: 'AuthViewModel');
     await _storage.deleteAll();
+    ref.invalidate(stepProvider);
+    ref.invalidate(questProvider);
+    ref.invalidate(userProvider);
+    ref.invalidate(leaderboardProvider);
     if (ref.mounted) {
       state = const AsyncData(false);
     }
   }
 }
 
-final authViewModelProvider =
-    AsyncNotifierProvider.autoDispose<AuthViewModel, bool>(AuthViewModel.new);
+final authViewModelProvider = AsyncNotifierProvider<AuthViewModel, bool>(
+  AuthViewModel.new,
+);
