@@ -64,6 +64,20 @@ class MapViewModel extends Notifier<MapState> {
     }
   }
 
+  Future<void> _loadMonthLog(DateTime date) async {
+    final gen = ++_loadGeneration;
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final gpsLog = await _syncService.getMonthLog(date);
+      if (gen != _loadGeneration) return;
+      state = state.copyWith(dayLog: gpsLog, isLoading: false);
+    } catch (e) {
+      if (gen != _loadGeneration) return;
+      log('MapViewModel _loadLog failed: $e', name: 'MapViewModel');
+      state = state.copyWith(isLoading: false, error: 'Failed to load map');
+    }
+  }
+
   Future<void> checkPermissions() async {
     final granted = await _locationService.requestPermissions();
     state = state.copyWith(
@@ -134,6 +148,21 @@ class MapViewModel extends Notifier<MapState> {
       clearDayLog: true,
     );
     _loadLog(newDate);
+  }
+
+  void navigateMonth(int months) {
+    final d = state.selectedDate;
+    final newDate = DateTime(d.year, d.month + months, 1);
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    if (newDate.isAfter(todayDate)) return;
+
+    state = state.copyWith(
+      selectedDate: newDate,
+      clearFocusedSession: true,
+      clearDayLog: true,
+    );
+    _loadMonthLog(newDate);
   }
 
   void focusSession(GpsSession session) {

@@ -83,6 +83,16 @@ class MapSyncService {
     }
   }
 
+  Future<GpsLog?> getMonthLog(DateTime month) async {
+    try {
+      final sessions = await _remote.getMonthHistory(month);
+      return sessions.isEmpty ? null : GpsLog(date: month, sessions: sessions);
+    } catch (e) {
+      log('getMonthLog failed: $e', name: 'MapSyncService');
+      return null;
+    }
+  }
+
   Future<GpsLog?> refreshLog(DateTime date) async {
     if (!await ConnectivityUtils.isOnline()) return getLog(date);
 

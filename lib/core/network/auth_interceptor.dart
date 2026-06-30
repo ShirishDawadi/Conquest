@@ -8,15 +8,20 @@ class AuthInterceptor extends Interceptor {
   static const _storage = FlutterSecureStorage();
   static Future<String?>? _refreshFuture;
 
-  static final _refreshDio = Dio(BaseOptions(
-    baseUrl: Config.baseUrl,
-    headers: {'Content-Type': 'application/json'},
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  static final _refreshDio = Dio(
+    BaseOptions(
+      baseUrl: Config.baseUrl,
+      headers: {'Content-Type': 'application/json'},
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await _storage.read(key: 'access_token');
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -53,10 +58,11 @@ class AuthInterceptor extends Interceptor {
       err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
       final retryResponse = await ApiClient.instance.fetch(err.requestOptions);
       handler.resolve(retryResponse);
-
     } catch (e) {
       _refreshFuture = null;
-      await _storage.deleteAll();
+      if (e is DioException && e.response?.statusCode == 401) {
+        await _storage.deleteAll();
+      }
       handler.next(err);
     }
   }

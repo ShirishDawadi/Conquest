@@ -1,4 +1,6 @@
+import 'package:conquest/core/constants/date_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/presentation/views/map/widgets/date_picker.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -26,21 +28,7 @@ class _MapCalendarState extends State<MapCalendar> {
   final today = DateTime.now();
 
   static const _weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  static const _months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
+  
   @override
   void initState() {
     super.initState();
@@ -133,7 +121,7 @@ class _MapCalendarState extends State<MapCalendar> {
                               SizedBox(
                                 width: 90,
                                 child: Text(
-                                  '${_months[_month]}, $_year',
+                                  '${DateConstants.months[_month]}, $_year',
                                   style: const TextStyle(fontSize: 12),
                                   textAlign: TextAlign.center,
                                 ),
@@ -251,52 +239,19 @@ class _MapCalendarState extends State<MapCalendar> {
                 child: SizedBox(
                   width: 150,
                   height: 100,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: CupertinoPicker(
-                          itemExtent: 28,
-                          selectionOverlay: const SizedBox(),
-                          scrollController: FixedExtentScrollController(
-                            initialItem: _month,
-                          ),
-                          onSelectedItemChanged: (index) {
-                            setState(() => _month = index);
-                          },
-                          children: _months
-                              .map(
-                                (m) => Center(
-                                  child: Text(
-                                    m,
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                      Expanded(
-                        child: CupertinoPicker(
-                          itemExtent: 28,
-                          selectionOverlay: const SizedBox(),
-                          scrollController: FixedExtentScrollController(
-                            initialItem: _year - 2024,
-                          ),
-                          onSelectedItemChanged: (index) {
-                            setState(() => _year = 2024 + index);
-                          },
-                          children: List.generate(
-                            today.year - 2023,
-                            (i) => Center(
-                              child: Text(
-                                '${2024 + i}',
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: DatePicker(
+                    month: _month,
+                    year: _year,
+                    today: today,
+                    onDismiss: () {
+                      setState(() => _showPicker = false);
+                    },
+                    onMonthChanged: (index) {
+                      setState(() => _month = index);
+                    },
+                    onYearChanged: (index) {
+                      setState(() => _year = 2024 + index);
+                    },
                   ),
                 ),
               ),
