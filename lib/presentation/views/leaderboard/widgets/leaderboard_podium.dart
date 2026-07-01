@@ -1,12 +1,18 @@
 import 'package:conquest/data/models/leaderboard_model.dart';
+import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/views/leaderboard/profile_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class LeaderboardPodium extends StatelessWidget {
   final List<LeaderboardEntry> top3;
+  final LeaderboardType leaderboardType;
 
-  const LeaderboardPodium({super.key, required this.top3});
+  const LeaderboardPodium({
+    super.key,
+    required this.top3,
+    required this.leaderboardType,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -52,14 +58,41 @@ class LeaderboardPodium extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(e.username, style: const TextStyle(fontSize: 12)),
-                Text(
-                  '${e.points} points',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+                Row(
+                  children: [
+                    if (leaderboardType == LeaderboardType.weekly)
+                      SvgPicture.asset(
+                        'assets/icons/weekly_point.svg',
+                        width: 10,
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        '${e.points}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    if (leaderboardType == LeaderboardType.steps)
+                      Text(
+                        'steps',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    if (leaderboardType == LeaderboardType.allTime)
+                      SvgPicture.asset(
+                        'assets/icons/xp.svg',
+                        width: 10,
+                      ),
+                  ],
                 ),
               ],
             ),

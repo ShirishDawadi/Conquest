@@ -1,16 +1,20 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/leaderboard_model.dart';
+import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/views/leaderboard/profile_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class LeaderboardTile extends StatelessWidget {
   final LeaderboardEntry entry;
   final bool isCurrentUser;
+  final LeaderboardType leaderboardType;
 
   const LeaderboardTile({
     super.key,
     required this.entry,
     required this.isCurrentUser,
+    required this.leaderboardType,
   });
 
   @override
@@ -47,7 +51,8 @@ class LeaderboardTile extends StatelessWidget {
                 radius: 16,
                 backgroundImage: entry.profilePhoto != null
                     ? NetworkImage(entry.profilePhoto!)
-                    : const AssetImage('assets/images/default-avatar.png') as ImageProvider,
+                    : const AssetImage('assets/images/default-avatar.png')
+                          as ImageProvider,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -58,12 +63,26 @@ class LeaderboardTile extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '${entry.points}',
-                style: TextStyle(
-                  color: isCurrentUser ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  if (leaderboardType == LeaderboardType.weekly)
+                    SvgPicture.asset(
+                      'assets/icons/weekly_point.svg',
+                      width: 10,
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '${entry.points}',
+                      style: TextStyle(
+                        color: isCurrentUser ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (leaderboardType == LeaderboardType.allTime)
+                    SvgPicture.asset('assets/icons/xp.svg', width: 10),
+                ],
               ),
             ],
           ),

@@ -111,7 +111,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
     return Column(
       children: [
-        LeaderboardPodium(top3: top3),
+        LeaderboardPodium(top3: top3, leaderboardType: _selectedType,),
         const SizedBox(height: 16),
         Expanded(
           child: Container(
@@ -130,6 +130,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               itemBuilder: (_, i) => LeaderboardTile(
                 entry: rest[i],
                 isCurrentUser: rest[i].userId == (currentUserId ?? -1),
+                leaderboardType: _selectedType,
               ),
             ),
           ),
@@ -158,6 +159,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 ),
               ),
               isCurrentUser: true,
+              leaderboardType: _selectedType,
             ),
           ),
         ],
