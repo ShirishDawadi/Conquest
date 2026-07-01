@@ -5,6 +5,7 @@ import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 
 class TrackingBar extends ConsumerStatefulWidget {
   const TrackingBar({super.key});
@@ -35,18 +36,19 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
   @override
   Widget build(BuildContext context) {
     final mapState = ref.watch(mapProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
 
     if (mapState.sessionStart != null) {
       _elapsed = DateTime.now().difference(mapState.sessionStart!);
     }
 
-    final distanceStr = TrackingUtils.distanceKm(mapState.currentPoints).toStringAsFixed(2);
+    final distanceStr = TrackingUtils.distanceKm(
+      mapState.currentPoints,
+    ).toStringAsFixed(2);
     final pace = TrackingUtils.speedString(mapState.currentPoints, _elapsed);
     final durationStr = TrackingUtils.formatDuration(_elapsed);
 
     return GlassContainer(
-      borderRadius: 20,
+      borderRadius: 40,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
@@ -65,85 +67,84 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
             ),
             const SizedBox(width: 10),
 
-            _stat(context, screenWidth, '$pace', 'km/hr'),
-            const SizedBox(width: 12),
-
-            _stat(
-              context,
-              screenWidth,
-              distanceStr,
-              'km',
-              icon: Icons.directions_walk,
+            Text(
+              '${pace}km/hr',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 15),
 
-            _stat(
-              context,
-              screenWidth,
-              durationStr,
-              '',
-              icon: Icons.timer_outlined,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/steps.svg',
+                  width: 20,
+                  colorFilter: ColorFilter.mode(
+                    Theme.of(context).iconTheme.color!,
+                    BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text('${distanceStr}km', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            const SizedBox(width: 15),
+
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/time.svg',
+                  width: 20,
+                  colorFilter: ColorFilter.mode(
+                    Theme.of(context).iconTheme.color!,
+                    BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(durationStr, style: TextStyle(fontSize: 12)),
+              ],
             ),
 
             const Spacer(),
 
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.greenish_3, width: 1.5),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.more_horiz,
-                size: 18,
-                color: AppColors.greenish_3,
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.greenish_3),
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.greenish_3),
+                      ),
+                      child: Center(
+                        child: SizedBox(
+                          width: 8,
+                          height: 8,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.greenish_3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _stat(
-    BuildContext context,
-    double screenWidth,
-    String value,
-    String unit, {
-    IconData? icon,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (icon != null) ...[
-          Icon(icon, size: screenWidth * 0.035, color: AppColors.greenish_3),
-          const SizedBox(width: 4),
-        ],
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: screenWidth * 0.035,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (unit.isNotEmpty)
-              Text(
-                unit,
-                style: TextStyle(
-                  fontSize: screenWidth * 0.025,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-          ],
-        ),
-      ],
     );
   }
 }

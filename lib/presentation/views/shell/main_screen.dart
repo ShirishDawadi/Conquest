@@ -34,23 +34,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _refreshCurrentPage(int index) {
-  switch (index) {
-    case 0:
-      ref.read(userProvider.notifier).refresh();
-      ref.read(questProvider.notifier).refresh();
-      ref.read(stepProvider.notifier).refresh();
-      break;
-    case 1:
-      ref.read(mapProvider.notifier).refresh();
-      break;
-    case 2:
-      ref.read(leaderboardProvider.notifier).refresh();
-      break;
-    case 3:
-      ref.read(userProvider.notifier).refresh();
-      break;
+    switch (index) {
+      case 0:
+        ref.read(userProvider.notifier).refresh();
+        ref.read(questProvider.notifier).refresh();
+        ref.read(stepProvider.notifier).refresh();
+        break;
+      case 1:
+        ref.read(mapProvider.notifier).refresh();
+        break;
+      case 2:
+        ref.read(leaderboardProvider.notifier).refresh();
+        break;
+      case 3:
+        ref.read(userProvider.notifier).refresh();
+        break;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -73,17 +73,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ],
             ),
 
-            if (isTracking)
-              Positioned(
-                bottom:
-                    MediaQuery.of(context).padding.bottom +
-                    MediaQuery.of(context).size.height * 0.065 +
-                    50,
-                left: 20,
-                right: 20,
-                child: const TrackingBar(),
-              ),
-
             Positioned(
               bottom: 0,
               left: 0,
@@ -95,16 +84,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   20,
                   MediaQuery.of(context).padding.bottom + 25,
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: GlassNavBar(
-                        currentIndex: _currentIndex,
-                        onTap: _onNavTap,
-                      ),
+                    if (isTracking) const TrackingBar(),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GlassNavBar(
+                            currentIndex: _currentIndex,
+                            onTap: _onNavTap,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const RunButton(),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    const RunButton(),
                   ],
                 ),
               ),
