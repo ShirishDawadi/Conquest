@@ -2,6 +2,7 @@ import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
+import 'package:conquest/presentation/views/profile/edit_profile_screen.dart';
 import 'package:conquest/presentation/views/shared_widgets/profile_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +27,7 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 40),
               Text(
                 'profile',
-                style: TextStyle(
-                  fontFamily: 'Vertigo',
-                  fontSize: 24,
-                ),
+                style: TextStyle(fontFamily: 'Vertigo', fontSize: 24),
               ),
               const SizedBox(height: 24),
               userState.when(
@@ -53,7 +51,28 @@ class ProfileScreen extends ConsumerWidget {
                   currentStreak: user.currentStreak,
                   longestStreak: user.longestStreak,
                   isOwnProfile: true,
-                  onEdit: () {},
+                  onEdit: () {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(
+                          milliseconds: 400,
+                        ),
+                        reverseTransitionDuration: const Duration(
+                          milliseconds: 400,
+                        ),
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const EditProfileScreen(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 40),

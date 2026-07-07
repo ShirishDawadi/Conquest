@@ -63,11 +63,12 @@ class ProfileCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: onEdit,
                   child: SvgPicture.asset(
                     'assets/icons/edit.svg',
-                    width: 20,
-                    height: 20,
+                    width: 24,
+                    height: 24,
                   ),
                 ),
               ),
@@ -79,15 +80,20 @@ class ProfileCard extends StatelessWidget {
                   child: Icon(Icons.close, color: Colors.black, size: 20),
                 ),
               ),
+
+            SizedBox(height: 5),
             Row(
               children: [
-                CircleAvatar(
-                  radius: (screenWidth / 8),
-                  backgroundColor: theme.dark,
-                  backgroundImage: profilePhoto != null
-                      ? NetworkImage(profilePhoto!)
-                      : const AssetImage('assets/images/default-avatar.png')
-                            as ImageProvider,
+                Hero(
+                  tag: 'profile-avatar',
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: theme.dark,
+                    backgroundImage: profilePhoto != null
+                        ? NetworkImage(profilePhoto!)
+                        : const AssetImage('assets/images/default-avatar.png')
+                              as ImageProvider,
+                  ),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
@@ -116,29 +122,18 @@ class ProfileCard extends StatelessWidget {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          // CircleAvatar(
-                          //   radius: 12,
-                          //   backgroundColor: theme.dark,
-                          //   child: Text(
-                          //     '$level',
-                          //     style: const TextStyle(
-                          //       color: Colors.white,
-                          //       fontSize: 12,
-                          //     ),
-                          //   ),
-                          // ),
                           Stack(
                             alignment: Alignment.center,
                             children: [
                               SvgPicture.asset(
                                 'assets/icons/xp.svg',
-                                width: screenWidth * 0.06,
+                                width: 24,
                               ),
                               Text(
                                 '$level',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: screenWidth * 0.03,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -212,7 +207,7 @@ class ProfileCard extends StatelessWidget {
                       )
                     : SizedBox(width: screenWidth / 8),
                 const SizedBox(width: 10),
-                _leagueBadge(leagueEnum, size: screenWidth / 4, opacity: 1),
+                _leagueBadge(leagueEnum, size: 100, opacity: 1),
                 const SizedBox(width: 10),
                 nextLeague != null
                     ? _leagueBadge(
@@ -289,7 +284,7 @@ class ProfileCard extends StatelessWidget {
             ),
             if (label == 'Highest Streak')
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal:5),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
                 child: SvgPicture.asset(
                   'assets/icons/streak.svg',
                   width: 15,
@@ -298,7 +293,7 @@ class ProfileCard extends StatelessWidget {
               ),
             if (label == 'Weekly Points')
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal:5),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
                 child: SvgPicture.asset(
                   'assets/icons/weekly_point.svg',
                   width: 15,

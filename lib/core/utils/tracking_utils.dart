@@ -40,7 +40,7 @@ class TrackingUtils {
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  static List<GpsPoint> rdp(List<GpsPoint> points, {double epsilon = 3}) {
+  static List<GpsPoint> rdp(List<GpsPoint> points, {double epsilon = 1}) {
     if (points.length < 3) return points;
 
     final origin = points.first;
