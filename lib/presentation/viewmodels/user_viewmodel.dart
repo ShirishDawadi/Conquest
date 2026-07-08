@@ -8,6 +8,25 @@ class UserViewModel extends AsyncNotifier<UserModel> {
   @override
   Future<UserModel> build() async => _source.getMe();
 
+  Future<String?> updateProfile({String? username, String? fullName}) async {
+    try {
+      final updated = await _source.updateProfile(
+        username: username,
+        fullName: fullName,
+      );
+      state = AsyncData(updated);
+      return null;
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('spaces')) return 'Username cannot contain spaces';
+      if (msg.contains('3 characters')) {
+        return 'Username must be at least 3 characters';
+      }
+      if (msg.contains('already taken')) return 'Username already taken';
+      return 'Something went wrong';
+    }
+  }
+
   void refresh() => ref.invalidateSelf();
 }
 

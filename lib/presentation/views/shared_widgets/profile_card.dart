@@ -103,6 +103,8 @@ class ProfileCard extends StatelessWidget {
                       Center(
                         child: Text(
                           fullName ?? 'Username',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 24,

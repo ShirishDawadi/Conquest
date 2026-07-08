@@ -17,7 +17,9 @@ class QuestRemoteSource {
 
   Future<QuestModel> setupQuest(int stepGoal) async {
     try {
-      final response = await _dio.post('/quests/today/setup?step_goal=$stepGoal');
+      final response = await _dio.post(
+        '/quests/today/setup?step_goal=$stepGoal',
+      );
       return QuestModel.fromJson(response.data);
     } catch (e) {
       log('Error setting up quest: $e', name: 'QuestRemoteSource');
@@ -32,9 +34,9 @@ class QuestRemoteSource {
     bool object2Completed = false,
   }) async {
     try {
-      await _dio.put(
+      await _dio.patch(
         '/quests/$questId/mark',
-        queryParameters: {
+        data: {
           'steps_completed': stepsCompleted,
           'object1_completed': object1Completed,
           'object2_completed': object2Completed,

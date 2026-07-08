@@ -45,7 +45,13 @@ class ObjectDetectionService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    final options = InterpreterOptions()..threads = 2;
+    final options = InterpreterOptions()..threads = 4;
+
+    try {
+      options.useNnApiForAndroid = true;
+    } catch (e) {
+      log('NNAPI not available: $e', name: 'OD');
+    }
 
     _interpreter = await Interpreter.fromAsset(_modelPath, options: options);
 
@@ -90,28 +96,34 @@ class ObjectDetectionService {
     if (_isRunning) return [];
     _isRunning = true;
 
+    final totalSW = Stopwatch()..start();
+
     try {
       final rotationAngle = isFrontCamera
           ? -sensorOrientation
           : sensorOrientation;
 
+      final preprocessSW = Stopwatch()..start();
       final ok = _preprocess(image, rotationAngle: rotationAngle);
+      preprocessSW.stop();
+      log("Preprocess: ${preprocessSW.elapsedMilliseconds} ms", name: "PERF");
+
       if (!ok) return [];
 
+      final inferenceSW = Stopwatch()..start();
       _interpreter!.runForMultipleInputs([_inputTensor], {0: _outputBuffer});
+      inferenceSW.stop();
+      log("Inference: ${inferenceSW.elapsedMilliseconds} ms", name: "PERF");
 
+      final postSW = Stopwatch()..start();
       final detections = _postprocess(_outputBuffer[0]);
+      postSW.stop();
+      log("Postprocess: ${postSW.elapsedMilliseconds} ms", name: "PERF");
 
       latestDetections = detections;
 
-      log("DETECTIONS: ${detections.length}", name: "OD");
-
-      for (final d in detections) {
-        log(
-          "${d.label} ${(d.confidence * 100).toStringAsFixed(1)}%",
-          name: "OD",
-        );
-      }
+      totalSW.stop();
+      log("TOTAL: ${totalSW.elapsedMilliseconds} ms", name: "PERF");
 
       return detections;
     } catch (e) {
@@ -124,7 +136,11 @@ class ObjectDetectionService {
 
   bool _preprocess(CameraImage image, {int rotationAngle = 90}) {
     try {
+      final sw = Stopwatch();
+
       img.Image? frame;
+
+      sw.start();
 
       if (image.format.group == ImageFormatGroup.yuv420) {
         frame = _convertYUV420(image);
@@ -139,23 +155,49 @@ class ObjectDetectionService {
         return false;
       }
 
-      final rotated = img.copyRotate(frame, angle: rotationAngle);
+      sw.stop();
+      log("YUV->RGB: ${sw.elapsedMilliseconds} ms", name: "PERF");
+
+      sw
+        ..reset()
+        ..start();
+
       final resized = img.copyResize(
-        rotated,
+        frame,
         width: _inputSize,
         height: _inputSize,
       );
+
+      sw.stop();
+      log("Resize: ${sw.elapsedMilliseconds} ms", name: "PERF");
+
+      sw
+        ..reset()
+        ..start();
+
+      final rotated = img.copyRotate(resized, angle: rotationAngle);
+
+      sw.stop();
+      log("Rotate: ${sw.elapsedMilliseconds} ms", name: "PERF");
+
+      sw
+        ..reset()
+        ..start();
 
       final tensor = _inputTensor[0];
 
       for (int y = 0; y < _inputSize; y++) {
         for (int x = 0; x < _inputSize; x++) {
-          final p = resized.getPixel(x, y);
+          final p = rotated.getPixel(x, y);
+
           tensor[y][x][0] = p.r / 255.0;
           tensor[y][x][1] = p.g / 255.0;
           tensor[y][x][2] = p.b / 255.0;
         }
       }
+
+      sw.stop();
+      log("Normalize: ${sw.elapsedMilliseconds} ms", name: "PERF");
 
       return true;
     } catch (e) {
@@ -185,7 +227,6 @@ class ObjectDetectionService {
       }
 
       final confidence = bestClassScore;
-
       if (confidence < _confidenceThreshold) continue;
       if (bestClass < 0 || bestClass >= _labels.length) continue;
 
@@ -210,14 +251,11 @@ class ObjectDetectionService {
 
   List<DetectionResult> _nms(List<DetectionResult> dets) {
     if (dets.isEmpty) return [];
-
     dets.sort((a, b) => b.confidence.compareTo(a.confidence));
 
     final kept = <DetectionResult>[];
-
     for (final d in dets) {
       bool sup = false;
-
       for (final k in kept) {
         if (k.label != d.label) continue;
         if (_iou(d.bbox, k.bbox) > _iouThreshold) {
@@ -225,10 +263,8 @@ class ObjectDetectionService {
           break;
         }
       }
-
       if (!sup) kept.add(d);
     }
-
     return kept;
   }
 
@@ -240,12 +276,10 @@ class ObjectDetectionService {
 
     final w = (x2 - x1).clamp(0.0, 1.0);
     final h = (y2 - y1).clamp(0.0, 1.0);
-
     final inter = w * h;
 
     final aArea = (a[2] - a[0]) * (a[3] - a[1]);
     final bArea = (b[2] - b[0]) * (b[3] - b[1]);
-
     final union = aArea + bArea - inter;
 
     return union <= 0 ? 0.0 : inter / union;
@@ -263,7 +297,6 @@ class ObjectDetectionService {
 img.Image _convertYUV420(CameraImage image) {
   final width = image.width;
   final height = image.height;
-
   final out = img.Image(width: width, height: height);
 
   final y = image.planes[0].bytes;

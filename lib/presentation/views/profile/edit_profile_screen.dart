@@ -17,6 +17,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _fullnameController = TextEditingController();
   final _usernameController = TextEditingController();
   bool _initialized = false;
+  String? _usernameError;
+  String? _fullnameError;
 
   @override
   void didChangeDependencies() {
@@ -29,6 +31,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         _initialized = true;
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(() {
+      if (_usernameError != null) setState(() => _usernameError = null);
+    });
+    _fullnameController.addListener(() {
+      if (_fullnameError != null) setState(() => _fullnameError = null);
+    });
   }
 
   @override
@@ -156,6 +169,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               'Full Name',
                               _fullnameController,
                               'assets/icons/profile.svg',
+                              error: _fullnameError,
+                              maxLength: 20,
                             ),
                             const SizedBox(height: 5),
                             _field(
@@ -163,12 +178,63 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               'Username',
                               _usernameController,
                               'assets/icons/at_symbol.svg',
+                              error: _usernameError,
+                              maxLength: 15,
                             ),
                             const SizedBox(height: 20),
                             SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: () {},
+                                onPressed: () async {
+                                  final username = _usernameController.text
+                                      .trim();
+                                  final fullName = _fullnameController.text
+                                      .trim();
+
+                                  if (fullName.isEmpty) {
+                                    setState(
+                                      () => _fullnameError =
+                                          'Full name cannot be empty',
+                                    );
+                                    return;
+                                  }
+                                  if (username.isEmpty) {
+                                    setState(
+                                      () => _usernameError =
+                                          'Username cannot be empty',
+                                    );
+                                    return;
+                                  }
+                                  if (username.contains(' ')) {
+                                    setState(
+                                      () => _usernameError =
+                                          'Username cannot contain spaces',
+                                    );
+                                    return;
+                                  }
+                                  if (username.length < 3) {
+                                    setState(
+                                      () => _usernameError =
+                                          'Username must be at least 3 characters',
+                                    );
+                                    return;
+                                  }
+                                  final error = await ref
+                                      .read(userProvider.notifier)
+                                      .updateProfile(
+                                        username: username,
+                                        fullName: fullName.isEmpty
+                                            ? null
+                                            : fullName,
+                                      );
+
+                                  if (!mounted) return;
+                                  if (error != null) {
+                                    setState(() => _usernameError = error);
+                                  } else {
+                                    Navigator.pop(context);
+                                  }
+                                },
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.greenish_3,
                                   foregroundColor: Colors.white,
@@ -213,8 +279,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     BuildContext context,
     String label,
     TextEditingController controller,
-    String iconAsset,
-  ) {
+    String iconAsset, {
+    String? error,
+    int? maxLength,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -233,6 +301,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             child: TextField(
               controller: controller,
               cursorColor: AppColors.greenish_4,
+              maxLength: maxLength,
+              buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
@@ -242,12 +312,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.greenish_2),
+                  borderSide: BorderSide(
+                    color: error != null ? Colors.red : AppColors.greenish_2,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: AppColors.greenish_3,
+                  borderSide: BorderSide(
+                    color: error != null ? Colors.red : AppColors.greenish_3,
                     width: 2,
                   ),
                 ),
@@ -265,6 +337,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
           ),
         ),
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
+            child: Text(
+              error,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }

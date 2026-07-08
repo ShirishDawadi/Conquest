@@ -6,11 +6,13 @@ class AppConstants {
   static final trackingBarKey = GlobalKey();
 
   static double navBarBottomPadding(BuildContext context) {
-    final isTracking = ProviderScope.containerOf(context).read(mapProvider).isTracking;
+    final isTracking = ProviderScope.containerOf(
+      context,
+    ).read(mapProvider).isTracking;
 
-    final base = MediaQuery.of(context).padding.bottom +
-        25 +
-        MediaQuery.of(context).size.height * 0.065;
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
+    final base = bottomInset + 25 + MediaQuery.of(context).size.height * 0.065;
 
     if (isTracking) {
       return base + 60;
