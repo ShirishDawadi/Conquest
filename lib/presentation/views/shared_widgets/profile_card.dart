@@ -1,5 +1,6 @@
 import 'package:conquest/core/theme/league_theme.dart';
 import 'package:conquest/presentation/views/shared_widgets/level_bar.dart';
+import 'package:conquest/presentation/views/shared_widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -86,13 +87,9 @@ class ProfileCard extends StatelessWidget {
               children: [
                 Hero(
                   tag: 'profile-avatar',
-                  child: CircleAvatar(
+                  child: ProfileAvatar(
+                    photoUrl: profilePhoto,
                     radius: 60,
-                    backgroundColor: theme.dark,
-                    backgroundImage: profilePhoto != null
-                        ? NetworkImage(profilePhoto!)
-                        : const AssetImage('assets/images/default-avatar.png')
-                              as ImageProvider,
                   ),
                 ),
                 const SizedBox(width: 15),

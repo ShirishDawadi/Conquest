@@ -1,5 +1,6 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/user_model.dart';
+import 'package:conquest/presentation/views/shared_widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -23,12 +24,9 @@ class GreetingLevel extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: (screenWidth * 0.08),
-              backgroundImage: user.profilePhoto != null
-                  ? NetworkImage(user.profilePhoto!)
-                  : const AssetImage('assets/images/default-avatar.png')
-                        as ImageProvider,
+            ProfileAvatar(
+              radius: screenWidth * 0.08,
+              photoUrl: user.profilePhoto,
             ),
             Expanded(
               child: Padding(
@@ -95,7 +93,9 @@ class GreetingLevel extends StatelessWidget {
                       value: xpProgress.clamp(0.0, 1.0),
                       borderRadius: BorderRadius.circular(screenWidth * 0.06),
                       backgroundColor: AppColors.progressBarBackground(context),
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.diamond_dark),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.diamond_dark,
+                      ),
                       minHeight: screenWidth * 0.045,
                     ),
                   ),

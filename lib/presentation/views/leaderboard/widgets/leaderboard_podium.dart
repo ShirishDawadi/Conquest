@@ -1,6 +1,7 @@
 import 'package:conquest/data/models/leaderboard_model.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/views/leaderboard/profile_dialog.dart';
+import 'package:conquest/presentation/views/shared_widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -49,12 +50,9 @@ class LeaderboardPodium extends StatelessWidget {
                       BlendMode.srcIn,
                     ),
                   ),
-                CircleAvatar(
+                ProfileAvatar(
                   radius: isFirst ? 36 : 28,
-                  backgroundImage: e.profilePhoto != null
-                      ? NetworkImage(e.profilePhoto!)
-                      : const AssetImage('assets/images/default-avatar.png')
-                            as ImageProvider,
+                  photoUrl: e.profilePhoto,
                 ),
                 const SizedBox(height: 4),
                 Text(e.username, style: const TextStyle(fontSize: 12)),
@@ -88,10 +86,7 @@ class LeaderboardPodium extends StatelessWidget {
                         ),
                       ),
                     if (leaderboardType == LeaderboardType.allTime)
-                      SvgPicture.asset(
-                        'assets/icons/xp.svg',
-                        width: 10,
-                      ),
+                      SvgPicture.asset('assets/icons/xp.svg', width: 10),
                   ],
                 ),
               ],

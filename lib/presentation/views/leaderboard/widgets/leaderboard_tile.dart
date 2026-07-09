@@ -2,6 +2,7 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/leaderboard_model.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/views/leaderboard/profile_dialog.dart';
+import 'package:conquest/presentation/views/shared_widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -47,13 +48,7 @@ class LeaderboardTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              CircleAvatar(
-                radius: 16,
-                backgroundImage: entry.profilePhoto != null
-                    ? NetworkImage(entry.profilePhoto!)
-                    : const AssetImage('assets/images/default-avatar.png')
-                          as ImageProvider,
-              ),
+              ProfileAvatar(radius: 16, photoUrl: entry.profilePhoto),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(

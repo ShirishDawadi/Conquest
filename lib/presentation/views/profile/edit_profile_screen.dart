@@ -1,10 +1,15 @@
+import 'dart:io';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
+import 'package:conquest/presentation/views/shared_widgets/app_text_field.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:conquest/presentation/views/shared_widgets/profile_avatar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -19,6 +24,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _initialized = false;
   String? _usernameError;
   String? _fullnameError;
+  File? _pendingAvatar;
+  String? _pendingDefaultAvatar;
 
   @override
   void didChangeDependencies() {
@@ -113,15 +120,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               data: (user) => Center(
                                 child: Hero(
                                   tag: 'profile-avatar',
-                                  child: CircleAvatar(
-                                    radius: screenWidth * 0.18,
-                                    backgroundImage: user.profilePhoto != null
-                                        ? NetworkImage(user.profilePhoto!)
-                                        : const AssetImage(
-                                                'assets/images/default-avatar.png',
-                                              )
-                                              as ImageProvider,
-                                  ),
+                                  child: _pendingAvatar != null
+                                      ? ProfileAvatar(
+                                          photoFile: _pendingAvatar!,
+                                          radius: screenWidth * 0.18,
+                                        )
+                                      : _pendingDefaultAvatar != null
+                                      ? ProfileAvatar(
+                                          assetImage: AssetImage(
+                                            'assets/images/$_pendingDefaultAvatar.png',
+                                          ),
+                                          radius: screenWidth * 0.18,
+                                        )
+                                      : ProfileAvatar(
+                                          photoUrl: user.profilePhoto,
+                                          radius: screenWidth * 0.18,
+                                        ),
                                 ),
                               ),
                             ),
@@ -129,23 +143,48 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const CircleAvatar(
-                                  radius: 24,
-                                  backgroundImage: AssetImage(
-                                    'assets/images/default-avatar.png',
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                const CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: AppColors.greenish_2,
-                                  backgroundImage: AssetImage(
-                                    'assets/images/character_avatar.png',
+                                IconButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    setState(() {
+                                      _pendingDefaultAvatar = "avatar1";
+                                    });
+                                  },
+                                  icon: const CircleAvatar(
+                                    radius: 24,
+                                    backgroundImage: AssetImage(
+                                      'assets/images/avatar1.png',
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
                                 IconButton(
-                                  onPressed: () {},
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    setState(() {
+                                      _pendingDefaultAvatar = "avatar2";
+                                    });
+                                  },
+                                  icon: const CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: AppColors.greenish_2,
+                                    backgroundImage: AssetImage(
+                                      'assets/images/avatar2.png',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                IconButton(
+                                  onPressed: () async {
+                                    final picker = ImagePicker();
+                                    final picked = await picker.pickImage(
+                                      source: ImageSource.gallery,
+                                    );
+                                    if (picked == null) return;
+                                    setState(
+                                      () => _pendingAvatar = File(picked.path),
+                                    );
+                                  },
                                   style: IconButton.styleFrom(
                                     backgroundColor: Theme.of(
                                       context,
@@ -164,20 +203,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               ],
                             ),
                             const SizedBox(height: 15),
-                            _field(
-                              context,
-                              'Full Name',
-                              _fullnameController,
-                              'assets/icons/profile.svg',
+                            AppTextField(
+                              label: 'Full Name',
+                              controller: _fullnameController,
+                              iconAsset: 'assets/icons/profile.svg',
                               error: _fullnameError,
                               maxLength: 20,
                             ),
                             const SizedBox(height: 5),
-                            _field(
-                              context,
-                              'Username',
-                              _usernameController,
-                              'assets/icons/at_symbol.svg',
+                            AppTextField(
+                              label: 'Username',
+                              controller: _usernameController,
+                              iconAsset: 'assets/icons/at_symbol.svg',
                               error: _usernameError,
                               maxLength: 15,
                             ),
@@ -219,13 +256,48 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     );
                                     return;
                                   }
+                                  if (username.length > 15) {
+                                    setState(
+                                      () => _usernameError =
+                                          'Username cannot exceed 15 characters',
+                                    );
+                                    return;
+                                  }
+
+                                  if (_pendingAvatar != null) {
+                                    final compressed =
+                                        await FlutterImageCompress.compressAndGetFile(
+                                          _pendingAvatar!.path,
+                                          '${_pendingAvatar!.path}_compressed.jpg',
+                                          quality: 70,
+                                          minWidth: 400,
+                                          minHeight: 400,
+                                        );
+                                    if (compressed != null) {
+                                      final avatarError = await ref
+                                          .read(userProvider.notifier)
+                                          .updateAvatar(File(compressed.path));
+                                      if (!mounted) return;
+                                      if (avatarError != null) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(avatarError),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                    }
+                                  }
+
                                   final error = await ref
                                       .read(userProvider.notifier)
                                       .updateProfile(
                                         username: username,
-                                        fullName: fullName.isEmpty
-                                            ? null
-                                            : fullName,
+                                        fullName: fullName,
+                                        profilePhoto: _pendingDefaultAvatar,
                                       );
 
                                   if (!mounted) return;
@@ -272,80 +344,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _field(
-    BuildContext context,
-    String label,
-    TextEditingController controller,
-    String iconAsset, {
-    String? error,
-    int? maxLength,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
-          child: Text(label, style: const TextStyle(fontSize: 14)),
-        ),
-        SizedBox(
-          height: 40,
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              textSelectionTheme: TextSelectionThemeData(
-                selectionHandleColor: AppColors.greenish_4,
-              ),
-            ),
-            child: TextField(
-              controller: controller,
-              cursorColor: AppColors.greenish_4,
-              maxLength: maxLength,
-              buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 5,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: error != null ? Colors.red : AppColors.greenish_2,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: error != null ? Colors.red : AppColors.greenish_3,
-                    width: 2,
-                  ),
-                ),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: SvgPicture.asset(
-                    iconAsset,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).iconTheme.color!,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (error != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
-            child: Text(
-              error,
-              style: const TextStyle(color: Colors.red, fontSize: 12),
-            ),
-          ),
-      ],
     );
   }
 }
