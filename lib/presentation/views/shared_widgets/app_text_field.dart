@@ -5,17 +5,23 @@ import 'package:flutter_svg/flutter_svg.dart';
 class AppTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final String iconAsset;
+  final String? iconAsset;
   final String? error;
   final int? maxLength;
+  final TextInputType keyboardType;
+  final bool obscureText;
+  final Widget? suffixIcon;
 
   const AppTextField({
     super.key,
     required this.label,
     required this.controller,
-    required this.iconAsset,
+    this.iconAsset,
     this.error,
     this.maxLength,
+    this.keyboardType = TextInputType.text,
+    this.obscureText = false,
+    this.suffixIcon,
   });
 
   @override
@@ -40,6 +46,8 @@ class AppTextField extends StatelessWidget {
             ),
             child: TextField(
               controller: controller,
+              keyboardType: keyboardType,
+              obscureText: obscureText,
               cursorColor: AppColors.greenish_4,
               maxLength: maxLength,
               buildCounter: (
@@ -73,16 +81,19 @@ class AppTextField extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: SvgPicture.asset(
-                    iconAsset,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).iconTheme.color!,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
+                suffixIcon: suffixIcon ??
+                    (iconAsset != null
+                        ? Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: SvgPicture.asset(
+                              iconAsset!,
+                              colorFilter: ColorFilter.mode(
+                                Theme.of(context).iconTheme.color!,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          )
+                        : null),
               ),
             ),
           ),

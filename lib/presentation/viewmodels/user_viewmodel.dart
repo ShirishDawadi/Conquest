@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserViewModel extends AsyncNotifier<UserModel> {
   final _source = UserRemoteSource();
+  bool isSaving = false;
 
   @override
   Future<UserModel> build() async => _source.getMe();
@@ -14,6 +15,9 @@ class UserViewModel extends AsyncNotifier<UserModel> {
     String? fullName,
     String? profilePhoto,
   }) async {
+    isSaving = true;
+    ref.notifyListeners();
+    
     try {
       final updated = await _source.updateProfile(
         username: username,
@@ -33,6 +37,9 @@ class UserViewModel extends AsyncNotifier<UserModel> {
       if (msg.contains('already taken')) return 'Username already taken';
 
       return 'Something went wrong';
+    } finally {
+      isSaving = false;
+      ref.notifyListeners();
     }
   }
 

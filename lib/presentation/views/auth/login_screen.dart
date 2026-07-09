@@ -1,6 +1,9 @@
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/core/validators/input_validators.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
+import 'package:conquest/presentation/views/shared_widgets/app_text_field.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,6 +22,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void initState() {
@@ -39,6 +45,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _login() {
+    setState(() {
+      _emailError = InputValidators.validateEmail(_emailController.text);
+
+      _passwordError = InputValidators.validatePassword(
+        _passwordController.text,
+      );
+    });
+
+    if (_emailError != null || _passwordError != null) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    ref
+        .read(authViewModelProvider.notifier)
+        .login(_emailController.text.trim(), _passwordController.text.trim());
   }
 
   @override
@@ -114,57 +140,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   letterSpacing: 10,
                                 ),
                               ),
-                              const SizedBox(height: 32),
-                              TextField(
+                              const SizedBox(height: 15),
+                              AppTextField(
+                                label: 'Email',
                                 controller: _emailController,
+                                iconAsset: 'assets/icons/email.svg',
                                 keyboardType: TextInputType.emailAddress,
-                                cursorColor: AppColors.greenish_4,
-                                decoration: InputDecoration(
-                                  hintText: 'Email',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: AppColors.greenish_4,
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
+                                maxLength: 254,
+                                error: _emailError,
                               ),
+
                               const SizedBox(height: 16),
-                              TextField(
+                              AppTextField(
+                                label: 'Password',
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
-                                cursorColor: AppColors.greenish_4,
-                                decoration: InputDecoration(
-                                  hintText: 'Password',
-
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                maxLength: 16,
+                                error: _passwordError,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                   ),
-
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: AppColors.greenish_4,
-                                      width: 2,
-                                    ),
-                                  ),
-
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
                                 ),
                               ),
                               const SizedBox(height: 24),
@@ -174,17 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   onPressed:
                                       ref.watch(authViewModelProvider).isLoading
                                       ? null
-                                      : () {
-                                          FocusScope.of(context).unfocus();
-                                          ref
-                                              .read(
-                                                authViewModelProvider.notifier,
-                                              )
-                                              .login(
-                                                _emailController.text.trim(),
-                                                _passwordController.text.trim(),
-                                              );
-                                        },
+                                      : _login,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.greenish_3,
                                     padding: const EdgeInsets.symmetric(
@@ -196,7 +189,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ),
                                   child:
                                       ref.watch(authViewModelProvider).isLoading
-                                      ? const CircularProgressIndicator(
+                                      ?  const CupertinoActivityIndicator(
                                           color: Colors.white,
                                         )
                                       : const Text(

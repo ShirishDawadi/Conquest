@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/core/validators/input_validators.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/shared_widgets/app_text_field.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
@@ -58,10 +59,70 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _saveChanges() async {
+    final username = _usernameController.text.trim();
+    final fullName = _fullnameController.text.trim();
+
+    setState(() {
+      _usernameError = InputValidators.validateUsername(username);
+      _fullnameError = InputValidators.validateFullName(fullName);
+    });
+
+    if (_usernameError != null || _fullnameError != null) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    if (_pendingAvatar != null) {
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        _pendingAvatar!.path,
+        '${_pendingAvatar!.path}_compressed.jpg',
+        quality: 70,
+        minWidth: 400,
+        minHeight: 400,
+      );
+
+      if (compressed != null) {
+        final avatarError = await ref
+            .read(userProvider.notifier)
+            .updateAvatar(File(compressed.path));
+
+        if (!mounted) return;
+
+        if (avatarError != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(avatarError), backgroundColor: Colors.red),
+          );
+          return;
+        }
+      }
+    }
+
+    final error = await ref
+        .read(userProvider.notifier)
+        .updateProfile(
+          username: username,
+          fullName: fullName,
+          profilePhoto: _pendingDefaultAvatar,
+        );
+
+    if (!mounted) return;
+
+    if (error != null) {
+      setState(() {
+        _usernameError = error;
+      });
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(userProvider);
     final screenWidth = MediaQuery.of(context).size.width;
+    final vm = ref.watch(userProvider.notifier);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -175,16 +236,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 ),
                                 const SizedBox(width: 10),
                                 IconButton(
-                                  onPressed: () async {
-                                    final picker = ImagePicker();
-                                    final picked = await picker.pickImage(
-                                      source: ImageSource.gallery,
-                                    );
-                                    if (picked == null) return;
-                                    setState(
-                                      () => _pendingAvatar = File(picked.path),
-                                    );
-                                  },
+                                  onPressed: vm.isSaving
+                                      ? null
+                                      : () async {
+                                          final picker = ImagePicker();
+                                          final picked = await picker.pickImage(
+                                            source: ImageSource.gallery,
+                                          );
+                                          if (picked == null) return;
+
+                                          setState(() {
+                                            _pendingAvatar = File(picked.path);
+                                          });
+                                        },
                                   style: IconButton.styleFrom(
                                     backgroundColor: Theme.of(
                                       context,
@@ -222,91 +286,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: () async {
-                                  final username = _usernameController.text
-                                      .trim();
-                                  final fullName = _fullnameController.text
-                                      .trim();
-
-                                  if (fullName.isEmpty) {
-                                    setState(
-                                      () => _fullnameError =
-                                          'Full name cannot be empty',
-                                    );
-                                    return;
-                                  }
-                                  if (username.isEmpty) {
-                                    setState(
-                                      () => _usernameError =
-                                          'Username cannot be empty',
-                                    );
-                                    return;
-                                  }
-                                  if (username.contains(' ')) {
-                                    setState(
-                                      () => _usernameError =
-                                          'Username cannot contain spaces',
-                                    );
-                                    return;
-                                  }
-                                  if (username.length < 3) {
-                                    setState(
-                                      () => _usernameError =
-                                          'Username must be at least 3 characters',
-                                    );
-                                    return;
-                                  }
-                                  if (username.length > 15) {
-                                    setState(
-                                      () => _usernameError =
-                                          'Username cannot exceed 15 characters',
-                                    );
-                                    return;
-                                  }
-
-                                  if (_pendingAvatar != null) {
-                                    final compressed =
-                                        await FlutterImageCompress.compressAndGetFile(
-                                          _pendingAvatar!.path,
-                                          '${_pendingAvatar!.path}_compressed.jpg',
-                                          quality: 70,
-                                          minWidth: 400,
-                                          minHeight: 400,
-                                        );
-                                    if (compressed != null) {
-                                      final avatarError = await ref
-                                          .read(userProvider.notifier)
-                                          .updateAvatar(File(compressed.path));
-                                      if (!mounted) return;
-                                      if (avatarError != null) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(avatarError),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                        return;
-                                      }
-                                    }
-                                  }
-
-                                  final error = await ref
-                                      .read(userProvider.notifier)
-                                      .updateProfile(
-                                        username: username,
-                                        fullName: fullName,
-                                        profilePhoto: _pendingDefaultAvatar,
-                                      );
-
-                                  if (!mounted) return;
-                                  if (error != null) {
-                                    setState(() => _usernameError = error);
-                                  } else {
-                                    Navigator.pop(context);
-                                  }
-                                },
+                                onPressed: vm.isSaving ? null : _saveChanges,
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.greenish_3,
                                   foregroundColor: Colors.white,
@@ -314,7 +294,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                 ),
-                                child: const Text('Save Changes'),
+                                child: vm.isSaving
+                                    ? const CupertinoActivityIndicator(
+                                        color: Colors.white,
+                                      )
+                                    : const Text('Save Changes'),
                               ),
                             ),
                             SizedBox(

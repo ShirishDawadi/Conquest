@@ -1,6 +1,10 @@
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/core/validators/input_validators.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
+import 'package:conquest/presentation/views/shared_widgets/app_text_field.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -20,6 +24,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _fullnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  String? _fullNameError;
+  String? _emailError;
+  String? _passwordError;
 
   bool _obscurePassword = true;
 
@@ -48,11 +56,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     super.dispose();
   }
 
-  OutlineInputBorder _border(Color color) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: color, width: 2),
-    );
+  void _register() {
+    setState(() {
+      _fullNameError = InputValidators.validateFullName(
+        _fullnameController.text,
+      );
+
+      _emailError = InputValidators.validateEmail(_emailController.text);
+
+      _passwordError = InputValidators.validatePassword(
+        _passwordController.text,
+      );
+    });
+
+    if (_fullNameError != null ||
+        _emailError != null ||
+        _passwordError != null) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    ref
+        .read(authViewModelProvider.notifier)
+        .register(
+          _fullnameController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
   }
 
   @override
@@ -75,9 +106,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         },
         loading: () {},
         error: (e, _) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Registration Failed')));
+          if (e is DioException &&
+              e.response?.statusCode == 400 &&
+              e.response?.data['detail'] == 'Email already registered') {
+            setState(() {
+              _emailError = 'Email already registered';
+            });
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Registration Failed')),
+            );
+          }
         },
       );
     });
@@ -131,59 +170,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 ),
                               ),
                               const SizedBox(height: 32),
-                              TextField(
+                              AppTextField(
+                                label: 'Full Name',
                                 controller: _fullnameController,
-                                cursorColor: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface,
-                                decoration: InputDecoration(
-                                  hintText: 'Full Name',
-                                  border: _border(
-                                    Theme.of(context).dividerColor,
-                                  ),
-                                  focusedBorder: _border(AppColors.greenish_4),
-                                ),
+                                iconAsset: 'assets/icons/profile.svg',
+                                maxLength: 20,
+                                error: _fullNameError,
                               ),
                               const SizedBox(height: 16),
-                              TextField(
+
+                              AppTextField(
+                                label: 'Email',
                                 controller: _emailController,
+                                iconAsset: 'assets/icons/email.svg',
                                 keyboardType: TextInputType.emailAddress,
-                                cursorColor: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface,
-                                decoration: InputDecoration(
-                                  hintText: 'Email',
-                                  border: _border(
-                                    Theme.of(context).dividerColor,
-                                  ),
-                                  focusedBorder: _border(AppColors.greenish_4),
-                                ),
+                                maxLength: 254,
+                                error: _emailError,
                               ),
                               const SizedBox(height: 16),
-                              TextField(
+
+                              AppTextField(
+                                label: 'Password',
+                                maxLength: 16,
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
-                                cursorColor: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface,
-                                decoration: InputDecoration(
-                                  hintText: 'Password',
-                                  border: _border(
-                                    Theme.of(context).dividerColor,
+                                error: _passwordError,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                   ),
-                                  focusedBorder: _border(AppColors.greenish_4),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
                                 ),
                               ),
                               const SizedBox(height: 24),
@@ -193,18 +215,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   onPressed:
                                       ref.watch(authViewModelProvider).isLoading
                                       ? null
-                                      : () {
-                                          FocusScope.of(context).unfocus();
-                                          ref
-                                              .read(
-                                                authViewModelProvider.notifier,
-                                              )
-                                              .register(
-                                                _fullnameController.text.trim(),
-                                                _emailController.text.trim(),
-                                                _passwordController.text.trim(),
-                                              );
-                                        },
+                                      : _register,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.greenish_3,
                                     padding: const EdgeInsets.symmetric(
@@ -216,7 +227,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   ),
                                   child:
                                       ref.watch(authViewModelProvider).isLoading
-                                      ? const CircularProgressIndicator(
+                                      ? const CupertinoActivityIndicator(
                                           color: Colors.white,
                                         )
                                       : const Text(
