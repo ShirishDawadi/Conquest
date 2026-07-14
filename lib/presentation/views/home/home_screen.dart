@@ -4,9 +4,9 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
+import 'package:conquest/presentation/views/home/steps_reset_screen.dart';
 import 'package:conquest/presentation/views/home/widgets/greeting_level.dart';
 import 'package:conquest/presentation/views/home/widgets/quest_card.dart';
-import 'package:conquest/presentation/views/home/widgets/reset_card.dart';
 import 'package:conquest/presentation/views/home/widgets/step_arc.dart';
 import 'package:conquest/presentation/views/home/widgets/tracking_banner.dart';
 import 'package:flutter/cupertino.dart';
@@ -27,6 +27,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool _isWalking = false;
   Timer? _walkTimer;
   StreamSubscription<StepCount>? _pedometerSubscription;
+
+  double _greetingHeight = 0;
 
   @override
   void initState() {
@@ -79,60 +81,121 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final trackingMode = ref.watch(trackingModeProvider);
     final steps = stepState.value ?? 0;
 
-    final screenHeight = MediaQuery.of(context).size.height;
+    if (questState.hasValue && questState.value!.needsReset) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.invalidate(questProvider);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const StepsResetScreen()),
+        );
+      });
+    }
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            bottom: AppConstants.navBarBottomPadding(context),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: screenHeight * 0.04),
-                userState.when(
-                  loading: () => const SizedBox(height: 80),
-                  error: (e, _) => const SizedBox(height: 80),
-                  data: (user) =>
-                      GreetingLevel(user: user, greeting: _getGreeting()),
-                ),
-                SizedBox(height: 10),
-                if (stepAsync.hasValue) TrackingBanner(mode: trackingMode),
-                SizedBox(height: screenHeight * 0.04),
-                questState.when(
-                  loading: () => const Center(
-                    child: CupertinoActivityIndicator(
-                      color: AppColors.greenish_3,
-                      radius: 20,
-                    ),
-                  ),
-                  error: (e, _) =>
-                      const Center(child: Text('Failed to load quest')),
-                  data: (quest) {
-                    if (quest.needsReset) return const ResetCard();
-                    return Column(
-                      children: [
-                        const SizedBox(height: 40),
-                        StepArc(
-                          steps: steps,
-                          goal: quest.stepGoal ?? 500,
-                          isWalking: _isWalking,
-                          walkController: _walkController,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: AppConstants.navBarBottomPadding(context),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: _greetingHeight),
+                    const SizedBox(height: 10),
+                    if (stepAsync.hasValue)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: TrackingBanner(mode: trackingMode),
+                      ),
+                    const SizedBox(height: 24),
+                    questState.when(
+                      loading: () => const Center(
+                        child: CupertinoActivityIndicator(
+                          color: AppColors.greenish_3,
+                          radius: 20,
                         ),
-                        const SizedBox(height: 40),
-                        QuestCard(quest: quest, steps: steps),
-                      ],
-                    );
-                  },
+                      ),
+                      error: (e, _) =>
+                          const Center(child: Text('Failed to load quest')),
+                      data: (quest) => Column(
+                        children: [
+                          const SizedBox(height: 24),
+                          StepArc(
+                            steps: steps,
+                            goal: quest.stepGoal ?? 500,
+                            isWalking: _isWalking,
+                            walkController: _walkController,
+                          ),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: QuestCard(quest: quest, steps: steps),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+            Positioned(
+              top: 10,
+              left: 0,
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: userState.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (e, _) => const SizedBox.shrink(),
+                  data: (user) => MeasureSize(
+                    onChange: (size) {
+                      if (size.height != _greetingHeight) {
+                        setState(() => _greetingHeight = size.height + 10);
+                      }
+                    },
+                    child: GreetingLevel(user: user, greeting: _getGreeting()),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+}
+
+class MeasureSize extends StatefulWidget {
+  final Widget child;
+  final ValueChanged<Size> onChange;
+
+  const MeasureSize({super.key, required this.child, required this.onChange});
+
+  @override
+  State<MeasureSize> createState() => _MeasureSizeState();
+}
+
+class _MeasureSizeState extends State<MeasureSize> {
+  final _key = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _notify());
+  }
+
+  void _notify() {
+    final box = _key.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null) widget.onChange(box.size);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(key: _key, child: widget.child);
   }
 }

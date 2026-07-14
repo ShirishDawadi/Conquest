@@ -1,6 +1,7 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/validators/input_validators.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
+import 'package:conquest/presentation/views/home/steps_reset_screen.dart';
 import 'package:conquest/presentation/views/shared_widgets/app_text_field.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:dio/dio.dart';
@@ -97,9 +98,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       next.when(
         data: (success) {
           if (success) {
-            Navigator.pushNamedAndRemoveUntil(
+            Navigator.pushAndRemoveUntil(
               context,
-              '/home',
+              MaterialPageRoute(builder: (_) => const StepsResetScreen()),
               (route) => false,
             );
           }

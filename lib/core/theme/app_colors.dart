@@ -17,6 +17,8 @@ class AppColors {
         :Color(0xFFD4D4D4);
   }
 
+  static const border =Color(0xFFD4D4D4);
+
   //green variants
   static const Color greenish_1 = Color(0xFFDAF1DE);
   static const Color greenish_2 = Color(0xFF8EB69B);

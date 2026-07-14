@@ -1,3 +1,4 @@
+import 'package:conquest/core/database/app_database.dart';
 import 'package:conquest/data/sources/remote/auth_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
@@ -39,6 +40,7 @@ class AuthViewModel extends AsyncNotifier<bool> {
     ref.invalidate(questProvider);
     ref.invalidate(userProvider);
     ref.invalidate(leaderboardProvider);
+    await AppDatabase().deleteDb();
     if (ref.mounted) {
       state = const AsyncData(false);
     }

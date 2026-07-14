@@ -35,9 +35,21 @@ class AppDatabase {
         ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        log('AppDatabase upgrade from $oldVersion to $newVersion', name: 'AppDatabase');
+        log(
+          'AppDatabase upgrade from $oldVersion to $newVersion',
+          name: 'AppDatabase',
+        );
       },
     );
+  }
+
+  Future<void> deleteDb() async {
+    await close();
+
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'conquest.db');
+
+    await deleteDatabase(path);
   }
 
   Future<void> close() async {

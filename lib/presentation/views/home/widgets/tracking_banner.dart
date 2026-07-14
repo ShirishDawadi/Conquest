@@ -21,7 +21,6 @@ class _TrackingBannerState extends State<TrackingBanner> {
       return const SizedBox.shrink();
     }
 
-    final sw = MediaQuery.of(context).size.width;
     final isPedometer = widget.mode == StepTrackingMode.pedometer;
 
     final bgColor = isPedometer
@@ -36,11 +35,11 @@ class _TrackingBannerState extends State<TrackingBanner> {
         : 'Step tracking is unavailable. Please grant activity recognition permission in Settings.';
 
     return Container(
-      margin: EdgeInsets.only(bottom: sw * 0.04),
-      padding: EdgeInsets.all(sw * 0.03),
+      margin: EdgeInsets.only(bottom: 0),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(sw * 0.04),
+        borderRadius: BorderRadius.circular(16),
         border: BoxBorder.all(
           color: iconColor.withValues(alpha: 0.4)
         )
@@ -48,15 +47,12 @@ class _TrackingBannerState extends State<TrackingBanner> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.only(top: sw * 0.005),
-            child: Icon(
-              Icons.warning_rounded,
-              color: iconColor,
-              size: sw * 0.06,
-            ),
+          Icon(
+            Icons.warning_rounded,
+            color: iconColor,
+            size: 24,
           ),
-          SizedBox(width: sw * 0.03),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,21 +60,21 @@ class _TrackingBannerState extends State<TrackingBanner> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: sw * 0.038,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(height: sw * 0.01),
+                SizedBox(height: 5),
                 Text(
                   body,
                   style: TextStyle(
-                    fontSize: sw * 0.028,
+                    fontSize: 10,
                     color: Colors.black.withValues(alpha: 0.5),
-                    height: 1.4,
+                    height: 1.2,
                   ),
                 ),
-                SizedBox(height: sw * 0.03),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -86,13 +82,13 @@ class _TrackingBannerState extends State<TrackingBanner> {
                       onTap: () => setState(() => _dismissed = true),
                       child: Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: sw * 0.03,
-                          vertical: sw * 0.015,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                         child: Text(
                           'Remind Me Later',
                           style: TextStyle(
-                            fontSize: sw * 0.033,
+                            fontSize: 12,
                             color: Colors.black38,
                             fontWeight: FontWeight.w500,
                           ),
@@ -100,22 +96,22 @@ class _TrackingBannerState extends State<TrackingBanner> {
                       ),
                     ),
                     if (isPedometer) ...[
-                      SizedBox(width: sw * 0.02),
+                      SizedBox(width: 8),
                       GestureDetector(
                         onTap: () => BackgroundTrackingDialog.show(context),
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.05,
-                            vertical: sw * 0.02,
+                            horizontal: 20,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
                             color: iconColor.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(sw * 0.035),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: Text(
                             'Setup',
                             style: TextStyle(
-                              fontSize: sw * 0.033,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
                             ),

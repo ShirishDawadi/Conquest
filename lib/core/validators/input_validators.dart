@@ -6,6 +6,19 @@ class InputValidators {
     return null;
   }
 
+  static String? validateSteps(int value){
+    final steps = value;
+
+    if(steps<500){
+      return 'Minimum 500 steps';
+    }
+
+    if(steps>50000){
+      return 'Slow Down,Speedster';
+    }
+    return null;
+  }
+
   static String? validateEmail(String value) {
     final email = value.trim();
 

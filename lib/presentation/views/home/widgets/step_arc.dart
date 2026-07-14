@@ -23,7 +23,7 @@ class StepArc extends StatelessWidget {
     final arcSize = screenWidth * 0.75;
 
     return SizedBox(
-      height: arcSize * 0.65,
+      height: arcSize * 0.75,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -54,7 +54,7 @@ class StepArc extends StatelessWidget {
                 Text(
                   '$steps steps',
                   style: TextStyle(
-                    fontSize: screenWidth * 0.055,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Gpkn',
                   ),
@@ -62,7 +62,7 @@ class StepArc extends StatelessWidget {
                 Text(
                   '${(steps * 0.00067).toStringAsFixed(1)} km',
                   style: TextStyle(
-                    fontSize: screenWidth * 0.035,
+                    fontSize: 16,
                     color: Theme.of(
                       context,
                     ).colorScheme.onSurface.withValues(alpha: 0.5),
@@ -71,7 +71,7 @@ class StepArc extends StatelessWidget {
                 Text(
                   '${(steps * 0.04).toStringAsFixed(0)} kcal',
                   style: TextStyle(
-                    fontSize: screenWidth * 0.035,
+                    fontSize: 16,
                     color: Theme.of(
                       context,
                     ).colorScheme.onSurface.withValues(alpha: 0.5),

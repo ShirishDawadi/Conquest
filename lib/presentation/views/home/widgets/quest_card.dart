@@ -14,15 +14,13 @@ class QuestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final goal = quest.stepGoal ?? 1;
     final progress = (steps / goal).clamp(0.0, 1.0);
 
     return GlassContainer(
       blur: 0,
       child: Container(
-        padding: EdgeInsets.all(screenWidth * 0.04),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -33,27 +31,27 @@ class QuestCard extends StatelessWidget {
                     "Today's Quest",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: screenWidth * 0.06,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: SvgPicture.asset(
-                    'assets/icons/edit.svg',
-                    width: screenWidth * 0.06,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).iconTheme.color!,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
+                // GestureDetector(
+                //   onTap: () {},
+                //   child: SvgPicture.asset(
+                //     'assets/icons/edit.svg',
+                //     width: 24,
+                //     colorFilter: ColorFilter.mode(
+                //       Theme.of(context).iconTheme.color!,
+                //       BlendMode.srcIn,
+                //     ),
+                //   ),
+                // ),
               ],
             ),
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: 6),
             Container(
-              padding: EdgeInsets.all(screenWidth * 0.04),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
@@ -65,14 +63,14 @@ class QuestCard extends StatelessWidget {
                     children: [
                       SvgPicture.asset(
                         'assets/icons/steps.svg',
-                        width: screenWidth * 0.075,
-                        height: screenWidth * 0.075,
+                        width: 30,
+                        height: 30,
                         colorFilter: ColorFilter.mode(
                           Theme.of(context).iconTheme.color!,
                           BlendMode.srcIn,
                         ),
                       ),
-                      SizedBox(width: screenWidth * 0.04),
+                      SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,8 +78,7 @@ class QuestCard extends StatelessWidget {
                             Text(
                               '${quest.stepGoal} Steps Goal',
                               style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: screenWidth * 0.04,
+                                fontSize: 16,
                               ),
                             ),
                             Row(
@@ -91,12 +88,12 @@ class QuestCard extends StatelessWidget {
                                   amount: '10',
                                   isXp: true,
                                   isWeekly: true,
-                                  width: screenWidth * 0.028,
+                                  width: 10,
                                 ),
                                 Text(
                                   '${(progress * 100).toInt()}% Completed',
                                   style: TextStyle(
-                                    fontSize: screenWidth * 0.028,
+                                    fontSize: 10,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
@@ -110,7 +107,7 @@ class QuestCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.008),
+                  SizedBox(height: 5),
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -125,14 +122,14 @@ class QuestCard extends StatelessWidget {
                           valueColor: AlwaysStoppedAnimation<Color>(
                             AppColors.greenish_3,
                           ),
-                          minHeight: screenWidth * 0.04,
+                          minHeight: 16,
                         ),
                       ),
 
                       Text(
                         '$steps/${quest.stepGoal}',
                         style: TextStyle(
-                          fontSize: screenWidth * 0.025,
+                          fontSize: 10,
                           color: Colors.white,
                         ),
                       ),
@@ -141,15 +138,15 @@ class QuestCard extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Scan the following objects:',
-                style: TextStyle(fontSize: screenWidth * 0.035),
+                style: TextStyle(fontSize: 12),
               ),
             ),
-            SizedBox(height: screenHeight * 0.005),
+            SizedBox(height: 5),
             Row(
               children: [
                 if (quest.object1 != null)
@@ -160,7 +157,7 @@ class QuestCard extends StatelessWidget {
                     ),
                   ),
                 if (quest.object1 != null && quest.object2 != null)
-                  SizedBox(width: screenWidth * 0.03),
+                  SizedBox(width: 10),
                 if (quest.object2 != null)
                   Expanded(
                     child: ObjectCard(

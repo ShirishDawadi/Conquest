@@ -12,7 +12,6 @@ class ObjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width;
     final difficultyXP = object.difficulty == 'easy'
         ? 10
         : object.difficulty == 'medium'
@@ -20,66 +19,70 @@ class ObjectCard extends StatelessWidget {
         : 20;
     final iconColor = Theme.of(context).iconTheme.color!;
 
-    return Container(
-      padding: EdgeInsets.all(sw * 0.04),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+    return IconButton(
+      onPressed: completed
+          ? null
+          : () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => ScanScreen(object: object)),
+              );
+            },
+      style: IconButton.styleFrom(
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      child: Row(
-        children: [
-          SizedBox(width: sw * 0.01),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  object.label[0].toUpperCase() +
-                      object.label.substring(1).toLowerCase(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: sw * 0.035,
+      icon: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 5),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    object.label[0].toUpperCase() +
+                        object.label.substring(1).toLowerCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
+                  QuestReward(
+                    amount: '$difficultyXP',
+                    isXp: true,
+                    isWeekly: true,
+                    width: 9,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 8),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/scan.svg',
+                  width: 30,
+                  height: 30,
+                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
                 ),
-                QuestReward(
-                  amount: '$difficultyXP',
-                  isXp: true,
-                  isWeekly: true,
-                  width: sw * 0.025,
-                ),
+                if (completed)
+                  SvgPicture.asset(
+                    'assets/icons/check.svg',
+                    width:10,
+                    colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                  ),
               ],
             ),
-          ),
-          SizedBox(width: sw * 0.02),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              GestureDetector(
-                onTap: completed
-                    ? null
-                    : () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ScanScreen(object: object),
-                          ),
-                        );
-                      },
-                child: SvgPicture.asset(
-                  'assets/icons/scan.svg',
-                  width: sw * 0.08,
-                  height: sw * 0.08,
-                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
-                ),
-              ),
-              if (completed)
-                SvgPicture.asset(
-                  'assets/icons/check.svg',
-                  width: sw * 0.025,
-                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
-                ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

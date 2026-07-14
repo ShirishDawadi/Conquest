@@ -92,7 +92,7 @@ class _BackgroundTrackingDialogState
 
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
         padding: EdgeInsets.all(screenWidth * 0.06),
@@ -108,19 +108,19 @@ class _BackgroundTrackingDialogState
                   Text(
                     'Background Step Tracking',
                     style: TextStyle(
-                      fontSize: screenWidth * 0.05,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: screenWidth * 0.02),
+                  SizedBox(height: 5),
                   Text(
                     'Complete the steps below to count steps even when the app is closed.',
                     style: TextStyle(
-                      fontSize: screenWidth * 0.032,
+                      fontSize: 12,
                       color: Colors.grey,
                     ),
                   ),
-                  SizedBox(height: screenWidth * 0.05),
+                  SizedBox(height: 10),
                   if (!_hasHealthConnect)
                     _StepTile(
                       number: 1,
@@ -172,22 +172,19 @@ class _BackgroundTrackingDialogState
                         ),
                         child: Text(
                           'Maybe Later',
-                          style: TextStyle(fontSize: screenWidth * 0.035),
+                          style: TextStyle(fontSize: 12),
                         ),
                       ),
-                      SizedBox(width: screenWidth * 0.02),
+                      SizedBox(width: 8),
                       FilledButton(
                         onPressed: _onDone,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.greenish_3,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.05,
-                            vertical: screenWidth * 0.03,
-                          ),
+                          padding: EdgeInsets.zero
                         ),
                         child: Text(
                           'Done',
-                          style: TextStyle(fontSize: screenWidth * 0.035),
+                          style: TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
@@ -219,23 +216,23 @@ class _StepTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: screenWidth * 0.04),
+      padding: EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: screenWidth * 0.035,
+            radius: 10,
             backgroundColor: AppColors.greenish_3,
             child: Text(
               '$number',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: screenWidth * 0.03,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          SizedBox(width: screenWidth * 0.03),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,14 +241,14 @@ class _StepTile extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: screenWidth * 0.035,
+                    fontSize: 14,
                   ),
                 ),
                 SizedBox(height: screenWidth * 0.005),
                 Text(
                   description,
                   style: TextStyle(
-                    fontSize: screenWidth * 0.03,
+                    fontSize: 10,
                     color: Colors.grey,
                   ),
                 ),
@@ -261,7 +258,7 @@ class _StepTile extends StatelessWidget {
                   child: Text(
                     '$buttonLabel →',
                     style: TextStyle(
-                      fontSize: screenWidth * 0.035,
+                      fontSize: 12,
                       color: AppColors.greenish_3,
                       fontWeight: FontWeight.w600,
                     ),

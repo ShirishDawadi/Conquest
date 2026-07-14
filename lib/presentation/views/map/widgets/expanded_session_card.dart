@@ -203,7 +203,6 @@ class _RoutePainter extends CustomPainter {
     const padding = 10.0;
     final drawSize = size.width - padding * 2;
 
-    // center offset so smaller dimension is centered
     final lngOffset = (range - lngRange) / range * drawSize / 2;
     final latOffset = (range - latRange) / range * drawSize / 2;
 

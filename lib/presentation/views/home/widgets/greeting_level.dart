@@ -1,5 +1,6 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/user_model.dart';
+import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:conquest/presentation/views/shared_widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,120 +20,115 @@ class GreetingLevel extends StatelessWidget {
         ? user.allTimeXp / totalXpForLevel
         : 0.0;
 
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+    return GlassContainer(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+        child: Column(
           children: [
-            ProfileAvatar(
-              radius: screenWidth * 0.08,
-              photoUrl: user.profilePhoto,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ProfileAvatar(
+                  radius: screenWidth * 0.08,
+                  photoUrl: user.profilePhoto,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          greeting,
+                          style: TextStyle(fontFamily: 'Vertigo', fontSize: 12),
+                        ),
+                        Text(
+                          user.fullName ?? user.username,
+                          style: TextStyle(fontFamily: 'Vertigo', fontSize: 16),
+                        ),
+                        Text(
+                          '@${user.username}',
+                          style: TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SvgPicture.asset(
+                  'assets/images/league/${user.league.toLowerCase()}.svg',
+                  width: screenWidth * 0.125,
+                  height: screenWidth * 0.125,
+                ),
+              ],
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
                   children: [
+                    SvgPicture.asset('assets/icons/xp.svg', width: 20),
                     Text(
-                      greeting,
+                      '${user.level}',
                       style: TextStyle(
-                        fontFamily: 'Vertigo',
-                        fontSize: screenWidth * 0.03,
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    Text(
-                      user.fullName ?? user.username,
-                      style: TextStyle(
-                        fontFamily: 'Vertigo',
-                        fontSize: screenWidth * 0.045,
-                      ),
-                    ),
-                    Text(
-                      '@${user.username}',
-                      style: TextStyle(fontSize: screenWidth * 0.02),
                     ),
                   ],
                 ),
-              ),
-            ),
-            SvgPicture.asset(
-              'assets/images/league/${user.league.toLowerCase()}.svg',
-              width: screenWidth * 0.15,
-              height: screenWidth * 0.15,
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/icons/xp.svg',
-                  width: screenWidth * 0.05,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: LinearProgressIndicator(
+                          value: xpProgress.clamp(0.0, 1.0),
+                          borderRadius: BorderRadius.circular(20),
+                          backgroundColor: AppColors.progressBarBackground(
+                            context,
+                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.diamond_dark,
+                          ),
+                          minHeight: 18,
+                        ),
+                      ),
+                      Text(
+                        '${user.allTimeXp.toInt()} / $totalXpForLevel',
+                        style: TextStyle(fontSize: 10, color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  '${user.level}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: screenWidth * 0.03,
+                const SizedBox(width: 20),
+                SvgPicture.asset('assets/icons/weekly_point.svg', width: 20),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 24),
+                  child: Text(
+                    '${user.weeklyPoints}',
+                    // '999',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                SvgPicture.asset('assets/icons/streak.svg', width: 20),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 24),
+                  child: Text(
+                    '${user.currentStreak}',
+                    // '999',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(screenWidth * 0.06),
-                    child: LinearProgressIndicator(
-                      value: xpProgress.clamp(0.0, 1.0),
-                      borderRadius: BorderRadius.circular(screenWidth * 0.06),
-                      backgroundColor: AppColors.progressBarBackground(context),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.diamond_dark,
-                      ),
-                      minHeight: screenWidth * 0.045,
-                    ),
-                  ),
-                  Text(
-                    '${user.allTimeXp.toInt()} / $totalXpForLevel',
-                    style: TextStyle(fontSize: 8, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 20),
-            SvgPicture.asset(
-              'assets/icons/weekly_point.svg',
-              width: screenWidth * 0.05,
-            ),
-            Text(
-              '${user.weeklyPoints}',
-              style: TextStyle(
-                fontSize: screenWidth * 0.035,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 12),
-            SvgPicture.asset(
-              'assets/icons/streak.svg',
-              width: screenWidth * 0.05,
-            ),
-            Text(
-              '${user.currentStreak}',
-              style: TextStyle(
-                fontSize: screenWidth * 0.035,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
