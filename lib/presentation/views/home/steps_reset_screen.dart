@@ -3,6 +3,7 @@ import 'package:conquest/core/validators/input_validators.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/views/shared_widgets/app_text_field.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
@@ -21,6 +22,7 @@ class _ResetCardState extends ConsumerState<StepsResetScreen> {
   final _stepsController = TextEditingController();
   String? _stepsError;
   final _formatter = NumberFormat('#,###');
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -41,7 +43,7 @@ class _ResetCardState extends ConsumerState<StepsResetScreen> {
     super.dispose();
   }
 
-  void _onContinue() {
+  void _onContinue() async {
     int? goal = _selected;
 
     if (goal == null) {
@@ -57,7 +59,20 @@ class _ResetCardState extends ConsumerState<StepsResetScreen> {
       if (_stepsError != null) return;
     }
 
-    ref.read(questProvider.notifier).setupQuest(goal!);
+    setState(() => _isSubmitting = true);
+
+    await ref.read(questProvider.notifier).setupQuest(goal!);
+
+    if (!mounted) return;
+
+    final error = ref.read(questProvider).error;
+    if (error != null) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to set step goal. Try again.')),
+      );
+      return;
+    }
 
     Navigator.pushNamedAndRemoveUntil(context, '/home', (_) => false);
   }
@@ -194,7 +209,7 @@ class _ResetCardState extends ConsumerState<StepsResetScreen> {
                                     ),
                                     const SizedBox(width: 2),
                                     Text(
-                                      'Most Used Option',
+                                      'Most Popular Choice',
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: Colors.black.withValues(
@@ -209,8 +224,11 @@ class _ResetCardState extends ConsumerState<StepsResetScreen> {
                                   width: double.infinity,
                                   child: FilledButton(
                                     onPressed:
-                                        _selected != null ||
-                                            _stepsController.text.isNotEmpty
+                                        !_isSubmitting &&
+                                            (_selected != null ||
+                                                _stepsController
+                                                    .text
+                                                    .isNotEmpty)
                                         ? _onContinue
                                         : null,
                                     style: FilledButton.styleFrom(
@@ -226,13 +244,21 @@ class _ResetCardState extends ConsumerState<StepsResetScreen> {
                                         vertical: 14,
                                       ),
                                     ),
-                                    child: const Text(
-                                      'Continue',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    child: _isSubmitting
+                                        ? const SizedBox(
+                                            height: 18,
+                                            width: 18,
+                                            child: CupertinoActivityIndicator(
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Continue',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ],
