@@ -16,9 +16,8 @@ class _RunButtonState extends ConsumerState<RunButton> {
   @override
   Widget build(BuildContext context) {
     final isTracking = ref.watch(mapProvider).isTracking;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final buttonWidth = screenWidth * 0.25;
-    final buttonHeight = buttonWidth * 0.35;
+    final buttonWidth = 105.0;
+    final buttonHeight = 35.0;
     final thumbSize = buttonHeight;
     final thumbTravel = buttonWidth - thumbSize - 20;
 
@@ -30,11 +29,15 @@ class _RunButtonState extends ConsumerState<RunButton> {
       onHorizontalDragUpdate: (details) {
         setState(() {
           if (!isTracking) {
-            _dragProgress =
-                (_dragProgress + details.delta.dx / 60).clamp(0.0, 1.0);
+            _dragProgress = (_dragProgress + details.delta.dx / 60).clamp(
+              0.0,
+              1.0,
+            );
           } else {
-            _dragProgress =
-                (_dragProgress - details.delta.dx / 60).clamp(0.0, 1.0);
+            _dragProgress = (_dragProgress - details.delta.dx / 60).clamp(
+              0.0,
+              1.0,
+            );
           }
         });
         if (_dragProgress >= 1.0) {
@@ -67,7 +70,7 @@ class _RunButtonState extends ConsumerState<RunButton> {
                 style: TextStyle(
                   color: Colors.black,
                   fontFamily: 'Gpkn',
-                  fontSize: buttonHeight * 0.35,
+                  fontSize: 12
                 ),
               ),
             ),
@@ -82,8 +85,9 @@ class _RunButtonState extends ConsumerState<RunButton> {
                 width: thumbSize * 1.6,
                 height: thumbSize,
                 decoration: BoxDecoration(
-                  color:
-                      isTracking ? AppColors.master_dark : AppColors.greenish_3,
+                  color: isTracking
+                      ? AppColors.master_dark
+                      : AppColors.greenish_3,
                   borderRadius: BorderRadius.circular(thumbSize / 2),
                 ),
                 child: Icon(

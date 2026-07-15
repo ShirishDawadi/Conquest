@@ -435,7 +435,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 !state.isTracking &&
                 state.focusedSession == null)
               Positioned(
-                bottom: AppConstants.navBarBottomPadding(context),
+                bottom: AppConstants.navBarBottomPosition(context),
                 right: 16,
                 width: 150,
                 child: SessionList(),
@@ -445,7 +445,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 state.focusedSession != null &&
                 !_isExpanded)
               Positioned(
-                bottom: AppConstants.navBarBottomPadding(context),
+                bottom: AppConstants.navBarBottomPosition(context),
                 right: 16,
                 width: 150,
                 child: SessionCard(

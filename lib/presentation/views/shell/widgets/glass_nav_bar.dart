@@ -15,14 +15,11 @@ class GlassNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final iconSize = screenWidth * 0.06;
-    final navHeight = MediaQuery.of(context).size.height * 0.065;
 
     return GlassContainer(
       borderRadius: 30,
       child: SizedBox(
-        height: navHeight,
+        height: 52,
         child: Row(
           children: [
             Expanded(
@@ -31,7 +28,6 @@ class GlassNavBar extends StatelessWidget {
                 0,
                 'assets/icons/home.svg',
                 'assets/icons/home-filled.svg',
-                iconSize,
               ),
             ),
             Expanded(
@@ -40,7 +36,6 @@ class GlassNavBar extends StatelessWidget {
                 1,
                 'assets/icons/map.svg',
                 'assets/icons/map-filled.svg',
-                iconSize,
               ),
             ),
             Expanded(
@@ -49,7 +44,6 @@ class GlassNavBar extends StatelessWidget {
                 2,
                 'assets/icons/leaderboard.svg',
                 'assets/icons/leaderboard-filled.svg',
-                iconSize,
               ),
             ),
             Expanded(
@@ -58,7 +52,6 @@ class GlassNavBar extends StatelessWidget {
                 3,
                 'assets/icons/profile.svg',
                 'assets/icons/profile-filled.svg',
-                iconSize,
               ),
             ),
           ],
@@ -72,7 +65,6 @@ class GlassNavBar extends StatelessWidget {
     int index,
     String icon,
     String selectedIcon,
-    double size,
   ) {
     final isSelected = currentIndex == index;
     return GestureDetector(
@@ -86,8 +78,8 @@ class GlassNavBar extends StatelessWidget {
               : Theme.of(context).iconTheme.color!,
           BlendMode.srcIn,
         ),
-        width: size,
-        height: size,
+        width: 24,
+        height: 24,
       ),
     );
   }

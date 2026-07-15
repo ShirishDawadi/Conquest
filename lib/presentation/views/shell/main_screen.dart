@@ -74,7 +74,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
 
             Positioned(
-              bottom: 0,
+              bottom: MediaQuery.of(context).viewPadding.bottom +15,
+              // bottom:0,
               left: 0,
               right: 0,
               child: Padding(
@@ -82,7 +83,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   20,
                   0,
                   20,
-                  MediaQuery.of(context).padding.bottom + 25,
+                  0
                 ),
                 child: Column(
                   children: [

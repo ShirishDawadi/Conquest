@@ -10,12 +10,29 @@ class AppConstants {
       context,
     ).read(mapProvider).isTracking;
 
-    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+    // final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
-    final base = bottomInset + 25 + MediaQuery.of(context).size.height * 0.065;
+    // final base = bottomInset + 15 + 52;
+    final base = 15 + 52;
 
     if (isTracking) {
-      return base + 60;
+      return base + 70;
+    }
+
+    return base + 10;
+  }
+
+  static double navBarBottomPosition(BuildContext context) {
+    final isTracking = ProviderScope.containerOf(
+      context,
+    ).read(mapProvider).isTracking;
+
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
+    final base = bottomInset + 15 + 52;
+
+    if (isTracking) {
+      return base + 70;
     }
 
     return base + 10;

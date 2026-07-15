@@ -3,6 +3,7 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/profile/edit_profile_screen.dart';
+import 'package:conquest/presentation/views/profile/cards/steps_overview/steps_overview_card.dart';
 import 'package:conquest/presentation/views/shared_widgets/profile_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -75,6 +76,7 @@ class ProfileScreen extends ConsumerWidget {
                   },
                 ),
               ),
+              StepsOverviewCard(),
               const SizedBox(height: 40),
               Padding(
                 padding: const EdgeInsets.symmetric(
