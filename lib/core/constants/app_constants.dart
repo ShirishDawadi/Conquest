@@ -9,10 +9,6 @@ class AppConstants {
     final isTracking = ProviderScope.containerOf(
       context,
     ).read(mapProvider).isTracking;
-
-    // final bottomInset = MediaQuery.of(context).viewPadding.bottom;
-
-    // final base = bottomInset + 15 + 52;
     final base = 15 + 52;
 
     if (isTracking) {

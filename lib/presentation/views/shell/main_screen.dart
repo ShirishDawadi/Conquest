@@ -2,6 +2,7 @@ import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/steps_stats_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/home/home_screen.dart';
 import 'package:conquest/presentation/views/leaderboard/leaderboard_screen.dart';
@@ -48,6 +49,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         break;
       case 3:
         ref.read(userProvider.notifier).refresh();
+        ref.read(stepsStatsProvider.notifier).refresh();
         break;
     }
   }
@@ -74,17 +76,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
 
             Positioned(
-              bottom: MediaQuery.of(context).viewPadding.bottom +15,
-              // bottom:0,
+              bottom: MediaQuery.of(context).viewPadding.bottom + 15,
               left: 0,
               right: 0,
               child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  0,
-                  20,
-                  0
-                ),
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: Column(
                   children: [
                     if (isTracking) const TrackingBar(),

@@ -34,6 +34,9 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        overscroll: false,
+      ),
       debugShowCheckedModeBanner: false,
       // showPerformanceOverlay: true,
       theme: AppTheme.lightTheme,

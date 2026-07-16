@@ -11,4 +11,18 @@ class ActivityRemoteSource {
     );
     return ActivityLog.fromJson(response.data);
   }
+
+  Future<StepsStatsResponse> getStepsStats({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final response = await _dio.get(
+      '/activity/stats',
+      queryParameters: {
+        'start_date': startDate.toIso8601String().substring(0, 10),
+        'end_date': endDate.toIso8601String().substring(0, 10),
+      },
+    );
+    return StepsStatsResponse.fromJson(response.data);
+  }
 }
