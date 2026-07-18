@@ -4,7 +4,7 @@ import 'package:conquest/presentation/views/profile/cards/steps_overview/tabs.da
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 DateTime _startOfWeek(DateTime date) =>
-    date.subtract(Duration(days: date.weekday - 1));
+    date.subtract(Duration(days: date.weekday % 7));
 
 DateTime _endOfWeek(DateTime date) =>
     _startOfWeek(date).add(const Duration(days: 6));

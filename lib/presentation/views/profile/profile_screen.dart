@@ -2,6 +2,7 @@ import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
+import 'package:conquest/presentation/views/profile/cards/activity_overview/calendar_session_row.dart';
 import 'package:conquest/presentation/views/profile/edit_profile_screen.dart';
 import 'package:conquest/presentation/views/profile/cards/steps_overview/steps_overview_card.dart';
 import 'package:conquest/presentation/views/shared_widgets/profile_card.dart';
@@ -56,9 +57,7 @@ class ProfileScreen extends ConsumerWidget {
                     Navigator.push(
                       context,
                       PageRouteBuilder(
-                        transitionDuration: const Duration(
-                          milliseconds: 400,
-                        ),
+                        transitionDuration: const Duration(milliseconds: 400),
                         reverseTransitionDuration: const Duration(
                           milliseconds: 400,
                         ),
@@ -77,6 +76,13 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               StepsOverviewCard(),
+
+              CalendarSessionRow(
+                selectedDate: DateTime.now(),
+                onDateSelected: (_) {},
+                sessions: 4,
+              ),
+
               const SizedBox(height: 40),
               Padding(
                 padding: const EdgeInsets.symmetric(

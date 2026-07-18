@@ -108,17 +108,20 @@ class _StepsOverviewCardState extends ConsumerState<StepsOverviewCard> {
               Row(
                 children: [
                   DaysStat(day: displayDay),
-                  if (statsState.value != null) ...[
-                    // const SizedBox(height: 12),
-                    const SizedBox(width: 5,),
-                    Expanded(child: StepsSummaryRow(stats: statsState.value!)),
-                  ],
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: StepsSummaryRow(
+                      stats:
+                          statsState.value ??
+                          StepsStatsResponse(
+                            days: const [],
+                            averageSteps: 0,
+                            totalSteps: 0,
+                          ),
+                    ),
+                  ),
                 ],
               ),
-              // if (statsState.value != null) ...[
-              //   const SizedBox(height: 12),
-              //   StepsSummaryRow(stats: statsState.value!),
-              // ],
             ],
           ),
         ),

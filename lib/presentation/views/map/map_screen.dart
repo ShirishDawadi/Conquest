@@ -5,9 +5,9 @@ import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
-import 'package:conquest/presentation/views/map/widgets/date_picker.dart';
+import 'package:conquest/presentation/views/shared_widgets/date_picker.dart';
 import 'package:conquest/presentation/views/map/widgets/expanded_session_card.dart';
-import 'package:conquest/presentation/views/map/widgets/map_calendar.dart';
+import 'package:conquest/presentation/views/shared_widgets/app_calendar.dart';
 import 'package:conquest/presentation/views/map/widgets/map_top_bar.dart';
 import 'package:conquest/presentation/views/map/widgets/session_card.dart';
 import 'package:conquest/presentation/views/map/widgets/session_list.dart';
@@ -335,7 +335,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 children: [
                   SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 16, 0, 10),
+                      padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
@@ -393,7 +393,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 225),
                         child: !_isMonthView
-                            ? MapCalendar(
+                            ? AppCalendar(
                                 selectedDate: state.selectedDate,
                                 onDateSelected: (date) {
                                   final diff = date

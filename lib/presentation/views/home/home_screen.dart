@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
@@ -79,7 +80,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final stepState = ref.watch(stepProvider);
     final stepAsync = ref.watch(stepProvider);
     final trackingMode = ref.watch(trackingModeProvider);
+    final isRunTracking = ref.watch(
+      mapProvider.select((state) => state.isTracking),
+    );
     final steps = stepState.value ?? 0;
+    final isWalking = _isWalking || isRunTracking;
 
     if (questState.hasValue && questState.value!.needsReset) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -128,7 +133,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           StepArc(
                             steps: steps,
                             goal: quest.stepGoal ?? 500,
-                            isWalking: _isWalking,
+                            isWalking: isWalking,
                             walkController: _walkController,
                           ),
                           const SizedBox(height: 24),

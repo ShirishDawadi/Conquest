@@ -1,26 +1,25 @@
 import 'package:conquest/core/constants/date_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
-import 'package:conquest/presentation/views/map/widgets/date_picker.dart';
+import 'package:conquest/presentation/views/shared_widgets/date_picker.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-class MapCalendar extends StatefulWidget {
+class AppCalendar extends StatefulWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
 
-  const MapCalendar({
+  const AppCalendar({
     super.key,
     required this.selectedDate,
     required this.onDateSelected,
   });
 
   @override
-  State<MapCalendar> createState() => _MapCalendarState();
+  State<AppCalendar> createState() => _AppCalendarState();
 }
 
-class _MapCalendarState extends State<MapCalendar> {
+class _AppCalendarState extends State<AppCalendar> {
   late int _month;
   late int _year;
 
@@ -28,7 +27,8 @@ class _MapCalendarState extends State<MapCalendar> {
   final today = DateTime.now();
 
   static const _weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  
+  static const _totalCells = 42;
+
   @override
   void initState() {
     super.initState();
@@ -36,16 +36,15 @@ class _MapCalendarState extends State<MapCalendar> {
     _year = widget.selectedDate.year;
   }
 
-  bool _isFuture(int day) {
-    final date = DateTime(_year, _month + 1, day);
+  bool _isFuture(DateTime date) {
     final todayDate = DateTime(today.year, today.month, today.day);
     return date.isAfter(todayDate);
   }
 
-  bool _isSelected(int day) {
-    return _year == widget.selectedDate.year &&
-        _month + 1 == widget.selectedDate.month &&
-        day == widget.selectedDate.day;
+  bool _isSelected(DateTime date) {
+    return date.year == widget.selectedDate.year &&
+        date.month == widget.selectedDate.month &&
+        date.day == widget.selectedDate.day;
   }
 
   void _prevMonth() {
@@ -97,6 +96,10 @@ class _MapCalendarState extends State<MapCalendar> {
                         child: SvgPicture.asset(
                           'assets/icons/nav_left.svg',
                           width: 20,
+                          colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.onSurface,
+                            BlendMode.srcIn,
+                          ),
                         ),
                       ),
 
@@ -118,13 +121,10 @@ class _MapCalendarState extends State<MapCalendar> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(
-                                width: 90,
-                                child: Text(
-                                  '${DateConstants.months[_month]}, $_year',
-                                  style: const TextStyle(fontSize: 12),
-                                  textAlign: TextAlign.center,
-                                ),
+                              Text(
+                                '${DateConstants.monthsShort[_month]}, $_year',
+                                style: const TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
                               ),
                               const SizedBox(width: 2.5),
                               const Icon(Icons.arrow_drop_down, size: 16),
@@ -139,12 +139,16 @@ class _MapCalendarState extends State<MapCalendar> {
                         child: SvgPicture.asset(
                           'assets/icons/nav_right.svg',
                           width: 20,
+                          colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.onSurface,
+                            BlendMode.srcIn,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 0),
 
                 Row(
                   children: _weekdays
@@ -173,21 +177,43 @@ class _MapCalendarState extends State<MapCalendar> {
                     crossAxisCount: 7,
                     childAspectRatio: 1,
                   ),
-                  itemCount: firstDay + daysInMonth,
+                  itemCount: _totalCells,
                   itemBuilder: (context, index) {
-                    if (index < firstDay) return const SizedBox.shrink();
-                    final day = index - firstDay + 1;
-                    final isFuture = _isFuture(day);
-                    final isSelected = _isSelected(day);
+                    late final DateTime date;
+                    late final bool inCurrentMonth;
+
+                    if (index < firstDay) {
+                      final prevMonthDate = DateTime(_year, _month + 1, 0);
+                      final day = prevMonthDate.day - (firstDay - index - 1);
+                      date = DateTime(
+                        prevMonthDate.year,
+                        prevMonthDate.month,
+                        day,
+                      );
+                      inCurrentMonth = false;
+                    } else if (index < firstDay + daysInMonth) {
+                      final day = index - firstDay + 1;
+                      date = DateTime(_year, _month + 1, day);
+                      inCurrentMonth = true;
+                    } else {
+                      final day = index - firstDay - daysInMonth + 1;
+                      final nextMonthDate = DateTime(_year, _month + 2, 1);
+                      date = DateTime(
+                        nextMonthDate.year,
+                        nextMonthDate.month,
+                        day,
+                      );
+                      inCurrentMonth = false;
+                    }
+
+                    final isFuture = _isFuture(date);
+                    final isSelected = inCurrentMonth && _isSelected(date);
+                    final isMuted = !inCurrentMonth || isFuture;
 
                     return GestureDetector(
-                      onTap: isFuture
+                      onTap: (!inCurrentMonth || isFuture)
                           ? null
-                          : () {
-                              widget.onDateSelected(
-                                DateTime(_year, _month + 1, day),
-                              );
-                            },
+                          : () => widget.onDateSelected(date),
                       child: Container(
                         decoration: BoxDecoration(
                           color: isSelected
@@ -197,12 +223,12 @@ class _MapCalendarState extends State<MapCalendar> {
                         ),
                         child: Center(
                           child: Text(
-                            '$day',
+                            '${date.day}',
                             style: TextStyle(
                               fontSize: 12,
                               color: isSelected
                                   ? Colors.white
-                                  : isFuture
+                                  : isMuted
                                   ? Theme.of(context).colorScheme.onSurface
                                         .withValues(alpha: 0.3)
                                   : Theme.of(context).colorScheme.onSurface,
