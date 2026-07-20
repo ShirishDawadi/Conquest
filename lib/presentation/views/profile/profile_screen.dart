@@ -3,6 +3,7 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/profile/cards/activity_overview/calendar_session_row.dart';
+import 'package:conquest/presentation/views/profile/cards/total_overview/total_overview.dart';
 import 'package:conquest/presentation/views/profile/edit_profile_screen.dart';
 import 'package:conquest/presentation/views/profile/cards/steps_overview/steps_overview_card.dart';
 import 'package:conquest/presentation/views/shared_widgets/profile_card.dart';
@@ -10,11 +11,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  DateTime _selectedDate = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) {
     final userState = ref.watch(userProvider);
 
     return Scaffold(
@@ -78,10 +86,16 @@ class ProfileScreen extends ConsumerWidget {
               StepsOverviewCard(),
 
               CalendarSessionRow(
-                selectedDate: DateTime.now(),
-                onDateSelected: (_) {},
+                selectedDate: _selectedDate,
+                onDateSelected: (date) {
+                  setState(() => _selectedDate = date);
+                },
                 sessions: 4,
               ),
+
+              const SizedBox(height: 10),
+
+              TotalOverview(date: _selectedDate),
 
               const SizedBox(height: 40),
               Padding(

@@ -21,14 +21,14 @@ class QuestReward extends StatelessWidget {
       children: [
         Text(amount, style: TextStyle(fontSize: width)),
         SizedBox(width: 5),
-        if (isWeekly)
+        if (isXp)
           SvgPicture.asset(
             'assets/icons/xp.svg',
             width: width,
             height: width,
           ),
         SizedBox(width: 5),
-        if (isXp)
+        if (isWeekly)
           SvgPicture.asset(
             'assets/icons/weekly_point.svg',
             width: width,

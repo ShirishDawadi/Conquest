@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 
 class SessionDistanceRadius extends StatelessWidget {
   final int circle;
-  const SessionDistanceRadius({super.key, required this.circle});
+  final double size;
+  const SessionDistanceRadius({
+    super.key,
+    required this.circle,
+    this.size = 24,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 24,
-      height: 24,
+      width: size,
+      height: size,
       child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
@@ -21,8 +26,8 @@ class SessionDistanceRadius extends StatelessWidget {
         ),
         child: Center(
           child: SizedBox(
-            width: 16,
-            height: 16,
+            width: (size*2)/3,
+            height: (size*2)/3,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -34,8 +39,8 @@ class SessionDistanceRadius extends StatelessWidget {
               ),
               child: Center(
                 child: SizedBox(
-                  width: 8,
-                  height: 8,
+                  width: size/3,
+                  height: size/3,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,

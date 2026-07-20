@@ -22,6 +22,7 @@ class DatePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Stack(
       children: [
@@ -48,10 +49,7 @@ class DatePicker extends StatelessWidget {
                       (m) => Center(
                         child: Text(
                           m,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
-                          ),
+                          style: TextStyle(fontSize: 14, color: textColor),
                         ),
                       ),
                     )
@@ -71,10 +69,7 @@ class DatePicker extends StatelessWidget {
                   (i) => Center(
                     child: Text(
                       '${2024 + i}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black,
-                      ),
+                      style: TextStyle(fontSize: 14, color: textColor),
                     ),
                   ),
                 ),
