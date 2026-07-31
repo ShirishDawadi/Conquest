@@ -30,10 +30,7 @@ class QuestCard extends StatelessWidget {
                   child: Text(
                     "Today's Quest",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
                 // GestureDetector(
@@ -77,9 +74,7 @@ class QuestCard extends StatelessWidget {
                           children: [
                             Text(
                               '${quest.stepGoal} Steps Goal',
-                              style: TextStyle(
-                                fontSize: 16,
-                              ),
+                              style: TextStyle(fontSize: 16),
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -128,10 +123,7 @@ class QuestCard extends StatelessWidget {
 
                       Text(
                         '$steps/${quest.stepGoal}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.white,
-                        ),
+                        style: TextStyle(fontSize: 10, color: Colors.white),
                       ),
                     ],
                   ),
@@ -154,6 +146,7 @@ class QuestCard extends StatelessWidget {
                     child: ObjectCard(
                       object: quest.object1!,
                       completed: quest.object1Completed ?? false,
+                      questId: quest.id,
                     ),
                   ),
                 if (quest.object1 != null && quest.object2 != null)
@@ -163,6 +156,7 @@ class QuestCard extends StatelessWidget {
                     child: ObjectCard(
                       object: quest.object2!,
                       completed: quest.object2Completed ?? false,
+                      questId: quest.id,
                     ),
                   ),
               ],

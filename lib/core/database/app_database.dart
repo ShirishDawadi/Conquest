@@ -19,7 +19,7 @@ class AppDatabase {
     final path = join(dbPath, 'conquest.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE gps_sessions (
@@ -33,22 +33,36 @@ class AppDatabase {
             synced INTEGER NOT NULL DEFAULT 0
           )
         ''');
+        await db.execute(_objectCapturesTableSql);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         log(
           'AppDatabase upgrade from $oldVersion to $newVersion',
           name: 'AppDatabase',
         );
+        if (oldVersion < 2) {
+          await db.execute(_objectCapturesTableSql);
+        }
       },
     );
   }
 
+  static const _objectCapturesTableSql = '''
+    CREATE TABLE object_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      quest_id INTEGER,
+      object_id INTEGER NOT NULL,
+      image_path TEXT NOT NULL,
+      latitude REAL,
+      longitude REAL,
+      created_at TEXT NOT NULL
+    )
+  ''';
+
   Future<void> deleteDb() async {
     await close();
-
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'conquest.db');
-
     await deleteDatabase(path);
   }
 

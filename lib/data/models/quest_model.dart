@@ -2,11 +2,13 @@ class QuestObjectModel {
   final int id;
   final String label;
   final String difficulty;
+  final String? imageUrl;
 
   QuestObjectModel({
     required this.id,
     required this.label,
     required this.difficulty,
+    this.imageUrl,
   });
 
   factory QuestObjectModel.fromJson(Map<String, dynamic> json) {
@@ -14,6 +16,7 @@ class QuestObjectModel {
       id: json['id'],
       label: json['label'],
       difficulty: json['difficulty'],
+      imageUrl: json['image_url'],
     );
   }
 }

@@ -14,28 +14,6 @@ class QuestViewModel extends AsyncNotifier<QuestModel> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _source.setupQuest(stepGoal));
   }
-
-  Future<void> markStepsCompleted() async {
-    final quest = state.value;
-    if (quest == null || quest.id == null) return;
-    state = await AsyncValue.guard(() async {
-      await _source.markQuest(questId: quest.id!, stepsCompleted: true);
-      return _source.getTodayQuest();
-    });
-  }
-
-  Future<void> markObjectCompleted(int objectId) async {
-    final quest = state.value;
-    if (quest == null || quest.id == null) return;
-    state = await AsyncValue.guard(() async {
-      await _source.markQuest(
-        questId: quest.id!,
-        object1Completed: objectId == quest.object1?.id,
-        object2Completed: objectId == quest.object2?.id,
-      );
-      return _source.getTodayQuest();
-    });
-  }
 }
 
 final questProvider = AsyncNotifierProvider<QuestViewModel, QuestModel>(

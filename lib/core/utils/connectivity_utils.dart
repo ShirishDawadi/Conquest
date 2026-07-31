@@ -5,4 +5,10 @@ class ConnectivityUtils {
     final result = await Connectivity().checkConnectivity();
     return !result.contains(ConnectivityResult.none);
   }
+
+  static Stream<bool> get onStatusChange {
+    return Connectivity().onConnectivityChanged.map(
+      (result) => !result.contains(ConnectivityResult.none),
+    );
+  }
 }

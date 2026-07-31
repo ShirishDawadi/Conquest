@@ -26,25 +26,4 @@ class QuestRemoteSource {
       rethrow;
     }
   }
-
-  Future<void> markQuest({
-    required int questId,
-    bool stepsCompleted = false,
-    bool object1Completed = false,
-    bool object2Completed = false,
-  }) async {
-    try {
-      await _dio.patch(
-        '/quests/$questId/mark',
-        data: {
-          'steps_completed': stepsCompleted,
-          'object1_completed': object1Completed,
-          'object2_completed': object2Completed,
-        },
-      );
-    } catch (e) {
-      log('Error marking quest: $e', name: 'QuestRemoteSource');
-      rethrow;
-    }
-  }
 }

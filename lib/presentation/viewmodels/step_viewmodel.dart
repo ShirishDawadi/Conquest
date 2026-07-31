@@ -53,16 +53,11 @@ class StepViewModel extends AsyncNotifier<int> {
     _lastSync = now;
 
     final today = now.toIso8601String().substring(0, 10);
-    final quest = ref.read(questProvider).value;
-
+    
     _activitySource
         .syncActivity(ActivitySyncRequest(date: today, steps: steps))
         .then((_) {
-          if (quest == null || quest.id == null) return;
-          if (!(quest.stepsCompleted ?? false) &&
-              steps >= (quest.stepGoal ?? 0)) {
-            ref.read(questProvider.notifier).markStepsCompleted();
-          }
+          ref.invalidate(questProvider);
         })
         .onError((e, _) {
           log('Activity sync failed: $e', name: 'StepViewModel');

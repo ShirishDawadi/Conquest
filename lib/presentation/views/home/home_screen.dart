@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:conquest/core/constants/app_constants.dart';
+import 'package:conquest/core/services/object_image_sync_service.dart';
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/presentation/viewmodels/connectivity_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
@@ -48,6 +50,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         if (mounted) setState(() => _isWalking = false);
       });
     }, onError: (e) {});
+
+    CaptureSyncService().syncPending(ref);
+
+    ref.listenManual(connectivityProvider, (previous, next) {
+      final wasOffline = previous?.value == false;
+      final isOnlineNow = next.value == true;
+      if (wasOffline && isOnlineNow) {
+        CaptureSyncService().syncPending(ref);
+      }
+    });
   }
 
   @override
