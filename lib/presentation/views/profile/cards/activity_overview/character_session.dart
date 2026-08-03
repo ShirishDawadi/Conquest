@@ -32,7 +32,7 @@ class CharacterSession extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SessionDistanceRadius(circle: 3),
+              SessionDistanceRadius(distanceMeters: 300),
               const SizedBox(width: 6),
               Text(
                 '$sessions',

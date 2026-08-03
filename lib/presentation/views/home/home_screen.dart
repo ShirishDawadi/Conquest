@@ -8,10 +8,11 @@ import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/home/steps_reset_screen.dart';
-import 'package:conquest/presentation/views/home/widgets/greeting_level.dart';
-import 'package:conquest/presentation/views/home/widgets/quest_card.dart';
-import 'package:conquest/presentation/views/home/widgets/step_arc.dart';
-import 'package:conquest/presentation/views/home/widgets/tracking_banner.dart';
+import 'package:conquest/presentation/views/home/cards/greeting&arc/greeting_level.dart';
+import 'package:conquest/presentation/views/home/cards/quest_card/quest_card.dart';
+import 'package:conquest/presentation/views/home/cards/greeting&arc/step_arc.dart';
+import 'package:conquest/presentation/views/home/cards/tracking/tracking_banner.dart';
+import 'package:conquest/presentation/views/home/cards/activity_stats/activity_stats_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,8 +26,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
-  late AnimationController _walkController;
+    with WidgetsBindingObserver {
   bool _isWalking = false;
   Timer? _walkTimer;
   StreamSubscription<StepCount>? _pedometerSubscription;
@@ -37,11 +37,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    _walkController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat();
 
     _pedometerSubscription = Pedometer.stepCountStream.listen((event) {
       if (!_isWalking) setState(() => _isWalking = true);
@@ -66,7 +61,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _walkTimer?.cancel();
-    _walkController.dispose();
     _pedometerSubscription?.cancel();
     super.dispose();
   }
@@ -97,6 +91,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
     final steps = stepState.value ?? 0;
     final isWalking = _isWalking || isRunTracking;
+
+    const double? bestSessionKm = 0.6;
 
     if (questState.hasValue && questState.value!.needsReset) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -142,16 +138,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       data: (quest) => Column(
                         children: [
                           const SizedBox(height: 24),
+
                           StepArc(
                             steps: steps,
                             goal: quest.stepGoal ?? 500,
                             isWalking: isWalking,
-                            walkController: _walkController,
                           ),
+                          
                           const SizedBox(height: 24),
+
                           Padding(
                             padding: const EdgeInsets.all(10.0),
                             child: QuestCard(quest: quest, steps: steps),
+                          ),
+
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: ActivityStatsCard(
+                              isSessionActive: isRunTracking,
+                              bestSessionKm: bestSessionKm,
+                            ),
                           ),
                         ],
                       ),

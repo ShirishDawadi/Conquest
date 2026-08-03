@@ -1,4 +1,5 @@
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/presentation/views/shared_widgets/character_avatar.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
@@ -6,14 +7,12 @@ class StepArc extends StatelessWidget {
   final int steps;
   final int goal;
   final bool isWalking;
-  final AnimationController walkController;
 
   const StepArc({
     super.key,
     required this.steps,
     required this.goal,
     required this.isWalking,
-    required this.walkController,
   });
 
   @override
@@ -35,21 +34,9 @@ class StepArc extends StatelessWidget {
             bottom: 0,
             child: Column(
               children: [
-                AnimatedBuilder(
-                  animation: walkController,
-                  builder: (context, child) {
-                    final frame = (walkController.value * 4).floor().clamp(
-                      0,
-                      3,
-                    );
-                    return Image.asset(
-                      'assets/images/character/${isWalking ? 'walk' : 'stand'}_$frame.png',
-                      width: screenWidth * 0.3,
-                      height: screenWidth * 0.3,
-                      fit: BoxFit.fill,
-                      filterQuality: FilterQuality.none,
-                    );
-                  },
+                CharacterAvatar(
+                  isActive: isWalking,
+                  size: screenWidth * 0.3,
                 ),
                 Text(
                   '$steps steps',

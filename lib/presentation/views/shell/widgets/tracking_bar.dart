@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:conquest/presentation/views/shared_widgets/session_distance_radius.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
@@ -36,14 +36,14 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
   @override
   Widget build(BuildContext context) {
     final mapState = ref.watch(mapProvider);
+    final distanceMeters = ref.watch(liveSessionDistanceMetersProvider);
+    final distanceKm = distanceMeters / 1000;
 
     if (mapState.sessionStart != null) {
       _elapsed = DateTime.now().difference(mapState.sessionStart!);
     }
 
-    final distanceStr = TrackingUtils.distanceKm(
-      mapState.currentPoints,
-    ).toStringAsFixed(2);
+    final distanceStr = distanceKm.toStringAsFixed(2);
     final pace = TrackingUtils.speedString(mapState.currentPoints, _elapsed);
     final durationStr = TrackingUtils.formatDuration(_elapsed);
 
@@ -108,40 +108,7 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
 
             const Spacer(),
 
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.greenish_3),
-                ),
-                child: Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.greenish_3),
-                      ),
-                      child: Center(
-                        child: SizedBox(
-                          width: 8,
-                          height: 8,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.greenish_3),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            SessionDistanceRadius(distanceMeters: distanceMeters, size: 24),
           ],
         ),
       ),

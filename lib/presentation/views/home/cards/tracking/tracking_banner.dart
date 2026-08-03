@@ -1,6 +1,6 @@
 import 'package:conquest/core/services/step_service.dart';
 import 'package:conquest/core/theme/app_colors.dart';
-import 'package:conquest/presentation/views/home/widgets/background_tracking_dialog.dart';
+import 'package:conquest/presentation/views/home/cards/tracking/background_tracking_dialog.dart';
 import 'package:flutter/material.dart';
 
 class TrackingBanner extends StatefulWidget {

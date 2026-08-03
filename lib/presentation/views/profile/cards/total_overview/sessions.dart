@@ -28,7 +28,7 @@ class Sessions extends StatelessWidget {
         children: [
           Row(
             children: [
-              SessionDistanceRadius(circle: 3, size: 30),
+              SessionDistanceRadius(distanceMeters: 1900, size: 30),
               const SizedBox(width: 6),
               Expanded(
                 child: Column(

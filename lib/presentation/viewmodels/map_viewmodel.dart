@@ -6,6 +6,7 @@ import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/data/models/map_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class MapViewModel extends Notifier<MapState> {
@@ -212,3 +213,14 @@ class MapViewModel extends Notifier<MapState> {
 }
 
 final mapProvider = NotifierProvider<MapViewModel, MapState>(MapViewModel.new);
+
+final liveSessionDistanceMetersProvider = Provider<double>((ref) {
+  final points = ref.watch(mapProvider.select((s) => s.currentPoints));
+  if (points.length < 2) return 0.0;
+
+  const distance = Distance();
+  final start = points.first.toLatLng();
+  final current = points.last.toLatLng();
+
+  return distance(start, current);
+});
