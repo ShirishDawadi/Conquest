@@ -143,14 +143,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   void _onMonthOrYearChanged(int month, int year) {
-  _debounce?.cancel();
-  _debounce = Timer(const Duration(milliseconds: 500), () {
-    final current = ref.read(mapProvider).selectedDate;
-    final target = DateTime(year, month + 1, 1);
-    final diff = (target.year - current.year) * 12 + (target.month - current.month);
-    ref.read(mapProvider.notifier).navigateMonth(diff);
-  });
-}
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final current = ref.read(mapProvider).selectedDate;
+      final target = DateTime(year, month + 1, 1);
+      final diff =
+          (target.year - current.year) * 12 + (target.month - current.month);
+      ref.read(mapProvider.notifier).navigateMonth(diff);
+    });
+  }
 
   @override
   void dispose() {
@@ -163,6 +164,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(mapProvider);
     final screenWidth = MediaQuery.of(context).size.width;
+    final sessionStart = ref.watch(
+      mapProvider.select(
+        (s) => s.currentPoints.isNotEmpty ? s.currentPoints.first : null,
+      ),
+    );
+    final isTracking = ref.watch(mapProvider.select((s) => s.isTracking));
 
     ref.listen(mapProvider, (prev, next) {
       if (!_mapReady) return;
@@ -303,6 +310,36 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                               .toList(),
                           color: AppColors.greenish_3,
                           strokeWidth: 4,
+                        ),
+                      ],
+                    ),
+
+                  if (isTracking && sessionStart != null)
+                    CircleLayer(
+                      circles: [
+                        CircleMarker(
+                          point: sessionStart.toLatLng(),
+                          radius: 500,
+                          useRadiusInMeter: true,
+                          color: Colors.transparent,
+                          borderColor: AppColors.greenish_2,
+                          borderStrokeWidth: 2,
+                        ),
+                        CircleMarker(
+                          point: sessionStart.toLatLng(),
+                          radius: 1000,
+                          useRadiusInMeter: true,
+                          color: Colors.transparent,
+                          borderColor: AppColors.greenish_3,
+                          borderStrokeWidth: 2,
+                        ),
+                        CircleMarker(
+                          point: sessionStart.toLatLng(),
+                          radius: 2000,
+                          useRadiusInMeter: true,
+                          color: Colors.transparent,
+                          borderColor: AppColors.greenish_4,
+                          borderStrokeWidth: 2,
                         ),
                       ],
                     ),
