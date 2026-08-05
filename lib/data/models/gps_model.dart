@@ -23,6 +23,7 @@ class GpsSession {
   final DateTime? endedAt;
   final List<GpsPoint> points;
   final double distanceKm;
+  final double furthestDistanceKm;
 
   const GpsSession({
     this.localId,
@@ -31,6 +32,7 @@ class GpsSession {
     this.endedAt,
     required this.points,
     required this.distanceKm,
+    this.furthestDistanceKm = 0,
   });
 
   GpsSession copyWith({
@@ -40,6 +42,7 @@ class GpsSession {
     DateTime? endedAt,
     List<GpsPoint>? points,
     double? distanceKm,
+    double? furthestDistanceKm,
   }) {
     return GpsSession(
       localId: localId ?? this.localId,
@@ -48,6 +51,7 @@ class GpsSession {
       endedAt: endedAt ?? this.endedAt,
       points: points ?? this.points,
       distanceKm: distanceKm ?? this.distanceKm,
+      furthestDistanceKm: furthestDistanceKm ?? this.furthestDistanceKm,
     );
   }
 
@@ -69,6 +73,7 @@ class GpsSession {
     'ended_at': endedAt?.toIso8601String(),
     'points': points.map((p) => p.toJson()).toList(),
     'distance': distanceKm,
+    'furthest_distance': furthestDistanceKm,
   };
 
   factory GpsSession.fromJson(Map<String, dynamic> json) => GpsSession(
@@ -81,6 +86,7 @@ class GpsSession {
         .map((p) => GpsPoint.fromJson(p as Map<String, dynamic>))
         .toList(),
     distanceKm: (json['distance'] as num).toDouble(),
+    furthestDistanceKm: (json['furthest_distance'] as num?)?.toDouble() ?? 0.0,
   );
 }
 

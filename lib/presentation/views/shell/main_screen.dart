@@ -40,6 +40,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ref.read(userProvider.notifier).refresh();
         ref.read(questProvider.notifier).refresh();
         ref.read(stepProvider.notifier).refresh();
+        ref.read(mapProvider.notifier).refresh();
         break;
       case 1:
         ref.read(mapProvider.notifier).refresh();

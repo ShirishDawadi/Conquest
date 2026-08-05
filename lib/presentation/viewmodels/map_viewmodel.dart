@@ -13,6 +13,8 @@ class MapViewModel extends Notifier<MapState> {
   final _locationService = LocationService();
   final _syncService = MapSyncService();
 
+  static const _distanceCalc = Distance();
+
   StreamSubscription<List<GpsPoint>>? _pointSubscription;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   Timer? _durationTimer;
@@ -34,7 +36,18 @@ class MapViewModel extends Notifier<MapState> {
     });
 
     _pointSubscription = _locationService.pointStream.listen((points) {
-      state = state.copyWith(currentPoints: points);
+      double furthest = state.furthestDistanceKm;
+      if (points.isNotEmpty) {
+        final start = points.first.toLatLng();
+        final latest = points.last.toLatLng();
+        final radialKm = _distanceCalc(start, latest) / 1000;
+        if (radialKm > furthest) furthest = radialKm;
+      }
+
+      state = state.copyWith(
+        currentPoints: points,
+        furthestDistanceKm: furthest,
+      );
     });
 
     ref.onDispose(() {
@@ -103,6 +116,7 @@ class MapViewModel extends Notifier<MapState> {
     state = state.copyWith(
       isTracking: true,
       currentPoints: [],
+      furthestDistanceKm: 0, 
       sessionStart: _locationService.sessionStart,
     );
 
@@ -113,11 +127,15 @@ class MapViewModel extends Notifier<MapState> {
     _durationTimer?.cancel();
     _durationTimer = null;
 
-    final session = await _locationService.stopTracking();
-    if (session == null) {
+    final rawSession = await _locationService.stopTracking();
+    if (rawSession == null) {
       state = state.copyWith(isTracking: false, clearFocusedSession: true);
       return;
     }
+
+    final session = rawSession.copyWith(
+      furthestDistanceKm: state.furthestDistanceKm,
+    );
 
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
@@ -131,6 +149,7 @@ class MapViewModel extends Notifier<MapState> {
     state = state.copyWith(
       isTracking: false,
       currentPoints: [],
+      furthestDistanceKm: 0,
       sessionStart: null,
       dayLog: updatedLog,
       focusedSession: savedSession,
@@ -215,12 +234,18 @@ class MapViewModel extends Notifier<MapState> {
 final mapProvider = NotifierProvider<MapViewModel, MapState>(MapViewModel.new);
 
 final liveSessionDistanceMetersProvider = Provider<double>((ref) {
-  final points = ref.watch(mapProvider.select((s) => s.currentPoints));
-  if (points.length < 2) return 0.0;
+  final furthestKm = ref.watch(
+    mapProvider.select((s) => s.furthestDistanceKm),
+  );
+  return furthestKm * 1000;
+});
 
-  const distance = Distance();
-  final start = points.first.toLatLng();
-  final current = points.last.toLatLng();
+final bestSessionTodayKmProvider = Provider<double?>((ref) {
+  final dayLog = ref.watch(mapProvider.select((s) => s.dayLog));
+  final sessions = dayLog?.sessions ?? [];
+  if (sessions.isEmpty) return null;
 
-  return distance(start, current);
+  return sessions
+      .map((s) => s.furthestDistanceKm)
+      .reduce((a, b) => a > b ? a : b);
 });

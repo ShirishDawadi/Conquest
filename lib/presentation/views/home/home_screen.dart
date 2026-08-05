@@ -92,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final steps = stepState.value ?? 0;
     final isWalking = _isWalking || isRunTracking;
 
-    const double? bestSessionKm = 0.6;
+    final bestSessionKm = ref.watch(bestSessionTodayKmProvider);
 
     if (questState.hasValue && questState.value!.needsReset) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -144,7 +144,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             goal: quest.stepGoal ?? 500,
                             isWalking: isWalking,
                           ),
-                          
+
                           const SizedBox(height: 24),
 
                           Padding(

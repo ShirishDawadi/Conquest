@@ -23,6 +23,7 @@ class MapLocalSource {
         'ended_at': session.endedAt?.toIso8601String(),
         'points': jsonEncode(session.points.map((p) => p.toJson()).toList()),
         'distance': session.distanceKm,
+        'furthest_distance': session.furthestDistanceKm,
         'synced': 0,
       });
       return generatedId;
@@ -115,6 +116,7 @@ class MapLocalSource {
           'ended_at': session.endedAt?.toIso8601String(),
           'points': jsonEncode(session.points.map((p) => p.toJson()).toList()),
           'distance': session.distanceKm,
+          'furthest_distance': session.furthestDistanceKm,
           'synced': 1,
         });
       }
@@ -180,6 +182,7 @@ class MapLocalSource {
           .map((p) => GpsPoint.fromJson(p as Map<String, dynamic>))
           .toList(),
       distanceKm: (row['distance'] as num).toDouble(),
+      furthestDistanceKm: (row['furthest_distance'] as num).toDouble(),
     );
   }
 }

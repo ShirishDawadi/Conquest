@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -19,33 +18,27 @@ class AppDatabase {
     final path = join(dbPath, 'conquest.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 1,
       onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE gps_sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            backend_id INTEGER,
-            date TEXT NOT NULL,
-            started_at TEXT NOT NULL,
-            ended_at TEXT,
-            points TEXT NOT NULL,
-            distance REAL NOT NULL DEFAULT 0,
-            synced INTEGER NOT NULL DEFAULT 0
-          )
-        ''');
+        await db.execute(_gpsSessionsTableSql);
         await db.execute(_objectCapturesTableSql);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        log(
-          'AppDatabase upgrade from $oldVersion to $newVersion',
-          name: 'AppDatabase',
-        );
-        if (oldVersion < 2) {
-          await db.execute(_objectCapturesTableSql);
-        }
       },
     );
   }
+
+  static const _gpsSessionsTableSql = '''
+    CREATE TABLE gps_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      backend_id INTEGER,
+      date TEXT NOT NULL,
+      started_at TEXT NOT NULL,
+      ended_at TEXT,
+      points TEXT NOT NULL,
+      distance REAL NOT NULL DEFAULT 0,
+      furthest_distance REAL NOT NULL DEFAULT 0,
+      synced INTEGER NOT NULL DEFAULT 0
+    )
+  ''';
 
   static const _objectCapturesTableSql = '''
     CREATE TABLE object_images (

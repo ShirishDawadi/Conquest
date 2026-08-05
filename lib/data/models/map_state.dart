@@ -5,6 +5,7 @@ enum LocationPermissionStatus { unknown, granted, denied, serviceDisabled }
 class MapState {
   final bool isTracking;
   final List<GpsPoint> currentPoints;
+  final double furthestDistanceKm;
   final DateTime? sessionStart;
   final GpsLog? dayLog;
   final DateTime selectedDate;
@@ -16,6 +17,7 @@ class MapState {
   const MapState({
     this.isTracking = false,
     this.currentPoints = const [],
+    this.furthestDistanceKm = 0,
     this.sessionStart,
     this.dayLog,
     required this.selectedDate,
@@ -28,6 +30,7 @@ class MapState {
   MapState copyWith({
     bool? isTracking,
     List<GpsPoint>? currentPoints,
+    double? furthestDistanceKm,
     DateTime? sessionStart,
     GpsLog? dayLog,
     bool clearDayLog = false,
@@ -42,6 +45,7 @@ class MapState {
     return MapState(
       isTracking: isTracking ?? this.isTracking,
       currentPoints: currentPoints ?? this.currentPoints,
+      furthestDistanceKm: furthestDistanceKm ?? this.furthestDistanceKm,
       sessionStart: sessionStart ?? this.sessionStart,
       dayLog: clearDayLog ? null : dayLog ?? this.dayLog,
       selectedDate: selectedDate ?? this.selectedDate,
