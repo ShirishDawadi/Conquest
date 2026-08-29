@@ -6,14 +6,14 @@ class InputValidators {
     return null;
   }
 
-  static String? validateSteps(int value){
+  static String? validateSteps(int value) {
     final steps = value;
 
-    if(steps<500){
+    if (steps < 500) {
       return 'Minimum 500 steps';
     }
 
-    if(steps>50000){
+    if (steps > 50000) {
       return 'Slow Down,Speedster';
     }
     return null;
@@ -24,6 +24,14 @@ class InputValidators {
 
     if (email.isEmpty) {
       return 'Email is required';
+    }
+
+    if (email.contains(' ')) {
+      return 'Email cannot contain spaces';
+    }
+
+    if (email != email.toLowerCase()) {
+      return 'Email cannot contain capital letters';
     }
 
     final emailRegex = RegExp(
@@ -62,6 +70,10 @@ class InputValidators {
   static String? validatePassword(String value) {
     if (value.isEmpty) {
       return 'Password is required';
+    }
+
+    if (value.contains(' ')) {
+      return 'Password cannot contain spaces';
     }
 
     if (value.length < 8) {

@@ -31,7 +31,7 @@ class ObjectDetectionService {
   static const _maxDetections = 756;
 
   Interpreter? _interpreter;
-  IsolateInterpreter? _isolateInterpreter; // runs inference off the UI thread
+  IsolateInterpreter? _isolateInterpreter;
   List<String> _labels = [];
 
   bool _isInitialized = false;
@@ -66,9 +66,6 @@ class ObjectDetectionService {
 
     _interpreter = await Interpreter.fromAsset(_modelPath, options: options);
 
-    // Wraps the interpreter so .run() calls happen on a background isolate
-    // instead of blocking Dart's UI thread. Without this, native inference
-    // freezes any running animation (like your spinner) for its duration.
     _isolateInterpreter = await IsolateInterpreter.create(
       address: _interpreter!.address,
     );

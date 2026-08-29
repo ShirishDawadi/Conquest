@@ -137,7 +137,7 @@ class ActivityLocalSource {
       final batch = db.batch();
 
       for (final day in days) {
-        if (day.date == today) continue; // today is owned by live step tracking
+        if (day.date == today) continue;
 
         batch.insert('activity_logs', {
           'date': day.date,

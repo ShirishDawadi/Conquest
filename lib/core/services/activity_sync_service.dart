@@ -1,5 +1,3 @@
-// core/services/activity_sync_service.dart
-
 import 'dart:async';
 import 'dart:developer';
 import 'package:conquest/core/services/step_service.dart';
