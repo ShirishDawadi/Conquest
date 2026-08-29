@@ -1,20 +1,40 @@
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/data/models/gps_model.dart';
+import 'package:conquest/presentation/views/shared_widgets/route_preview.dart';
 import 'package:flutter/material.dart';
 
 class SessionsExpanded extends StatelessWidget {
   final Color mutedColor;
+  final List<GpsSession> sessions;
 
-  const SessionsExpanded({super.key, required this.mutedColor});
+  const SessionsExpanded({
+    super.key,
+    required this.mutedColor,
+    required this.sessions,
+  });
 
-  static const _sessions = [
-    (speed: '1.5km/hr', distance: '2.3km', time: '01:45:36'),
-    (speed: '1.5km/hr', distance: '2.3km', time: '01:45:36'),
-    (speed: '1.5km/hr', distance: '2.3km', time: '01:45:36'),
-    (speed: '1.5km/hr', distance: '2.3km', time: '01:45:36'),
-  ];
+  String _formatDuration(Duration d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    final hours = two(d.inHours);
+    final minutes = two(d.inMinutes.remainder(60));
+    final seconds = two(d.inSeconds.remainder(60));
+    return '$hours:$minutes:$seconds';
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (sessions.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: Text(
+            'No sessions on this day',
+            style: TextStyle(fontSize: 12, color: mutedColor),
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -59,8 +79,8 @@ class SessionsExpanded extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        ...List.generate(_sessions.length, (i) {
-          final s = _sessions[i];
+        ...List.generate(sessions.length, (i) {
+          final s = sessions[i];
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(
@@ -70,29 +90,31 @@ class SessionsExpanded extends StatelessWidget {
                   child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
                 ),
                 Expanded(
-                  child: Icon(
-                    Icons.timeline,
-                    size: 22,
-                    color: AppColors.greenish_3,
+                  child: Center(
+                    child: RoutePreview(
+                      session: s,
+                      size: 22,
+                      color: AppColors.greenish_3,
+                    ),
                   ),
                 ),
                 Expanded(
                   child: Text(
-                    s.speed,
+                    '${s.speedString}km/hr',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 12),
                   ),
                 ),
                 Expanded(
                   child: Text(
-                    s.distance,
+                    '${s.distanceKm.toStringAsFixed(2)}km',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 12),
                   ),
                 ),
                 Expanded(
                   child: Text(
-                    s.time,
+                    _formatDuration(s.duration),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 12),
                   ),

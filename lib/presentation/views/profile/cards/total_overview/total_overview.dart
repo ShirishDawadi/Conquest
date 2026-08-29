@@ -1,18 +1,22 @@
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/data/models/summary_model.dart';
+import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:conquest/presentation/views/profile/cards/total_overview/total_overview_expanded.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
-class TotalOverview extends StatefulWidget {
+class TotalOverview extends ConsumerStatefulWidget {
   final DateTime date;
   const TotalOverview({super.key, required this.date});
 
   @override
-  State<TotalOverview> createState() => _TotalOverviewState();
+  ConsumerState<TotalOverview> createState() => _TotalOverviewState();
 }
 
-class _TotalOverviewState extends State<TotalOverview> {
+class _TotalOverviewState extends ConsumerState<TotalOverview> {
   bool _isExpanded = false;
 
   @override
@@ -24,6 +28,8 @@ class _TotalOverviewState extends State<TotalOverview> {
     final borderColor = Theme.of(
       context,
     ).colorScheme.onSurface.withValues(alpha: 0.10);
+
+    final summaryAsync = ref.watch(daySummaryProvider(widget.date));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -46,28 +52,62 @@ class _TotalOverviewState extends State<TotalOverview> {
                 onTap: () => setState(() => _isExpanded = !_isExpanded),
               ),
               const SizedBox(height: 15),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                layoutBuilder: (currentChild, previousChildren) => Stack(
-                  alignment: Alignment.topCenter,
-                  children: [
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
+              summaryAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: CupertinoActivityIndicator(
+                      color: AppColors.greenish_3,
+                    ),
+                  ),
                 ),
-                child: _isExpanded
-                    ? TotalOverviewExpanded(
-                        mutedColor: mutedColor,
-                        borderColor: borderColor,
-                      )
-                    : _CompactBody(
-                        mutedColor: mutedColor,
-                        borderColor: borderColor,
+                error: (e, _) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'Failed to load this day',
+                      style: TextStyle(fontSize: 12, color: mutedColor),
+                    ),
+                  ),
+                ),
+                data: (summary) {
+                  if (summary == null) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text(
+                          'No activity on this day',
+                          style: TextStyle(fontSize: 12, color: mutedColor),
+                        ),
                       ),
+                    );
+                  }
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeIn,
+                    transitionBuilder: (child, animation) =>
+                        FadeTransition(opacity: animation, child: child),
+                    layoutBuilder: (currentChild, previousChildren) => Stack(
+                      alignment: Alignment.topCenter,
+                      children: [
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    ),
+                    child: _isExpanded
+                        ? TotalOverviewExpanded(
+                            summary: summary,
+                            mutedColor: mutedColor,
+                            borderColor: borderColor,
+                          )
+                        : _CompactBody(
+                            summary: summary,
+                            mutedColor: mutedColor,
+                            borderColor: borderColor,
+                          ),
+                  );
+                },
               ),
             ],
           ),
@@ -124,16 +164,26 @@ class _Header extends StatelessWidget {
 }
 
 class _CompactBody extends StatelessWidget {
+  final DaySummaryModel summary;
   final Color mutedColor;
   final Color borderColor;
 
   const _CompactBody({
+    required this.summary,
     required this.mutedColor,
     required this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final foundCount =
+        (summary.object1Completed ? 1 : 0) + (summary.object2Completed ? 1 : 0);
+    final stepsPercent = summary.stepGoal == 0
+        ? 0
+        : ((summary.stepsAchieved / summary.stepGoal) * 100)
+              .clamp(0, 100)
+              .round();
+
     return Column(
       children: [
         Padding(
@@ -164,15 +214,15 @@ class _CompactBody extends StatelessWidget {
                           'Steps',
                           style: TextStyle(fontSize: 10, color: mutedColor),
                         ),
-                        const Text(
-                          '12756',
-                          style: TextStyle(
+                        Text(
+                          '${summary.stepsAchieved}',
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          'Goal:5000',
+                          'Goal:${summary.stepGoal}',
                           style: TextStyle(fontSize: 10, color: mutedColor),
                         ),
                         Container(
@@ -184,9 +234,12 @@ class _CompactBody extends StatelessWidget {
                             color: AppColors.greenish_3,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
-                            '100%',
-                            style: TextStyle(fontSize: 10, color: Colors.white),
+                          child: Text(
+                            '$stepsPercent%',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -218,9 +271,9 @@ class _CompactBody extends StatelessWidget {
                           'Objects',
                           style: TextStyle(fontSize: 10, color: mutedColor),
                         ),
-                        const Text(
-                          '1/2',
-                          style: TextStyle(
+                        Text(
+                          '$foundCount/2',
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -231,24 +284,32 @@ class _CompactBody extends StatelessWidget {
                         ),
                         Row(
                           children: [
-                            Container(
+                            SizedBox(
                               width: 20,
                               height: 20,
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.30),
-                              ),
+                              child: summary.object1.imageUrl != null
+                                  ? Image.network(
+                                      summary.object1.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const SizedBox.shrink(),
+                                    )
+                                  : null,
                             ),
                             const SizedBox(width: 6),
-                            Container(
+                            SizedBox(
                               width: 20,
                               height: 20,
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.30),
-                              ),
+                              child: summary.object2.imageUrl != null
+                                  ? Image.network(
+                                      summary.object2.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const SizedBox.shrink(),
+                                    )
+                                  : null,
                             ),
                           ],
                         ),
@@ -277,8 +338,8 @@ class _CompactBody extends StatelessWidget {
                           'Calories',
                           style: TextStyle(fontSize: 10, color: mutedColor),
                         ),
-                        const Text(
-                          '300 kcal',
+                        Text(
+                          '${(summary.stepsAchieved * 0.04).toStringAsFixed(0)} kcal',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -305,7 +366,7 @@ class _CompactBody extends StatelessWidget {
               const SizedBox(width: 20),
               SvgPicture.asset('assets/icons/xp.svg', width: 10, height: 10),
               const SizedBox(width: 3),
-              const Text('40', style: TextStyle(fontSize: 12)),
+              Text('${summary.totalXpEarned}', style: const TextStyle(fontSize: 12)),
               const SizedBox(width: 20),
               SvgPicture.asset(
                 'assets/icons/weekly_point.svg',
@@ -313,7 +374,7 @@ class _CompactBody extends StatelessWidget {
                 height: 10,
               ),
               const SizedBox(width: 3),
-              const Text('20', style: TextStyle(fontSize: 12)),
+              Text('${summary.totalPointsEarned}', style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),

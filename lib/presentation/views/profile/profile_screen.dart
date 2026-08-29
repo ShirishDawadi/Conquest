@@ -1,6 +1,7 @@
 import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/auth_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/profile/cards/activity_overview/calendar_session_row.dart';
 import 'package:conquest/presentation/views/profile/cards/total_overview/total_overview.dart';
@@ -24,6 +25,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(userProvider);
+
+    final summaryAsync = ref.watch(daySummaryProvider(_selectedDate));
+    final sessionCount = summaryAsync.maybeWhen(
+      data: (summary) => summary?.gpsSessions.length ?? 0,
+      orElse: () => 0,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -90,7 +97,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onDateSelected: (date) {
                   setState(() => _selectedDate = date);
                 },
-                sessions: 4,
+                sessions: sessionCount,
               ),
 
               const SizedBox(height: 10),

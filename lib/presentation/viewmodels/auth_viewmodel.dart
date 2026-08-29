@@ -4,6 +4,7 @@ import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/steps_stats_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -42,6 +43,7 @@ class AuthViewModel extends AsyncNotifier<bool> {
   ref.invalidate(userProvider);
   ref.invalidate(leaderboardProvider);
   ref.invalidate(stepsStatsProvider);
+  ref.invalidate(daySummaryProvider);
   await AppDatabase().deleteDb();
   if (ref.mounted) {
     state = const AsyncData(false);

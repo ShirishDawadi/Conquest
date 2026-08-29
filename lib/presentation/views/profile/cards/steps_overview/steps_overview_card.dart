@@ -27,12 +27,39 @@ class _StepsOverviewCardState extends ConsumerState<StepsOverviewCard> {
     return '${startFmt.format(start)} - ${endFmt.format(end)}';
   }
 
-  StepsStatsDay _todayFallback(List<StepsStatsDay> days) {
-    final todayIso = DateTime.now().toIso8601String().substring(0, 10);
-    return days.firstWhere(
-      (d) => d.date == todayIso,
-      orElse: () => StepsStatsDay(date: todayIso, steps: 0, goal: 0),
-    );
+  /// Picks which day to show when nothing's explicitly tapped:
+  /// - if today falls inside the visible range (current week/month), show today
+  /// - otherwise (viewing a past week/month), show the most recent day in
+  ///   that range instead of defaulting to "today" (which isn't in range).
+  StepsStatsDay _defaultDay(
+    List<StepsStatsDay> days,
+    DateTime rangeStart,
+    DateTime rangeEnd,
+  ) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayInRange =
+        !today.isBefore(rangeStart) && !today.isAfter(rangeEnd);
+
+    if (todayInRange) {
+      final todayIso = today.toIso8601String().substring(0, 10);
+      return days.firstWhere(
+        (d) => d.date == todayIso,
+        orElse: () => StepsStatsDay(date: todayIso, steps: 0, goal: 0),
+      );
+    }
+
+    if (days.isEmpty) {
+      return StepsStatsDay(
+        date: rangeEnd.toIso8601String().substring(0, 10),
+        steps: 0,
+        goal: 0,
+      );
+    }
+
+    // Past range -> most recent day actually in that period (days is
+    // assumed ordered ascending by date, same as the bar chart expects).
+    return days.last;
   }
 
   @override
@@ -42,7 +69,8 @@ class _StepsOverviewCardState extends ConsumerState<StepsOverviewCard> {
     final notifier = ref.read(stepsStatsProvider.notifier);
     final days = statsState.value?.days ?? [];
     final range = notifier.currentRange;
-    final displayDay = _selectedDay ?? _todayFallback(days);
+    final displayDay =
+        _selectedDay ?? _defaultDay(days, range.start, range.end);
 
     return Padding(
       padding: const EdgeInsets.all(10.0),

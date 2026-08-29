@@ -22,6 +22,9 @@ class AppDatabase {
       onCreate: (db, version) async {
         await db.execute(_gpsSessionsTableSql);
         await db.execute(_objectCapturesTableSql);
+        await db.execute(_dailyQuestsTableSql);
+        await db.execute(_activityLogsTableSql);
+        await db.execute(_userRewardsTableSql);
       },
     );
   }
@@ -51,6 +54,42 @@ class AppDatabase {
       created_at TEXT NOT NULL
     )
   ''';
+
+  static const _dailyQuestsTableSql = '''
+    CREATE TABLE daily_quests (
+      date TEXT PRIMARY KEY,
+      object1_id INTEGER,
+      object1_label TEXT,
+      object1_difficulty TEXT,
+      object1_image_url TEXT,
+      object1_completed INTEGER NOT NULL DEFAULT 0,
+      object2_id INTEGER,
+      object2_label TEXT,
+      object2_difficulty TEXT,
+      object2_image_url TEXT,
+      object2_completed INTEGER NOT NULL DEFAULT 0
+    )
+  ''';
+
+  static const _activityLogsTableSql = '''
+    CREATE TABLE activity_logs (
+      date TEXT PRIMARY KEY,
+      steps_achieved INTEGER NOT NULL DEFAULT 0,
+      steps_goal INTEGER NOT NULL DEFAULT 0,
+      synced INTEGER NOT NULL DEFAULT 0
+    )
+  ''';
+
+  static const _userRewardsTableSql = '''
+  CREATE TABLE user_rewards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    action_type TEXT NOT NULL,
+    tier TEXT,
+    xp_earned INTEGER NOT NULL DEFAULT 0,
+    points_earned INTEGER NOT NULL DEFAULT 0
+  )
+''';
 
   Future<void> deleteDb() async {
     await close();

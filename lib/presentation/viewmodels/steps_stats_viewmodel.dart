@@ -1,4 +1,5 @@
 import 'package:conquest/data/models/activity_model.dart';
+import 'package:conquest/data/sources/local/activity_local_source.dart';
 import 'package:conquest/data/sources/remote/activity_remote_source.dart';
 import 'package:conquest/presentation/views/profile/cards/steps_overview/tabs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,11 +23,12 @@ class StepsStatsLoadingNotifier extends Notifier<bool> {
 
 final stepsStatsLoadingProvider =
     NotifierProvider<StepsStatsLoadingNotifier, bool>(
-  StepsStatsLoadingNotifier.new,
-);
+      StepsStatsLoadingNotifier.new,
+    );
 
 class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
   final _source = ActivityRemoteSource();
+  final _local = ActivityLocalSource();
 
   StatsPeriod _period = StatsPeriod.weekly;
   int _offset = 0;
@@ -34,7 +36,8 @@ class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
   StatsPeriod get period => _period;
   int get offset => _offset;
   bool get canGoNext => _offset < 0;
-  ({DateTime start, DateTime end}) get currentRange => _rangeFor(_period, _offset);
+  ({DateTime start, DateTime end}) get currentRange =>
+      _rangeFor(_period, _offset);
 
   @override
   Future<StepsStatsResponse> build() => _fetch();
@@ -50,10 +53,40 @@ class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
     }
   }
 
-  Future<StepsStatsResponse> _fetch() {
+  Future<StepsStatsResponse> _fetch() async {
     final range = _rangeFor(_period, _offset);
-    return _source.getStepsStats(startDate: range.start, endDate: range.end);
+
+    final hasCache = await _local.hasFullRange(range.start, range.end);
+    if (hasCache) {
+      final rows = await _local.getRange(range.start, range.end);
+      final days = rows
+          .map(
+            (r) => StepsStatsDay(
+              date: r['date'] as String,
+              steps: r['steps_achieved'] as int,
+              goal: r['steps_goal'] as int,
+            ),
+          )
+          .toList();
+
+      final totalSteps = days.fold<int>(0, (sum, d) => sum + d.steps);
+      final avgSteps = days.isEmpty ? 0 : totalSteps ~/ days.length;
+
+      return StepsStatsResponse(
+        days: days,
+        averageSteps: avgSteps,
+        totalSteps: totalSteps,
+      );
+    }
+
+    final remote = await _source.getStepsStats(
+      startDate: range.start,
+      endDate: range.end,
+    );
+    await _local.upsertStatsDays(remote.days);
+    return remote;
   }
+
 
   Future<void> _reload() async {
     ref.read(stepsStatsLoadingProvider.notifier).set(true);
@@ -87,5 +120,5 @@ class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
 
 final stepsStatsProvider =
     AsyncNotifierProvider<StepsStatsViewModel, StepsStatsResponse>(
-  StepsStatsViewModel.new,
-);
+      StepsStatsViewModel.new,
+    );
