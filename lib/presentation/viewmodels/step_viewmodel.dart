@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:conquest/core/services/step_service.dart';
+import 'package:conquest/core/services/reward_applier.dart';
 import 'package:conquest/data/models/activity_model.dart';
+import 'package:conquest/data/sources/local/activity_local_source.dart';
 import 'package:conquest/data/sources/remote/activity_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class StepViewModel extends AsyncNotifier<int> {
   StepService get _service => StepService();
   final _activitySource = ActivityRemoteSource();
+  final _activityLocal = ActivityLocalSource();
 
   StreamSubscription<int>? _subscription;
   bool _initialized = false;
@@ -27,11 +31,11 @@ class StepViewModel extends AsyncNotifier<int> {
       _initialized = true;
     }
 
-    _syncToBackend(_service.todaySteps);
+    _updateLocalAndSync(_service.todaySteps);
 
     _subscription = _service.stepStream.listen((steps) {
       state = AsyncData(steps);
-      _syncToBackend(steps);
+      _updateLocalAndSync(steps);
     });
 
     ref.onDispose(() {
@@ -42,10 +46,19 @@ class StepViewModel extends AsyncNotifier<int> {
     return _service.todaySteps;
   }
 
-  void _syncToBackend(int steps) {
+  void _updateLocalAndSync(int steps) {
     if (steps <= 0) return;
 
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    _activityLocal.upsertLocalSteps(today, steps);
+    ref.invalidate(daySummaryProvider(today));
+
+    _syncToBackend(steps, now);
+  }
+
+  void _syncToBackend(int steps, DateTime now) {
     if (_lastSync != null &&
         now.difference(_lastSync!) < const Duration(minutes: 5)) {
       return;
@@ -53,11 +66,18 @@ class StepViewModel extends AsyncNotifier<int> {
     _lastSync = now;
 
     final today = now.toIso8601String().substring(0, 10);
-    
+
     _activitySource
         .syncActivity(ActivitySyncRequest(date: today, steps: steps))
-        .then((_) {
+        .then((result) async {
           ref.invalidate(questProvider);
+          await RewardApplier.apply(
+            date: now,
+            actionType: 'steps_completed',
+            xpEarned: result.xpEarned,
+            pointsEarned: result.pointsEarned,
+            invalidate: (d) => ref.invalidate(daySummaryProvider(d)),
+          );
         })
         .onError((e, _) {
           log('Activity sync failed: $e', name: 'StepViewModel');

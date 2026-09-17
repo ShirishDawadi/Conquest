@@ -231,7 +231,9 @@ class _CompactBody extends StatelessWidget {
                             vertical: 2.0,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.greenish_3,
+                            color: stepsPercent < 100
+                                ? AppColors.master_mid
+                                : AppColors.greenish_3,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -366,7 +368,10 @@ class _CompactBody extends StatelessWidget {
               const SizedBox(width: 20),
               SvgPicture.asset('assets/icons/xp.svg', width: 10, height: 10),
               const SizedBox(width: 3),
-              Text('${summary.totalXpEarned}', style: const TextStyle(fontSize: 12)),
+              Text(
+                '${summary.totalXpEarned}',
+                style: const TextStyle(fontSize: 12),
+              ),
               const SizedBox(width: 20),
               SvgPicture.asset(
                 'assets/icons/weekly_point.svg',
@@ -374,7 +379,10 @@ class _CompactBody extends StatelessWidget {
                 height: 10,
               ),
               const SizedBox(width: 3),
-              Text('${summary.totalPointsEarned}', style: const TextStyle(fontSize: 12)),
+              Text(
+                '${summary.totalPointsEarned}',
+                style: const TextStyle(fontSize: 12),
+              ),
             ],
           ),
         ),

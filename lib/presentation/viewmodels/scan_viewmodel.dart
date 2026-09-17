@@ -4,12 +4,15 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:conquest/core/services/object_detection_service.dart';
+import 'package:conquest/core/services/reward_applier.dart';
 import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/core/utils/detection_capability_utils.dart';
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/data/sources/local/object_image_local_source.dart';
+import 'package:conquest/data/sources/local/summary_local_source.dart';
 import 'package:conquest/data/sources/remote/object_image_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -387,9 +390,11 @@ class ScanViewModel extends ChangeNotifier {
     await File(path).writeAsBytes(bytes);
     return path;
   }
-  
+
   Future<void> _handleFoundObject(CapturedFrame frame) async {
     final questId = ref.read(questProvider).value?.id;
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
 
     Position? position;
     try {
@@ -403,17 +408,41 @@ class ScanViewModel extends ChangeNotifier {
       position = null;
     }
 
+    await SummaryLocalSource().markObjectCompleted(
+      date: normalizedToday,
+      objectId: object.id,
+    );
+    ref.invalidate(daySummaryProvider(normalizedToday));
+
     final online = await ConnectivityUtils.isOnline();
 
     if (online) {
       try {
-        await _objectImageSource.uploadObjectImage(
+        final result = await _objectImageSource.uploadObjectImage(
           questId: questId!,
           objectId: object.id,
           latitude: position?.latitude,
           longitude: position?.longitude,
           imageBytes: frame.bytes,
         );
+
+        if (result.photoUrl != null) {
+          await SummaryLocalSource().updateObjectImage(
+            date: normalizedToday,
+            objectId: object.id,
+            imageUrl: result.photoUrl!,
+          );
+        }
+
+        await RewardApplier.apply(
+          date: today,
+          actionType: 'object_completed',
+          tier: object.difficulty,
+          xpEarned: result.xpEarned,
+          pointsEarned: result.pointsEarned,
+          invalidate: (d) => ref.invalidate(daySummaryProvider(d)),
+        );
+
         ref.invalidate(questProvider);
         return;
       } catch (e) {

@@ -9,22 +9,25 @@ class ActivitySyncRequest {
 
 class ActivityLog {
   final int id;
-  final int userId;
   final String date;
   final int steps;
+  final int xpEarned;
+  final int pointsEarned;
 
   ActivityLog({
     required this.id,
-    required this.userId,
     required this.date,
     required this.steps,
+    required this.xpEarned,
+    required this.pointsEarned,
   });
 
   factory ActivityLog.fromJson(Map<String, dynamic> json) => ActivityLog(
     id: json['id'],
-    userId: json['user_id'],
     date: json['date'],
     steps: json['steps'],
+    xpEarned: json['xp_earned'] as int? ?? 0,
+    pointsEarned: json['points_earned'] as int? ?? 0,
   );
 }
 

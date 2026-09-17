@@ -38,13 +38,15 @@ class AuthViewModel extends AsyncNotifier<bool> {
 
   Future<void> logout() async {
   await _storage.deleteAll();
+  await AppDatabase().deleteDb();
+
   ref.invalidate(stepProvider);
   ref.invalidate(questProvider);
   ref.invalidate(userProvider);
   ref.invalidate(leaderboardProvider);
   ref.invalidate(stepsStatsProvider);
   ref.invalidate(daySummaryProvider);
-  await AppDatabase().deleteDb();
+  
   if (ref.mounted) {
     state = const AsyncData(false);
   }

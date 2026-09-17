@@ -49,7 +49,6 @@ class ObjectsDetail extends StatelessWidget {
       ),
     ];
 
-    // an object slot with no label means no quest object was assigned for it
     final objects = rawObjects.where((o) => o.name.isNotEmpty).toList();
 
     final foundCount = objects.where((o) => o.found).length;

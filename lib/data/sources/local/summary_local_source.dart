@@ -45,6 +45,89 @@ class SummaryLocalSource {
     }
   }
 
+  Future<void> markObjectCompleted({
+    required DateTime date,
+    required int objectId,
+  }) async {
+    try {
+      final db = await _db;
+      final dateStr = _fmt(date);
+
+      final rows = await db.query(
+        'daily_quests',
+        where: 'date = ?',
+        whereArgs: [dateStr],
+      );
+      if (rows.isEmpty) return;
+
+      final row = rows.first;
+      final updates = <String, dynamic>{};
+
+      if (row['object1_id'] == objectId) {
+        updates['object1_completed'] = 1;
+      }
+      if (row['object2_id'] == objectId) {
+        updates['object2_completed'] = 1;
+      }
+
+      if (updates.isEmpty) return;
+
+      await db.update(
+        'daily_quests',
+        updates,
+        where: 'date = ?',
+        whereArgs: [dateStr],
+      );
+    } catch (e) {
+      log(
+        'SummaryLocalSource markObjectCompleted failed: $e',
+        name: 'SummaryLocalSource',
+      );
+    }
+  }
+
+  Future<void> updateObjectImage({
+    required DateTime date,
+    required int objectId,
+    required String imageUrl,
+  }) async {
+    try {
+      final db = await _db;
+      final dateStr = _fmt(date);
+
+      final rows = await db.query(
+        'daily_quests',
+        where: 'date = ?',
+        whereArgs: [dateStr],
+      );
+      if (rows.isEmpty) return;
+
+      final row = rows.first;
+      final updates = <String, dynamic>{};
+
+      if (row['object1_id'] == objectId) {
+        updates['object1_image_url'] = imageUrl;
+      }
+      if (row['object2_id'] == objectId) {
+        updates['object2_image_url'] = imageUrl;
+      }
+
+      if (updates.isEmpty) return;
+
+      await db.update(
+        'daily_quests',
+        updates,
+        where: 'date = ?',
+        whereArgs: [dateStr],
+      );
+    } catch (e) {
+      log(
+        'SummaryLocalSource updateObjectImage failed: $e',
+        name: 'SummaryLocalSource',
+      );
+    }
+  }
+
   Future<Map<String, dynamic>?> getQuest(DateTime date) async {
     try {
       final db = await _db;
@@ -60,23 +143,21 @@ class SummaryLocalSource {
     }
   }
 
-  Future<void> upsertRewards(
+  Future<void> insertRewards(
     DateTime date,
     List<UserRewardModel> rewards,
   ) async {
+    if (rewards.isEmpty) return;
     try {
       final db = await _db;
-      await db.delete(
-        'user_rewards',
-        where: 'date = ?',
-        whereArgs: [_fmt(date)],
-      );
+      final batch = db.batch();
       for (final reward in rewards) {
-        await db.insert('user_rewards', reward.toDbMap(date));
+        batch.insert('user_rewards', reward.toDbMap(date));
       }
+      await batch.commit(noResult: true);
     } catch (e) {
       log(
-        'SummaryLocalSource upsertRewards failed: $e',
+        'SummaryLocalSource insertRewards failed: $e',
         name: 'SummaryLocalSource',
       );
     }
