@@ -5,6 +5,7 @@ import 'package:conquest/core/services/map_sync_service.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/data/models/map_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -116,7 +117,7 @@ class MapViewModel extends Notifier<MapState> {
     state = state.copyWith(
       isTracking: true,
       currentPoints: [],
-      furthestDistanceKm: 0, 
+      furthestDistanceKm: 0,
       sessionStart: _locationService.sessionStart,
     );
 
@@ -154,6 +155,8 @@ class MapViewModel extends Notifier<MapState> {
       dayLog: updatedLog,
       focusedSession: savedSession,
     );
+
+    ref.invalidate(daySummaryProvider(todayDate));
   }
 
   void navigateDate(int days) {
@@ -215,6 +218,8 @@ class MapViewModel extends Notifier<MapState> {
     }
 
     await _syncService.deleteSession(session, state.selectedDate);
+
+    ref.invalidate(daySummaryProvider(state.selectedDate));
   }
 
   Future<void> refresh() async {
@@ -234,9 +239,7 @@ class MapViewModel extends Notifier<MapState> {
 final mapProvider = NotifierProvider<MapViewModel, MapState>(MapViewModel.new);
 
 final liveSessionDistanceMetersProvider = Provider<double>((ref) {
-  final furthestKm = ref.watch(
-    mapProvider.select((s) => s.furthestDistanceKm),
-  );
+  final furthestKm = ref.watch(mapProvider.select((s) => s.furthestDistanceKm));
   return furthestKm * 1000;
 });
 

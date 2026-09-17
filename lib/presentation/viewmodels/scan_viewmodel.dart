@@ -169,7 +169,9 @@ class ScanViewModel extends ChangeNotifier {
     modelReady = true;
 
     if (needsBenchmark) {
-      final recommended = await DetectionCapabilityUtil.benchmarkAndCache(detectionService);
+      final recommended = await DetectionCapabilityUtil.benchmarkAndCache(
+        detectionService,
+      );
       if (_disposed) return;
       mode = recommended;
       modeReady = true;
@@ -358,7 +360,9 @@ class ScanViewModel extends ChangeNotifier {
     var oriented = img.bakeOrientation(decoded);
     oriented = _cropToSquare(oriented);
 
-    final squareBytes = Uint8List.fromList(img.encodeJpg(oriented, quality: 90));
+    final squareBytes = Uint8List.fromList(
+      img.encodeJpg(oriented, quality: 90),
+    );
     final results = await detectionService.detectStatic(oriented);
 
     return CapturedFrame(
@@ -446,7 +450,10 @@ class ScanViewModel extends ChangeNotifier {
         ref.invalidate(questProvider);
         return;
       } catch (e) {
-        log('Upload failed despite being online, queuing: $e', name: 'ScanViewModel');
+        log(
+          'Upload failed despite being online, queuing: $e',
+          name: 'ScanViewModel',
+        );
       }
     }
 
@@ -485,35 +492,41 @@ class ScanViewModel extends ChangeNotifier {
     capturing = true;
     _notify();
 
-    CapturedFrame? frame;
     try {
-      frame = await _takeAndAnalyze();
-    } catch (e) {
-      log('Capture failed: $e', name: 'ScanViewModel');
+      CapturedFrame? frame;
+      try {
+        frame = await _takeAndAnalyze();
+      } catch (e) {
+        log('Capture failed: $e', name: 'ScanViewModel');
+      }
+
+      if (_disposed) return;
+
+      if (frame == null) {
+        log(
+          'Capture produced no frame — camera or decode issue',
+          name: 'ScanViewModel',
+        );
+        return;
+      }
+
+      final found = _targetConfidenceIn(frame) >= _captureConfidenceThreshold;
+
+      if (found) {
+        await _handleFoundObject(frame);
+      }
+
+      if (_disposed) return;
+
+      reviewFrame = frame;
+      reviewFound = found;
+      _notify();
     } finally {
       if (!_disposed) {
         capturing = false;
         _notify();
       }
     }
-
-    if (_disposed) return;
-
-    if (frame == null) {
-      log('Capture produced no frame — camera or decode issue', name: 'ScanViewModel');
-      return;
-    }
-
-    final found = _targetConfidenceIn(frame) >= _captureConfidenceThreshold;
-
-    if (found) {
-      await _handleFoundObject(frame);
-      if (_disposed) return;
-    }
-
-    reviewFrame = frame;
-    reviewFound = found;
-    _notify();
   }
 
   Future<void> onRetry() async {
