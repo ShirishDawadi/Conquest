@@ -3,6 +3,7 @@ import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/steps_stats_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/home/home_screen.dart';
 import 'package:conquest/presentation/views/leaderboard/leaderboard_screen.dart';
@@ -51,6 +52,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       case 3:
         ref.read(userProvider.notifier).refresh();
         ref.read(stepsStatsProvider.notifier).refresh();
+        final today = DateTime.now();
+        ref.invalidate(
+          daySummaryProvider(DateTime(today.year, today.month, today.day)),
+        );
         break;
     }
   }
