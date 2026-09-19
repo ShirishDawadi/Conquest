@@ -6,6 +6,13 @@ import 'package:conquest/data/models/gps_model.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 
+enum LocationPermissionResult {
+  granted,
+  serviceDisabled,
+  denied,
+  deniedForever,
+}
+
 class LocationService {
   static final LocationService _instance = LocationService._internal();
   factory LocationService() => _instance;
@@ -17,7 +24,6 @@ class LocationService {
   DateTime? _sessionStart;
   bool _isTracking = false;
   double _lastSpeedKmh = 0.0;
-
 
   bool get isTracking => _isTracking;
   List<GpsPoint> get currentPoints => List.unmodifiable(_currentPoints);
@@ -47,26 +53,30 @@ class LocationService {
     );
   }
 
-  Future<bool> requestPermissions() async {
+  Future<LocationPermissionResult> requestPermissions() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return false;
+    if (!serviceEnabled) return LocationPermissionResult.serviceDisabled;
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return false;
+      if (permission == LocationPermission.denied) {
+        return LocationPermissionResult.denied;
+      }
     }
 
-    if (permission == LocationPermission.deniedForever) return false;
+    if (permission == LocationPermission.deniedForever) {
+      return LocationPermissionResult.deniedForever;
+    }
 
-    return true;
+    return LocationPermissionResult.granted;
   }
 
   Future<bool> startTracking() async {
     if (_isTracking) return true;
 
-    final hasPermission = await requestPermissions();
-    if (!hasPermission) return false;
+    final result = await requestPermissions();
+    if (result != LocationPermissionResult.granted) return false;
 
     _currentPoints.clear();
     _lastSpeedKmh = 0.0;

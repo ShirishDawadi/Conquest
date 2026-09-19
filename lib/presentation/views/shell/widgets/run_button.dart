@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:developer';
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/data/models/map_state.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
+import 'package:conquest/presentation/views/shell/widgets/location_permission_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +23,32 @@ class _RunButtonState extends ConsumerState<RunButton> {
   bool _busyIsStarting = false;
   bool _showBusyText = false;
 
+  Timer? _dotTimer;
+  int _dotCount = 0;
+
+  void _startDotAnimation() {
+    _dotTimer?.cancel();
+    _dotCount = 0;
+    _dotTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (!mounted) return;
+      setState(() {
+        _dotCount = (_dotCount + 1) % 5;
+      });
+    });
+  }
+
+  void _stopDotAnimation() {
+    _dotTimer?.cancel();
+    _dotTimer = null;
+    _dotCount = 0;
+  }
+
+  @override
+  void dispose() {
+    _dotTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _handleSwipeComplete(bool isTracking) async {
     if (_isBusy) return;
 
@@ -35,6 +65,7 @@ class _RunButtonState extends ConsumerState<RunButton> {
     setState(() {
       _showBusyText = true;
     });
+    _startDotAnimation();
 
     Object? error;
 
@@ -48,9 +79,15 @@ class _RunButtonState extends ConsumerState<RunButton> {
       }
     } catch (e, st) {
       error = e;
-
-      debugPrint('RunButton tracking operation failed: $e\n$st');
+      log(
+        'RunButton tracking operation failed: $e',
+        name: 'RunButton',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
+      _stopDotAnimation();
+
       if (!mounted) return;
 
       setState(() {
@@ -61,6 +98,13 @@ class _RunButtonState extends ConsumerState<RunButton> {
     }
 
     if (!mounted) return;
+
+    final status = ref.read(mapProvider).permissionStatus;
+    if (!isTracking && status != LocationPermissionStatus.granted) {
+      setState(() => _dragProgress = 0.0);
+      LocationPermissionDialog.show(context, status);
+      return;
+    }
 
     if (error != null) {
       setState(() {
@@ -89,16 +133,6 @@ class _RunButtonState extends ConsumerState<RunButton> {
     setState(() {
       _dragProgress = 0.0;
     });
-  }
-
-  Future<void> _handleTap() async {
-    if (_isBusy) return;
-
-    final isTracking = ref.read(mapProvider).isTracking;
-
-    HapticFeedback.mediumImpact();
-
-    await _handleSwipeComplete(isTracking);
   }
 
   void _handleDragUpdate(DragUpdateDetails details, bool isTracking) {
@@ -140,120 +174,134 @@ class _RunButtonState extends ConsumerState<RunButton> {
 
     final thumbLeft = isTracking ? thumbTravel * (1 - _dragProgress) : 0.0;
 
-    return Semantics(
-      button: true,
-      enabled: !_isBusy,
-      label: isTracking ? 'Stop tracking' : 'Start tracking',
-      hint: _isBusy
-          ? (_busyIsStarting ? 'Starting tracking' : 'Stopping tracking')
-          : (isTracking
-                ? 'Swipe left to stop tracking'
-                : 'Swipe right to start tracking'),
-      onTap: _isBusy ? null : _handleTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+    final dots = '.' * _dotCount;
 
-        onHorizontalDragUpdate: _isBusy
-            ? null
-            : (details) {
-                _handleDragUpdate(details, isTracking);
-              },
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
 
-        onHorizontalDragEnd: _isBusy ? null : (_) => _handleDragEnd(),
+      onHorizontalDragUpdate: _isBusy
+          ? null
+          : (details) {
+              _handleDragUpdate(details, isTracking);
+            },
 
-        child: AnimatedContainer(
-          duration: _snapDuration,
-          curve: Curves.easeInOut,
-          width: buttonWidth,
-          height: buttonHeight,
-          decoration: BoxDecoration(
-            color: isTracking ? AppColors.master_light : AppColors.greenish_1,
-            borderRadius: BorderRadius.circular(buttonHeight / 2),
-          ),
-          child: Stack(
-            alignment: Alignment.centerLeft,
-            children: [
-              if (!_isBusy && _dragProgress == 0.0)
-                Positioned(
-                  left: isTracking ? buttonWidth * 0.1 : null,
-                  right: isTracking ? null : buttonWidth * 0.1,
-                  child: Text(
-                    isTracking ? 'Stop' : 'Start',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontFamily: 'Gpkn',
-                      fontSize: 12,
-                    ),
+      onHorizontalDragEnd: _isBusy ? null : (_) => _handleDragEnd(),
+
+      child: AnimatedContainer(
+        duration: _snapDuration,
+        curve: Curves.easeInOut,
+        width: buttonWidth,
+        height: buttonHeight,
+        decoration: BoxDecoration(
+          color: isTracking ? AppColors.master_light : AppColors.greenish_1,
+          borderRadius: BorderRadius.circular(buttonHeight / 2),
+        ),
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            if (!_isBusy && _dragProgress == 0.0)
+              Positioned(
+                left: isTracking ? buttonWidth * 0.1 : null,
+                right: isTracking ? null : buttonWidth * 0.1,
+                child: Text(
+                  isTracking ? 'Stop' : 'Start',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontFamily: 'Gpkn',
+                    fontSize: 12,
                   ),
                 ),
+              ),
 
-              AnimatedPositioned(
+            AnimatedPositioned(
+              duration: _dragProgress > 0 && !_isBusy
+                  ? Duration.zero
+                  : _snapDuration,
+              curve: Curves.easeInOut,
+              left: thumbLeft,
+              child: AnimatedContainer(
                 duration: _dragProgress > 0 && !_isBusy
                     ? Duration.zero
                     : _snapDuration,
-                left: thumbLeft,
-                child: AnimatedContainer(
-                  duration: _dragProgress > 0 && !_isBusy
-                      ? Duration.zero
-                      : _snapDuration,
-                  curve: Curves.easeInOut,
-                  width: thumbWidth,
-                  height: thumbSize,
-                  decoration: BoxDecoration(
-                    color: isTracking
-                        ? AppColors.master_dark
-                        : AppColors.greenish_3,
-                    borderRadius: BorderRadius.circular(thumbSize / 2),
-                  ),
-                  child: _showBusyText
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: _busyIsStarting
-                              ? [
-                                  const Text(
-                                    'Starting',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'Gpkn',
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Icon(
-                                    Icons.arrow_forward,
-                                    color: Colors.white,
-                                    size: thumbSize * 0.45,
-                                  ),
-                                ]
-                              : [
-                                  Icon(
-                                    Icons.arrow_back,
-                                    color: Colors.white,
-                                    size: thumbSize * 0.45,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    'Stopping',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'Gpkn',
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                        )
-                      : Center(
-                          child: Icon(
-                            isTracking ? Icons.arrow_back : Icons.arrow_forward,
-                            color: Colors.white,
-                            size: thumbSize * 0.5,
-                          ),
-                        ),
+                curve: Curves.easeInOut,
+                width: thumbWidth,
+                height: thumbSize,
+                decoration: BoxDecoration(
+                  color: isTracking
+                      ? AppColors.master_dark
+                      : AppColors.greenish_3,
+                  borderRadius: BorderRadius.circular(thumbSize / 2),
                 ),
+                child: _showBusyText
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: _busyIsStarting
+                            ? [
+                                Text(
+                                  'Starting',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Gpkn',
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 16,
+                                  child: Text(
+                                    dots,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'Gpkn',
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  color: Colors.white,
+                                  size: thumbSize * 0.45,
+                                ),
+                              ]
+                            : [
+                                Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: thumbSize * 0.45,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Stopping',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Gpkn',
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 16,
+                                  child: Text(
+                                    dots,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'Gpkn',
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                      )
+                    : Center(
+                        child: Icon(
+                          isTracking ? Icons.arrow_back : Icons.arrow_forward,
+                          color: Colors.white,
+                          size: thumbSize * 0.5,
+                        ),
+                      ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

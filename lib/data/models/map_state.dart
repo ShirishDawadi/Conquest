@@ -1,6 +1,6 @@
 import 'package:conquest/data/models/gps_model.dart';
 
-enum LocationPermissionStatus { unknown, granted, denied, serviceDisabled }
+enum LocationPermissionStatus { unknown, granted, denied, serviceDisabled, deniedForever }
 
 class MapState {
   final bool isTracking;
