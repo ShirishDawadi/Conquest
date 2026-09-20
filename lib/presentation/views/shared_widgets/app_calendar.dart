@@ -41,6 +41,12 @@ class _AppCalendarState extends State<AppCalendar> {
     return date.isAfter(todayDate);
   }
 
+  bool get _isNextMonthDisabled {
+    final next = DateTime(_year, _month + 2, 1);
+    final todayDate = DateTime(today.year, today.month, today.day);
+    return next.isAfter(todayDate);
+  }
+
   bool _isSelected(DateTime date) {
     return date.year == widget.selectedDate.year &&
         date.month == widget.selectedDate.month &&
@@ -135,12 +141,16 @@ class _AppCalendarState extends State<AppCalendar> {
 
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: _nextMonth,
+                        onTap: _isNextMonthDisabled ? null : _nextMonth,
                         child: SvgPicture.asset(
                           'assets/icons/nav_right.svg',
                           width: 20,
                           colorFilter: ColorFilter.mode(
-                            Theme.of(context).colorScheme.onSurface,
+                            _isNextMonthDisabled
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withValues(alpha: 0.3)
+                                : Theme.of(context).colorScheme.onSurface,
                             BlendMode.srcIn,
                           ),
                         ),

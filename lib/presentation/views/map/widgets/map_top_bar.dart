@@ -23,6 +23,10 @@ class MapTopBar extends ConsumerWidget {
     final isToday =
         date.year == now.year && date.month == now.month && date.day == now.day;
 
+    final isCurrentMonth = date.year == now.year && date.month == now.month;
+
+    final isNextDisabled = isMonthView ? isCurrentMonth : isToday;
+
     String label;
     if (isMonthView) {
       label =
@@ -69,13 +73,13 @@ class MapTopBar extends ConsumerWidget {
               ),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: isToday
+                onTap: isNextDisabled
                     ? null
                     : () => isMonthView
                           ? ref.read(mapProvider.notifier).navigateMonth(1)
                           : ref.read(mapProvider.notifier).navigateDate(1),
                 child: Opacity(
-                  opacity: isToday ? 0.3 : 1.0,
+                  opacity: isNextDisabled ? 0.3 : 1.0,
                   child: SvgPicture.asset(
                     'assets/icons/nav_right.svg',
                     colorFilter: const ColorFilter.mode(
