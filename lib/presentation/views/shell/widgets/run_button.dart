@@ -49,9 +49,7 @@ class _RunButtonState extends ConsumerState<RunButton> {
     super.dispose();
   }
 
-  Future<void> _handleSwipeComplete(bool isTracking) async {
-    if (_isBusy) return;
-
+  Future<void> _runBusyAnimation(bool isTracking) async {
     setState(() {
       _isBusy = true;
       _busyIsStarting = !isTracking;
@@ -66,7 +64,9 @@ class _RunButtonState extends ConsumerState<RunButton> {
       _showBusyText = true;
     });
     _startDotAnimation();
+  }
 
+  Future<Object?> _performTrackingAction(bool isTracking) async {
     Object? error;
 
     try {
@@ -88,18 +88,33 @@ class _RunButtonState extends ConsumerState<RunButton> {
     } finally {
       _stopDotAnimation();
 
-      if (!mounted) return;
-
-      setState(() {
-        _isBusy = false;
-        _showBusyText = false;
-        _busyIsStarting = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+          _showBusyText = false;
+          _busyIsStarting = false;
+        });
+      }
     }
 
+    return error;
+  }
+
+  Future<void> _handleResult({
+    required bool isTracking,
+    required Object? error,
+  }) async {
     if (!mounted) return;
 
-    final status = ref.read(mapProvider).permissionStatus;
+    final mapState = ref.read(mapProvider);
+
+    if (!isTracking && mapState.error == 'sessionLimitReached') {
+      setState(() => _dragProgress = 0.0);
+      _showSnackBar("You've reached the session limit for today.");
+      return;
+    }
+
+    final status = mapState.permissionStatus;
     if (!isTracking && status != LocationPermissionStatus.granted) {
       setState(() => _dragProgress = 0.0);
       LocationPermissionDialog.show(context, status);
@@ -107,22 +122,8 @@ class _RunButtonState extends ConsumerState<RunButton> {
     }
 
     if (error != null) {
-      setState(() {
-        _dragProgress = 0.0;
-      });
-
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Could not change tracking state. Please try again.',
-              style: TextStyle(fontFamily: 'Gpkn'),
-            ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-
+      setState(() => _dragProgress = 0.0);
+      _showSnackBar('Could not change tracking state. Please try again.');
       return;
     }
 
@@ -133,6 +134,35 @@ class _RunButtonState extends ConsumerState<RunButton> {
     setState(() {
       _dragProgress = 0.0;
     });
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          duration: Duration(milliseconds: 1200),
+          backgroundColor: AppColors.master_mid,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: Center(
+            child: Text(
+              message,
+              style: const TextStyle(fontFamily: 'Gpkn', color: Colors.white, fontSize: 10),
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
+  Future<void> _handleSwipeComplete(bool isTracking) async {
+    if (_isBusy) return;
+
+    await _runBusyAnimation(isTracking);
+    final error = await _performTrackingAction(isTracking);
+    await _handleResult(isTracking: isTracking, error: error);
   }
 
   void _handleDragUpdate(DragUpdateDetails details, bool isTracking) {
@@ -171,7 +201,6 @@ class _RunButtonState extends ConsumerState<RunButton> {
     final thumbTravel = buttonWidth - baseThumbWidth;
 
     final thumbWidth = baseThumbWidth + (_dragProgress * thumbTravel);
-
     final thumbLeft = isTracking ? thumbTravel * (1 - _dragProgress) : 0.0;
 
     final dots = '.' * _dotCount;
@@ -238,9 +267,9 @@ class _RunButtonState extends ConsumerState<RunButton> {
                         mainAxisSize: MainAxisSize.min,
                         children: _busyIsStarting
                             ? [
-                                Text(
+                                const Text(
                                   'Starting',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'Gpkn',
                                     fontSize: 12,
@@ -257,7 +286,7 @@ class _RunButtonState extends ConsumerState<RunButton> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 5),
+                                const SizedBox(width: 2),
                                 Icon(
                                   Icons.arrow_forward,
                                   color: Colors.white,
@@ -270,10 +299,10 @@ class _RunButtonState extends ConsumerState<RunButton> {
                                   color: Colors.white,
                                   size: thumbSize * 0.45,
                                 ),
-                                const SizedBox(width: 5),
-                                Text(
+                                const SizedBox(width: 2),
+                                const Text(
                                   'Stopping',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'Gpkn',
                                     fontSize: 12,

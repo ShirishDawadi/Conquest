@@ -94,54 +94,64 @@ class MapViewModel extends Notifier<MapState> {
   }
 
   Future<void> checkPermissions() async {
-  final result = await _locationService.requestPermissions();
-  state = state.copyWith(permissionStatus: _mapResult(result));
-}
-
-Future<bool> startTracking() async {
-  await Permission.notification.request();
-
-  final permissionResult = await _locationService.requestPermissions();
-  if (permissionResult != LocationPermissionResult.granted) {
-    state = state.copyWith(permissionStatus: _mapResult(permissionResult));
-    return false;
+    final result = await _locationService.requestPermissions();
+    state = state.copyWith(permissionStatus: _mapResult(result));
   }
 
-  final started = await _locationService.startTracking();
-  if (!started) {
-    // shouldn't normally happen now that permission is confirmed first,
-    // but keep as a safety net
-    state = state.copyWith(permissionStatus: LocationPermissionStatus.denied);
-    return false;
+  Future<bool> startTracking() async {
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+
+    final todaySessionCount = await _syncService.getSessionCountForDate(
+      todayDate,
+    );
+    if (todaySessionCount >= 10) {
+      state = state.copyWith(error: 'sessionLimitReached');
+      return false;
+    }
+
+    await Permission.notification.request();
+
+    final permissionResult = await _locationService.requestPermissions();
+    if (permissionResult != LocationPermissionResult.granted) {
+      state = state.copyWith(permissionStatus: _mapResult(permissionResult));
+      return false;
+    }
+
+    final started = await _locationService.startTracking();
+    if (!started) {
+      state = state.copyWith(permissionStatus: LocationPermissionStatus.denied);
+      return false;
+    }
+
+    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      state = state.copyWith(sessionStart: _locationService.sessionStart);
+    });
+
+    state = state.copyWith(
+      isTracking: true,
+      currentPoints: [],
+      furthestDistanceKm: 0,
+      sessionStart: _locationService.sessionStart,
+      permissionStatus: LocationPermissionStatus.granted,
+      clearError: true,
+    );
+
+    return true;
   }
 
-  _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-    state = state.copyWith(sessionStart: _locationService.sessionStart);
-  });
-
-  state = state.copyWith(
-    isTracking: true,
-    currentPoints: [],
-    furthestDistanceKm: 0,
-    sessionStart: _locationService.sessionStart,
-    permissionStatus: LocationPermissionStatus.granted,
-  );
-
-  return true;
-}
-
-LocationPermissionStatus _mapResult(LocationPermissionResult r) {
-  switch (r) {
-    case LocationPermissionResult.granted:
-      return LocationPermissionStatus.granted;
-    case LocationPermissionResult.serviceDisabled:
-      return LocationPermissionStatus.serviceDisabled;
-    case LocationPermissionResult.denied:
-      return LocationPermissionStatus.denied;
-    case LocationPermissionResult.deniedForever:
-      return LocationPermissionStatus.deniedForever;
+  LocationPermissionStatus _mapResult(LocationPermissionResult r) {
+    switch (r) {
+      case LocationPermissionResult.granted:
+        return LocationPermissionStatus.granted;
+      case LocationPermissionResult.serviceDisabled:
+        return LocationPermissionStatus.serviceDisabled;
+      case LocationPermissionResult.denied:
+        return LocationPermissionStatus.denied;
+      case LocationPermissionResult.deniedForever:
+        return LocationPermissionStatus.deniedForever;
+    }
   }
-}
 
   Future<void> stopTracking() async {
     _durationTimer?.cancel();

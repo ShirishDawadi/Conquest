@@ -13,6 +13,11 @@ class MapSyncService {
   final _local = MapLocalSource();
   final _remote = MapRemoteSource();
 
+  Future<int> getSessionCountForDate(DateTime date) async {
+    final log = await getLog(date);
+    return log?.sessions.length ?? 0;
+  }
+
   Future<GpsSession> saveAndSync(DateTime date, GpsSession session) async {
     final simplifiedPoints = TrackingUtils.rdp(session.points);
     final simplified = session.copyWith(points: simplifiedPoints);
