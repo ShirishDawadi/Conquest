@@ -65,13 +65,25 @@ class MapViewModel extends Notifier<MapState> {
     return initialState;
   }
 
+  Future<void> loadForCurrentView({required bool isMonthView}) async {
+    if (isMonthView) {
+      await _loadMonthLog(state.selectedDate);
+    } else {
+      await _loadLog(state.selectedDate);
+    }
+  }
+
   Future<void> _loadLog(DateTime date) async {
     final gen = ++_loadGeneration;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final gpsLog = await _syncService.getLog(date);
       if (gen != _loadGeneration) return;
-      state = state.copyWith(dayLog: gpsLog, isLoading: false);
+      state = state.copyWith(
+        dayLog: gpsLog,
+        clearDayLog: gpsLog == null,
+        isLoading: false,
+      );
     } catch (e) {
       if (gen != _loadGeneration) return;
       log('MapViewModel _loadLog failed: $e', name: 'MapViewModel');
@@ -85,7 +97,11 @@ class MapViewModel extends Notifier<MapState> {
     try {
       final gpsLog = await _syncService.getMonthLog(date);
       if (gen != _loadGeneration) return;
-      state = state.copyWith(dayLog: gpsLog, isLoading: false);
+      state = state.copyWith(
+        dayLog: gpsLog,
+        clearDayLog: gpsLog == null,
+        isLoading: false,
+      );
     } catch (e) {
       if (gen != _loadGeneration) return;
       log('MapViewModel _loadLog failed: $e', name: 'MapViewModel');
@@ -257,7 +273,11 @@ class MapViewModel extends Notifier<MapState> {
     try {
       final gpsLog = await _syncService.refreshLog(state.selectedDate);
       if (gen != _loadGeneration) return;
-      state = state.copyWith(dayLog: gpsLog, isLoading: false);
+      state = state.copyWith(
+        dayLog: gpsLog,
+        clearDayLog: gpsLog == null,
+        isLoading: false,
+      );
     } catch (e) {
       if (gen != _loadGeneration) return;
       state = state.copyWith(isLoading: false, error: 'Failed to load map');

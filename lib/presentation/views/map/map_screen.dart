@@ -389,9 +389,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                 GlassContainer(
                                   child: GestureDetector(
                                     behavior: HitTestBehavior.opaque,
-                                    onTap: () => setState(
-                                      () => _isMonthView = !_isMonthView,
-                                    ),
+                                    onTap: () {
+                                      final newIsMonthView = !_isMonthView;
+                                      setState(
+                                        () => _isMonthView = newIsMonthView,
+                                      );
+                                      ref
+                                          .read(mapProvider.notifier)
+                                          .loadForCurrentView(
+                                            isMonthView: newIsMonthView,
+                                          );
+                                    },
                                     child: Padding(
                                       padding: const EdgeInsets.all(8),
                                       child: SvgPicture.asset(
