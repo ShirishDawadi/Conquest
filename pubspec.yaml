@@ -21,6 +21,7 @@ dependencies:
   flutter_svg: ^2.2.4
   geolocator: ^14.0.2
   health: ^13.3.1
+  http: ^1.6.0
   image: ^4.8.0
   image_picker: ^1.2.2
   intl: ^0.20.3

@@ -47,9 +47,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(mapProvider.notifier).checkPermissions();
     });
-    Geolocator.getServiceStatusStream().listen((ServiceStatus status) {
+    Geolocator.getServiceStatusStream().listen((ServiceStatus status) async {
       if (status == ServiceStatus.enabled) {
-        _initLocation();
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) _initLocation();
       }
     });
   }
@@ -74,7 +75,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       log('Live location failed: $e', name: 'MapScreen');
     }
 
-    if (mounted && _initialCenter == null) {
+    if (mounted && _currentLocation == null && _initialCenter == null) {
       final ipLocation = await _getIpLocation();
       if (ipLocation != null && mounted) {
         setState(() {
