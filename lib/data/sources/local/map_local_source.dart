@@ -4,6 +4,12 @@ import 'package:conquest/core/database/app_database.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:sqflite/sqflite.dart';
 
+class SessionStatus {
+  static const synced = 'synced';
+  static const unsynced = 'unsynced';
+  static const pendingDelete = 'pending_delete';
+}
+
 class MapLocalSource {
   static final MapLocalSource _instance = MapLocalSource._internal();
   factory MapLocalSource() => _instance;
@@ -24,7 +30,7 @@ class MapLocalSource {
         'points': jsonEncode(session.points.map((p) => p.toJson()).toList()),
         'distance': session.distanceKm,
         'furthest_distance': session.furthestDistanceKm,
-        'synced': 0,
+        'status': SessionStatus.unsynced,
       });
       return generatedId;
     } catch (e) {
@@ -38,15 +44,12 @@ class MapLocalSource {
       final db = await _db;
       await db.update(
         'gps_sessions',
-        {'synced': 1, 'backend_id': backendId},
+        {'status': SessionStatus.synced, 'backend_id': backendId},
         where: 'id = ?',
         whereArgs: [localId],
       );
     } catch (e) {
-      log(
-        'MapLocalSource markSessionSynced failed: $e',
-        name: 'MapLocalSource',
-      );
+      log('MapLocalSource markSessionSynced failed: $e', name: 'MapLocalSource');
     }
   }
 
@@ -55,8 +58,8 @@ class MapLocalSource {
       final db = await _db;
       final rows = await db.query(
         'gps_sessions',
-        where: 'date = ?',
-        whereArgs: [date.toIso8601String().substring(0, 10)],
+        where: 'date = ? AND status != ?',
+        whereArgs: [date.toIso8601String().substring(0, 10), SessionStatus.pendingDelete],
         orderBy: 'started_at ASC',
       );
       if (rows.isEmpty) return null;
@@ -72,23 +75,32 @@ class MapLocalSource {
       final db = await _db;
       final rows = await db.query(
         'gps_sessions',
-        where: 'synced = ?',
-        whereArgs: [0],
+        where: 'status = ?',
+        whereArgs: [SessionStatus.unsynced],
       );
       return rows.map(_rowToSession).toList();
     } catch (e) {
-      log(
-        'MapLocalSource getUnsyncedSessions failed: $e',
-        name: 'MapLocalSource',
-      );
+      log('MapLocalSource getUnsyncedSessions failed: $e', name: 'MapLocalSource');
       return [];
     }
   }
 
-  Future<void> insertSyncedSessions(
-    DateTime date,
-    List<GpsSession> sessions,
-  ) async {
+  Future<List<GpsSession>> getPendingDeleteSessions() async {
+    try {
+      final db = await _db;
+      final rows = await db.query(
+        'gps_sessions',
+        where: 'status = ? AND backend_id IS NOT NULL',
+        whereArgs: [SessionStatus.pendingDelete],
+      );
+      return rows.map(_rowToSession).toList();
+    } catch (e) {
+      log('MapLocalSource getPendingDeleteSessions failed: $e', name: 'MapLocalSource');
+      return [];
+    }
+  }
+
+  Future<void> insertSyncedSessions(DateTime date, List<GpsSession> sessions) async {
     try {
       final db = await _db;
 
@@ -105,8 +117,7 @@ class MapLocalSource {
 
       final batch = db.batch();
       for (final session in sessions) {
-        if (session.backendId != null &&
-            existingBackendIds.contains(session.backendId)) {
+        if (session.backendId != null && existingBackendIds.contains(session.backendId)) {
           continue;
         }
         batch.insert('gps_sessions', {
@@ -117,24 +128,43 @@ class MapLocalSource {
           'points': jsonEncode(session.points.map((p) => p.toJson()).toList()),
           'distance': session.distanceKm,
           'furthest_distance': session.furthestDistanceKm,
-          'synced': 1,
+          'status': SessionStatus.synced,
         });
       }
       await batch.commit(noResult: true);
     } catch (e) {
-      log(
-        'MapLocalSource insertSyncedSessions failed: $e',
-        name: 'MapLocalSource',
-      );
+      log('MapLocalSource insertSyncedSessions failed: $e', name: 'MapLocalSource');
     }
   }
 
   Future<void> deleteSession(int localId) async {
     try {
       final db = await _db;
-      await db.delete('gps_sessions', where: 'id = ?', whereArgs: [localId]);
+      final rows = await db.query('gps_sessions', where: 'id = ?', whereArgs: [localId]);
+      if (rows.isEmpty) return;
+
+      final backendId = rows.first['backend_id'] as int?;
+      if (backendId == null) {
+        await db.delete('gps_sessions', where: 'id = ?', whereArgs: [localId]);
+      } else {
+        await db.update(
+          'gps_sessions',
+          {'status': SessionStatus.pendingDelete},
+          where: 'id = ?',
+          whereArgs: [localId],
+        );
+      }
     } catch (e) {
       log('MapLocalSource deleteSession failed: $e', name: 'MapLocalSource');
+    }
+  }
+
+  Future<void> hardDeleteSession(int localId) async {
+    try {
+      final db = await _db;
+      await db.delete('gps_sessions', where: 'id = ?', whereArgs: [localId]);
+    } catch (e) {
+      log('MapLocalSource hardDeleteSession failed: $e', name: 'MapLocalSource');
     }
   }
 
@@ -147,26 +177,17 @@ class MapLocalSource {
         whereArgs: [date.toIso8601String().substring(0, 10)],
       );
     } catch (e) {
-      log(
-        'MapLocalSource deleteSessionsByDate failed: $e',
-        name: 'MapLocalSource',
-      );
+      log('MapLocalSource deleteSessionsByDate failed: $e', name: 'MapLocalSource');
     }
   }
 
   Future<void> deleteOldSessions() async {
     try {
       final db = await _db;
-      final cutoff = DateTime.now()
-          .subtract(const Duration(days: 30))
-          .toIso8601String()
-          .substring(0, 10);
+      final cutoff = DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
       await db.delete('gps_sessions', where: 'date < ?', whereArgs: [cutoff]);
     } catch (e) {
-      log(
-        'MapLocalSource deleteOldSessions failed: $e',
-        name: 'MapLocalSource',
-      );
+      log('MapLocalSource deleteOldSessions failed: $e', name: 'MapLocalSource');
     }
   }
 
@@ -175,9 +196,7 @@ class MapLocalSource {
       localId: row['id'] as int,
       backendId: row['backend_id'] as int?,
       startedAt: DateTime.parse(row['started_at'] as String),
-      endedAt: row['ended_at'] != null
-          ? DateTime.parse(row['ended_at'] as String)
-          : null,
+      endedAt: row['ended_at'] != null ? DateTime.parse(row['ended_at'] as String) : null,
       points: (jsonDecode(row['points'] as String) as List)
           .map((p) => GpsPoint.fromJson(p as Map<String, dynamic>))
           .toList(),

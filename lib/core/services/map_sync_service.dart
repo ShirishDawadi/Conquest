@@ -68,6 +68,26 @@ class MapSyncService {
           );
         }
       }
+
+      final pendingDeletes = await _local.getPendingDeleteSessions();
+      for (final session in pendingDeletes) {
+        try {
+          final date = DateTime.parse(
+            session.startedAt.toIso8601String().substring(0, 10),
+          );
+          await _remote.deleteSession(date, session.backendId!);
+          await _local.hardDeleteSession(session.localId!);
+          log(
+            'MapSyncService synced delete for ${session.localId}',
+            name: 'MapSyncService',
+          );
+        } catch (e) {
+          log(
+            'MapSyncService retry delete failed for ${session.localId}: $e',
+            name: 'MapSyncService',
+          );
+        }
+      }
     } catch (e) {
       log('MapSyncService retryUnsynced failed: $e', name: 'MapSyncService');
     }
@@ -116,14 +136,15 @@ class MapSyncService {
   }
 
   Future<void> deleteSession(GpsSession session, DateTime date) async {
-    if (session.localId != null) {
-      await _local.deleteSession(session.localId!);
-    }
+    if (session.localId == null) return;
+
+    await _local.deleteSession(session.localId!);
 
     if (session.backendId != null) {
       try {
         if (await ConnectivityUtils.isOnline()) {
           await _remote.deleteSession(date, session.backendId!);
+          await _local.hardDeleteSession(session.localId!);
         }
       } catch (e) {
         log(

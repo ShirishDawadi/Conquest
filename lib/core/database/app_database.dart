@@ -30,18 +30,18 @@ class AppDatabase {
   }
 
   static const _gpsSessionsTableSql = '''
-    CREATE TABLE gps_sessions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      backend_id INTEGER,
-      date TEXT NOT NULL,
-      started_at TEXT NOT NULL,
-      ended_at TEXT,
-      points TEXT NOT NULL,
-      distance REAL NOT NULL DEFAULT 0,
-      furthest_distance REAL NOT NULL DEFAULT 0,
-      synced INTEGER NOT NULL DEFAULT 0
-    )
-  ''';
+  CREATE TABLE gps_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    backend_id INTEGER,
+    date TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    ended_at TEXT,
+    points TEXT NOT NULL,
+    distance REAL NOT NULL DEFAULT 0,
+    furthest_distance REAL NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'unsynced'
+  )
+''';
 
   static const _objectCapturesTableSql = '''
     CREATE TABLE object_images (
