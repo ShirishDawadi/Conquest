@@ -5,6 +5,7 @@ import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
+import 'package:conquest/presentation/views/map/widgets/expanded_session_list.dart';
 import 'package:conquest/presentation/views/shared_widgets/date_picker.dart';
 import 'package:conquest/presentation/views/map/widgets/expanded_session_card.dart';
 import 'package:conquest/presentation/views/shared_widgets/app_calendar.dart';
@@ -38,6 +39,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _locating = true;
   bool _showCalendar = false;
   bool _isMonthView = false;
+  bool _showSessionsExpanded = false;
   Timer? _debounce;
 
   @override
@@ -245,6 +247,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     setState(() {
                       _isExpanded = false;
                       _showCalendar = false;
+                      _showSessionsExpanded = false;
                     });
                     ref.read(mapProvider.notifier).clearFocus();
                   },
@@ -479,12 +482,33 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
             if (_initialCenter != null &&
                 !state.isTracking &&
-                state.focusedSession == null)
+                state.focusedSession == null &&
+                !_showSessionsExpanded)
               Positioned(
                 bottom: AppConstants.navBarBottomPosition(context),
                 right: 16,
-                width: 150,
-                child: SessionList(),
+                width: 160,
+                child: SessionList(
+                  isMonthView: _isMonthView,
+                  onExpand: () => setState(() => _showSessionsExpanded = true),
+                ),
+              ),
+
+            if (_initialCenter != null &&
+                !state.isTracking &&
+                state.focusedSession == null &&
+                _showSessionsExpanded)
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 420),
+                  child: SizedBox(
+                    width: 300,
+                    child: ExpandedSessionList(
+                      onCollapse: () =>
+                          setState(() => _showSessionsExpanded = false),
+                    ),
+                  ),
+                ),
               ),
 
             if (_initialCenter != null &&
