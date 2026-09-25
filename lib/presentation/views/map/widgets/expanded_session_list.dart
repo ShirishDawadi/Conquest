@@ -25,33 +25,44 @@ class ExpandedSessionList extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SvgPicture.asset('assets/icons/session.svg', width: 20),
-                const SizedBox(width: 4),
+                SvgPicture.asset('assets/icons/session.svg', width: 24),
                 const Expanded(
                   child: Center(
                     child: Text(
                       'Sessions',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
                 GestureDetector(
                   onTap: onCollapse,
                   child: SvgPicture.asset(
                     'assets/icons/collapse.svg',
-                    width: 20,
+                    width: 24,
                   ),
                 ),
               ],
             ),
+            SizedBox(height: 5),
             Flexible(
-              child: SingleChildScrollView(
-                child: SessionsExpanded(
-                  mutedColor: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.50),
-                  sessions: sessions,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white.withValues(alpha: 0.50),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
+                child: SingleChildScrollView(
+                  child: SessionsExpanded(
+                    mutedColor: Colors.grey,
+                    sessions: sessions,
+                    onSessionTap: (session) {
+                      ref.read(mapProvider.notifier).focusSession(session);
+                      onCollapse();
+                    },
+                  ),
                 ),
               ),
             ),

@@ -1,3 +1,4 @@
+import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
@@ -35,15 +36,17 @@ class _SessionListState extends ConsumerState<SessionList> {
     final sessions = state.dayLog?.sessions ?? [];
     final len = sessions.length;
 
-
     return GlassContainer(
       borderRadius: 12,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6.0,
+                vertical: 2.0,
+              ),
               child: Row(
                 children: [
                   SvgPicture.asset('assets/icons/session.svg', width: 15),
@@ -74,13 +77,30 @@ class _SessionListState extends ConsumerState<SessionList> {
             const SizedBox(height: 4),
             Container(
               constraints: const BoxConstraints(maxHeight: 100),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.white.withValues(alpha: 0.50),
+              ),
               child: ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 itemCount: len,
                 itemBuilder: (context, index) {
                   final session = sessions[index];
-                  return _SessionTile(index: index + 1, session: session);
+                  final isLast = index == len - 1;
+                  return Column(
+                    children: [
+                      _SessionTile(index: index + 1, session: session),
+                      if (!isLast)
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColors.border,
+                          indent: 10,
+                          endIndent: 10,
+                        ),
+                    ],
+                  );
                 },
               ),
             ),
@@ -90,7 +110,10 @@ class _SessionListState extends ConsumerState<SessionList> {
                 child: Center(
                   child: Text(
                     'No sessions found',
-                    style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.5)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.black.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               ),
@@ -121,37 +144,27 @@ class _SessionTile extends ConsumerWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () => ref.read(mapProvider.notifier).focusSession(session),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white),
-            color: Colors.white,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 14,
-                  child: Text('$index.', style: const TextStyle(fontSize: 10)),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Row(
-                    children: [
-                      SvgPicture.asset('assets/icons/distance.svg', width: 15),
-                      const SizedBox(width: 2),
-                      Text(distStr, style: const TextStyle(fontSize: 10)),
-                    ],
-                  ),
-                ),
-                SvgPicture.asset('assets/icons/time.svg', width: 15),
-                Text(durStr, style: const TextStyle(fontSize: 10)),
-              ],
+        padding: const EdgeInsets.fromLTRB(10, 4, 5, 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 14,
+              child: Text('$index.', style: const TextStyle(fontSize: 10)),
             ),
-          ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Row(
+                children: [
+                  SvgPicture.asset('assets/icons/distance.svg', width: 15),
+                  const SizedBox(width: 2),
+                  Text(distStr, style: const TextStyle(fontSize: 10)),
+                ],
+              ),
+            ),
+            SvgPicture.asset('assets/icons/time.svg', width: 15),
+            Text(durStr, style: const TextStyle(fontSize: 10)),
+          ],
         ),
       ),
     );

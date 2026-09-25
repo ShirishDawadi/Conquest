@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 class SessionsExpanded extends StatelessWidget {
   final Color mutedColor;
   final List<GpsSession> sessions;
+  final ValueChanged<GpsSession>? onSessionTap;
 
   const SessionsExpanded({
     super.key,
     required this.mutedColor,
     required this.sessions,
+    this.onSessionTap,
   });
 
   String _formatDuration(Duration d) {
@@ -28,7 +30,7 @@ class SessionsExpanded extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Center(
           child: Text(
-            'No sessions found',
+            'No sessions on this day',
             style: TextStyle(fontSize: 12, color: mutedColor),
           ),
         ),
@@ -42,7 +44,7 @@ class SessionsExpanded extends StatelessWidget {
         Row(
           children: [
             SizedBox(
-              width: 18,
+              width: 24,
               child: Text(
                 'No.',
                 style: TextStyle(fontSize: 10, color: mutedColor),
@@ -81,19 +83,24 @@ class SessionsExpanded extends StatelessWidget {
         const SizedBox(height: 6),
         ...List.generate(sessions.length, (i) {
           final s = sessions[i];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+          final isLast = i == sessions.length - 1;
+    
+          final row = Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
             child: Row(
               children: [
                 SizedBox(
-                  width: 18,
-                  child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
+                  width: 24,
+                  child: Text(
+                    '${i + 1}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
                 Expanded(
                   child: Center(
                     child: RoutePreview(
                       session: s,
-                      size: 22,
+                      size: 40,
                       color: AppColors.greenish_3,
                     ),
                   ),
@@ -121,6 +128,28 @@ class SessionsExpanded extends StatelessWidget {
                 ),
               ],
             ),
+          );
+    
+          final tappableRow = onSessionTap != null
+              ? GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onSessionTap!(s),
+                  child: row,
+                )
+              : row;
+    
+          return Column(
+            children: [
+              tappableRow,
+              if (!isLast)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.border,
+                  indent: 10,
+                  endIndent: 10,
+                ),
+            ],
           );
         }),
       ],
