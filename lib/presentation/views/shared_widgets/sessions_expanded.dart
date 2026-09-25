@@ -28,7 +28,7 @@ class SessionsExpanded extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Center(
           child: Text(
-            'No sessions on this day',
+            'No sessions found',
             style: TextStyle(fontSize: 12, color: mutedColor),
           ),
         ),
@@ -42,7 +42,7 @@ class SessionsExpanded extends StatelessWidget {
         Row(
           children: [
             SizedBox(
-              width: 24,
+              width: 18,
               child: Text(
                 'No.',
                 style: TextStyle(fontSize: 10, color: mutedColor),
@@ -86,7 +86,7 @@ class SessionsExpanded extends StatelessWidget {
             child: Row(
               children: [
                 SizedBox(
-                  width: 24,
+                  width: 18,
                   child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
                 ),
                 Expanded(

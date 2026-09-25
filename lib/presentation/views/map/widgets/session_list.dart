@@ -35,7 +35,6 @@ class _SessionListState extends ConsumerState<SessionList> {
     final sessions = state.dayLog?.sessions ?? [];
     final len = sessions.length;
 
-    if (sessions.isEmpty) return const SizedBox.shrink();
 
     return GlassContainer(
       borderRadius: 12,
@@ -47,7 +46,6 @@ class _SessionListState extends ConsumerState<SessionList> {
               padding: const EdgeInsets.symmetric(horizontal: 6.0),
               child: Row(
                 children: [
-                  const SizedBox(width: 8),
                   SvgPicture.asset('assets/icons/session.svg', width: 15),
                   const SizedBox(width: 4),
                   const Expanded(
@@ -55,7 +53,7 @@ class _SessionListState extends ConsumerState<SessionList> {
                       'Sessions',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -65,7 +63,10 @@ class _SessionListState extends ConsumerState<SessionList> {
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: widget.onExpand,
-                    child: SvgPicture.asset('assets/icons/expand.svg', width: 15),
+                    child: SvgPicture.asset(
+                      'assets/icons/expand.svg',
+                      width: 20,
+                    ),
                   ),
                 ],
               ),
@@ -83,6 +84,16 @@ class _SessionListState extends ConsumerState<SessionList> {
                 },
               ),
             ),
+            if (sessions.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Text(
+                    'No sessions found',
+                    style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.5)),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -115,6 +126,7 @@ class _SessionTile extends ConsumerWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.white),
+            color: Colors.white,
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

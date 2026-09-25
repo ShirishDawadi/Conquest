@@ -23,6 +23,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
+enum MapOverlay { none, calendar, sessionExpanded, sessionListExpanded }
+
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
 
@@ -35,12 +37,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   LatLng? _currentLocation;
   LatLng? _initialCenter;
   bool _mapReady = false;
-  bool _isExpanded = false;
   bool _locating = true;
-  bool _showCalendar = false;
   bool _isMonthView = false;
-  bool _showSessionsExpanded = false;
+  MapOverlay _overlay = MapOverlay.none;
   Timer? _debounce;
+
+  void _closeOverlay() => setState(() => _overlay = MapOverlay.none);
+
+  void _openOverlay(MapOverlay overlay) => setState(() {
+    _overlay = _overlay == overlay ? MapOverlay.none : overlay;
+  });
 
   @override
   void initState() {
@@ -244,11 +250,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     }
                   },
                   onTap: (_, __) {
-                    setState(() {
-                      _isExpanded = false;
-                      _showCalendar = false;
-                      _showSessionsExpanded = false;
-                    });
+                    _closeOverlay();
                     ref.read(mapProvider.notifier).clearFocus();
                   },
                 ),
@@ -368,171 +370,172 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 ],
               ),
 
+            if (_overlay != MapOverlay.none)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _closeOverlay,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+
             Positioned(
               top: 0,
               left: 0,
               right: 0,
-              child: Column(
-                children: [
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          MapTopBar(
-                            onDateTap: () =>
-                                setState(() => _showCalendar = !_showCalendar),
-                            isMonthView: _isMonthView,
-                          ),
-
-                          Positioned(
-                            right: 12,
-                            child: Row(
-                              children: [
-                                GlassContainer(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () {
-                                      final newIsMonthView = !_isMonthView;
-                                      setState(
-                                        () => _isMonthView = newIsMonthView,
-                                      );
-                                      ref
-                                          .read(mapProvider.notifier)
-                                          .loadForCurrentView(
-                                            isMonthView: newIsMonthView,
-                                          );
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: SvgPicture.asset(
-                                        _isMonthView
-                                            ? 'assets/icons/calendar_month.svg'
-                                            : 'assets/icons/calendar_day.svg',
-                                        width: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                GlassContainer(
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () => _moveToUserLocation(),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: SvgPicture.asset(
-                                        'assets/icons/locate.svg',
-                                        width: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      MapTopBar(
+                        onDateTap: () => _openOverlay(MapOverlay.calendar),
+                        isMonthView: _isMonthView,
                       ),
-                    ),
-                  ),
 
-                  if (_showCalendar)
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 225),
-                        child: !_isMonthView
-                            ? AppCalendar(
-                                selectedDate: state.selectedDate,
-                                onDateSelected: (date) {
-                                  final diff = date
-                                      .difference(state.selectedDate)
-                                      .inDays;
+                      Positioned(
+                        right: 12,
+                        child: Row(
+                          children: [
+                            GlassContainer(
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () {
+                                  final newIsMonthView = !_isMonthView;
+                                  setState(
+                                    () => _isMonthView = newIsMonthView,
+                                  );
                                   ref
                                       .read(mapProvider.notifier)
-                                      .navigateDate(diff);
+                                      .loadForCurrentView(
+                                        isMonthView: newIsMonthView,
+                                      );
                                 },
-                              )
-                            : GlassContainer(
-                                child: SizedBox(
-                                  width: 200,
-                                  height: 120,
-                                  child: DatePicker(
-                                    month: state.selectedDate.month - 1,
-                                    year: state.selectedDate.year,
-                                    today: DateTime.now(),
-                                    onDismiss: () {},
-                                    onMonthChanged: (m) =>
-                                        _onMonthOrYearChanged(
-                                          m,
-                                          state.selectedDate.year,
-                                        ),
-                                    onYearChanged: (y) => _onMonthOrYearChanged(
-                                      state.selectedDate.month - 1,
-                                      2024 + y,
-                                    ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: SvgPicture.asset(
+                                    _isMonthView
+                                        ? 'assets/icons/calendar_month.svg'
+                                        : 'assets/icons/calendar_day.svg',
+                                    width: 20,
                                   ),
                                 ),
                               ),
+                            ),
+                            const SizedBox(width: 8),
+                            GlassContainer(
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => _moveToUserLocation(),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: SvgPicture.asset(
+                                    'assets/icons/locate.svg',
+                                    width: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
+
+            if (_overlay == MapOverlay.calendar)
+              Positioned(
+                top: 90,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 225),
+                    child: !_isMonthView
+                        ? AppCalendar(
+                            selectedDate: state.selectedDate,
+                            onDateSelected: (date) {
+                              final diff = date
+                                  .difference(state.selectedDate)
+                                  .inDays;
+                              ref
+                                  .read(mapProvider.notifier)
+                                  .navigateDate(diff);
+                            },
+                          )
+                        : GlassContainer(
+                            child: SizedBox(
+                              width: 200,
+                              height: 120,
+                              child: DatePicker(
+                                month: state.selectedDate.month - 1,
+                                year: state.selectedDate.year,
+                                today: DateTime.now(),
+                                onDismiss: () {},
+                                onMonthChanged: (m) => _onMonthOrYearChanged(
+                                  m,
+                                  state.selectedDate.year,
+                                ),
+                                onYearChanged: (y) => _onMonthOrYearChanged(
+                                  state.selectedDate.month - 1,
+                                  2024 + y,
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
 
             if (_initialCenter != null &&
                 !state.isTracking &&
                 state.focusedSession == null &&
-                !_showSessionsExpanded)
+                _overlay != MapOverlay.sessionListExpanded)
               Positioned(
                 bottom: AppConstants.navBarBottomPosition(context),
                 right: 16,
                 width: 160,
                 child: SessionList(
                   isMonthView: _isMonthView,
-                  onExpand: () => setState(() => _showSessionsExpanded = true),
-                ),
-              ),
-
-            if (_initialCenter != null &&
-                !state.isTracking &&
-                state.focusedSession == null &&
-                _showSessionsExpanded)
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 420),
-                  child: SizedBox(
-                    width: 300,
-                    child: ExpandedSessionList(
-                      onCollapse: () =>
-                          setState(() => _showSessionsExpanded = false),
-                    ),
-                  ),
+                  onExpand: () => _openOverlay(MapOverlay.sessionListExpanded),
                 ),
               ),
 
             if (_initialCenter != null &&
                 state.focusedSession != null &&
-                !_isExpanded)
+                _overlay != MapOverlay.sessionExpanded)
               Positioned(
                 bottom: AppConstants.navBarBottomPosition(context),
                 right: 16,
                 width: 150,
                 child: SessionCard(
                   session: state.focusedSession!,
-                  onExpand: () => setState(() => _isExpanded = true),
+                  onExpand: () => _openOverlay(MapOverlay.sessionExpanded),
                 ),
               ),
 
-            if (_initialCenter != null &&
-                state.focusedSession != null &&
-                _isExpanded)
+            if (_overlay == MapOverlay.sessionListExpanded)
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 420, maxWidth: 380),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: ExpandedSessionList(onCollapse: _closeOverlay),
+                  ),
+                ),
+              ),
+
+            if (_overlay == MapOverlay.sessionExpanded &&
+                state.focusedSession != null)
               Center(
                 child: SizedBox(
                   width: 250,
                   child: ExpandedCard(
                     session: state.focusedSession!,
-                    onCollapse: () => setState(() => _isExpanded = false),
+                    onCollapse: _closeOverlay,
                   ),
                 ),
               ),
