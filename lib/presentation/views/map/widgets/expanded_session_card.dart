@@ -85,7 +85,7 @@ class ExpandedCard extends ConsumerWidget {
               children: [
                 Column(
                   children: [
-                    SvgPicture.asset('assets/icons/steps.svg', width: 30),
+                    SvgPicture.asset('assets/icons/distance.svg', width: 30),
                     const SizedBox(height: 4),
                     Text(
                       '$distStr km',

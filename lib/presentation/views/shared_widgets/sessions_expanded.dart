@@ -101,6 +101,7 @@ class SessionsExpanded extends StatelessWidget {
                     child: RoutePreview(
                       session: s,
                       size: 40,
+                      strokeWidth: 2.5,
                       color: AppColors.greenish_3,
                     ),
                   ),

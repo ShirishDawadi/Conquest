@@ -1,5 +1,6 @@
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
+import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,35 +19,45 @@ class SessionCard extends ConsumerWidget {
     final pace = session.speedString;
 
     return GlassContainer(
-      child: Container(
-        padding: const EdgeInsets.all(12),
+      borderRadius: 10,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6,6,6,12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => onExpand(),
-              child: Align(
-                alignment: AlignmentGeometry.centerLeft,
-                child: SvgPicture.asset(
-                  'assets/icons/expand.svg',
-                  width: 16,
-                  height: 16,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onExpand(),
+                  child: SvgPicture.asset(
+                    'assets/icons/expand.svg',
+                    width: 20,
+                    height: 20,
+                  ),
                 ),
-              ),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => ref.read(mapProvider.notifier).clearFocus(),
+                  child: SvgPicture.asset(
+                    'assets/icons/cross.svg',
+                    width: 20,
+                    height: 20,
+                  ),
+                ),
+                  
+              ],
             ),
             Text(
               '$pace km/hr',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            const SizedBox(height: 6),
-            SvgPicture.asset('assets/icons/steps.svg', width: 20),
-            const SizedBox(height: 4),
+            SvgPicture.asset('assets/icons/distance.svg', width: 20),
             Text('$distStr km', style: const TextStyle(fontSize: 10)),
             const SizedBox(height: 8),
             SvgPicture.asset('assets/icons/time.svg', width: 20),
-            const SizedBox(height: 4),
             Text(durStr, style: const TextStyle(fontSize: 10)),
           ],
         ),

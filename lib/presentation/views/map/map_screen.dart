@@ -510,7 +510,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               Positioned(
                 bottom: AppConstants.navBarBottomPosition(context),
                 right: 16,
-                width: 150,
+                width: 130,
                 child: SessionCard(
                   session: state.focusedSession!,
                   onExpand: () => _openOverlay(MapOverlay.sessionExpanded),
@@ -520,7 +520,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             if (_overlay == MapOverlay.sessionListExpanded)
               Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 420, maxWidth: 380),
+                  constraints: const BoxConstraints(maxHeight: 420, maxWidth: 340),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: ExpandedSessionList(onCollapse: _closeOverlay),

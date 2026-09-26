@@ -1,9 +1,3 @@
-// presentation/views/shared_widgets/route_preview.dart
-//
-// Small static route thumbnail from a GpsSession's points. No map tiles,
-// no flutter_map dependency — just normalizes lat/lng into local pixel
-// space and draws a path. Cheap enough to use in a list row.
-
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:flutter/material.dart';
 
@@ -52,8 +46,6 @@ class _RoutePreviewPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
-    // Single point (or a near-zero-distance session) -> draw a dot instead
-    // of a degenerate/invisible line.
     if (points.length == 1) {
       final center = Offset(size.width / 2, size.height / 2);
       canvas.drawCircle(center, strokeWidth * 1.5, Paint()..color = color);
@@ -72,21 +64,16 @@ class _RoutePreviewPainter extends CustomPainter {
     final latSpan = (maxLat - minLat).abs();
     final lngSpan = (maxLng - minLng).abs();
 
-    // Degenerate bounding box (e.g. GPS jitter session with ~0 movement) ->
-    // also just draw a dot rather than a stretched/garbage line.
     if (latSpan < 1e-7 && lngSpan < 1e-7) {
       final center = Offset(size.width / 2, size.height / 2);
       canvas.drawCircle(center, strokeWidth * 1.5, Paint()..color = color);
       return;
     }
 
-    // Leave a small margin so the line doesn't touch the edges.
     const margin = 3.0;
     final drawableW = size.width - margin * 2;
     final drawableH = size.height - margin * 2;
 
-    // Keep aspect ratio: scale by whichever span is more constraining, then
-    // center the smaller axis. Avoids stretching narrow/tall routes.
     final scale = latSpan == 0 || lngSpan == 0
         ? 1.0
         : (drawableW / lngSpan < drawableH / latSpan
@@ -102,7 +89,6 @@ class _RoutePreviewPainter extends CustomPainter {
       final x = lngSpan == 0
           ? drawableW / 2 + margin
           : offsetX + (p.lng - minLng) * scale;
-      // Flip Y: latitude increases upward, canvas Y increases downward.
       final y = latSpan == 0
           ? drawableH / 2 + margin
           : offsetY + (maxLat - p.lat) * scale;

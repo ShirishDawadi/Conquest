@@ -17,34 +17,37 @@ class ExpandedSessionList extends ConsumerWidget {
     return GlassContainer(
       borderRadius: 16,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SvgPicture.asset('assets/icons/session.svg', width: 24),
-                const Expanded(
-                  child: Center(
-                    child: Text(
-                      'Sessions',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset('assets/icons/session.svg', width: 24),
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'Sessions',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: onCollapse,
-                  child: SvgPicture.asset(
-                    'assets/icons/collapse.svg',
-                    width: 24,
+                  GestureDetector(
+                    onTap: onCollapse,
+                    child: SvgPicture.asset(
+                      'assets/icons/collapse.svg',
+                      width: 24,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             SizedBox(height: 5),
             Flexible(
