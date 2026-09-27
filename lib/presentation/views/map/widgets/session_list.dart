@@ -1,4 +1,3 @@
-import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
@@ -79,7 +78,7 @@ class _SessionListState extends ConsumerState<SessionList> {
               constraints: const BoxConstraints(maxHeight: 100),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Colors.white.withValues(alpha: 0.50),
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.50),
               ),
               child: ListView.builder(
                 padding: EdgeInsets.zero,
@@ -95,7 +94,7 @@ class _SessionListState extends ConsumerState<SessionList> {
                         Divider(
                           height: 1,
                           thickness: 1,
-                          color: AppColors.border,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.10),
                           indent: 10,
                           endIndent: 10,
                         ),
@@ -112,7 +111,7 @@ class _SessionListState extends ConsumerState<SessionList> {
                     'No sessions found',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.50)
                     ),
                   ),
                 ),

@@ -13,6 +13,9 @@ class ExpandedSessionList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(mapProvider);
     final sessions = state.dayLog?.sessions ?? [];
+    final mutedColor = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.50);
 
     return GlassContainer(
       borderRadius: 16,
@@ -54,12 +57,12 @@ class ExpandedSessionList extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: Colors.white.withValues(alpha: 0.50),
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.50),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
                 child: SingleChildScrollView(
                   child: SessionsExpanded(
-                    mutedColor: Colors.grey,
+                    mutedColor: mutedColor,
                     sessions: sessions,
                     onSessionTap: (session) {
                       ref.read(mapProvider.notifier).focusSession(session);

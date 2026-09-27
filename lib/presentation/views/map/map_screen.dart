@@ -41,6 +41,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _isMonthView = false;
   MapOverlay _overlay = MapOverlay.none;
   Timer? _debounce;
+  late DateTime _displayDate = ref.read(mapProvider).selectedDate;
+  int _navAccum = 0;
+  Timer? _navDebounce;
 
   void _closeOverlay() => setState(() => _overlay = MapOverlay.none);
 
@@ -162,10 +165,30 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     });
   }
 
+  void _debouncedNavigate(int delta) {
+    setState(() {
+      _displayDate = _isMonthView
+          ? DateTime(_displayDate.year, _displayDate.month + delta, 1)
+          : _displayDate.add(Duration(days: delta));
+    });
+
+    _navAccum += delta;
+    _navDebounce?.cancel();
+    _navDebounce = Timer(const Duration(milliseconds: 500), () {
+      final steps = _navAccum;
+      _navAccum = 0;
+      if (steps == 0) return;
+      _isMonthView
+          ? ref.read(mapProvider.notifier).navigateMonth(steps)
+          : ref.read(mapProvider.notifier).navigateDate(steps);
+    });
+  }
+
   @override
   void dispose() {
     _mapController.dispose();
     _debounce?.cancel();
+    _navDebounce?.cancel();
     super.dispose();
   }
 
@@ -190,6 +213,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           if (mounted) _flyToSession(next.focusedSession!);
         });
       }
+    });
+
+    ref.listen(mapProvider.select((s) => s.selectedDate), (prev, next) {
+      if (mounted) setState(() => _displayDate = next);
     });
 
     return Theme(
@@ -386,6 +413,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       MapTopBar(
                         onDateTap: () => _openOverlay(MapOverlay.calendar),
                         isMonthView: _isMonthView,
+                        displayDate: _displayDate,
+                        onPrevious: () => _debouncedNavigate(-1),
+                        onNext: () => _debouncedNavigate(1),
                       ),
 
                       Positioned(
@@ -448,12 +478,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     constraints: const BoxConstraints(maxWidth: 225),
                     child: !_isMonthView
                         ? AppCalendar(
-                            selectedDate: state.selectedDate,
+                            selectedDate: _displayDate,
                             onDateSelected: (date) {
-                              final diff = date
-                                  .difference(state.selectedDate)
-                                  .inDays;
-                              ref.read(mapProvider.notifier).navigateDate(diff);
+                              final diff = date.difference(_displayDate).inDays;
+                              _debouncedNavigate(diff);
                             },
                           )
                         : GlassContainer(

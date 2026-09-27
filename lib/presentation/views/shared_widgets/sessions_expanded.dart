@@ -146,7 +146,7 @@ class SessionsExpanded extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: AppColors.border,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.10),
                   indent: 10,
                   endIndent: 10,
                 ),
