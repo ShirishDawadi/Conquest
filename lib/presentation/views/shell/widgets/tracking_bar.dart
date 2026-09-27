@@ -77,7 +77,7 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SvgPicture.asset(
-                  'assets/icons/steps.svg',
+                  'assets/icons/distance.svg',
                   width: 20,
                   colorFilter: ColorFilter.mode(
                     Theme.of(context).iconTheme.color!,

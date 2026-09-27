@@ -125,6 +125,20 @@ class LocationService {
   void _onPosition(Position position) {
     if (position.accuracy > 20.0) return;
 
+    if (_currentPoints.isNotEmpty) {
+      final last = _currentPoints.last;
+      final movedMeters = Geolocator.distanceBetween(
+        last.lat,
+        last.lng,
+        position.latitude,
+        position.longitude,
+      );
+
+      if (movedMeters < position.accuracy * 0.5) {
+        return;
+      }
+    }
+
     final point = GpsPoint(lat: position.latitude, lng: position.longitude);
     _lastSpeedKmh = (position.speed * 3.6).clamp(0.0, double.infinity);
     _currentPoints.add(point);

@@ -263,7 +263,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     maxNativeZoom: 19,
                   ),
 
-                  if (state.dayLog != null)
+                  if (state.dayLog != null && state.focusedSession == null)
                     PolylineLayer(
                       polylines: state.dayLog!.sessions
                           .where((s) => s.points.isNotEmpty)
@@ -272,12 +272,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                               (p) =>
                                   p.latitude.isFinite && p.longitude.isFinite,
                             ),
-                          )
-                          .where(
-                            (s) =>
-                                (s.backendId ?? s.localId) !=
-                                (state.focusedSession?.backendId ??
-                                    state.focusedSession?.localId),
                           )
                           .map(
                             (s) => Polyline(
@@ -403,9 +397,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                 behavior: HitTestBehavior.opaque,
                                 onTap: () {
                                   final newIsMonthView = !_isMonthView;
-                                  setState(
-                                    () => _isMonthView = newIsMonthView,
-                                  );
+                                  setState(() => _isMonthView = newIsMonthView);
                                   ref
                                       .read(mapProvider.notifier)
                                       .loadForCurrentView(
@@ -461,9 +453,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                               final diff = date
                                   .difference(state.selectedDate)
                                   .inDays;
-                              ref
-                                  .read(mapProvider.notifier)
-                                  .navigateDate(diff);
+                              ref.read(mapProvider.notifier).navigateDate(diff);
                             },
                           )
                         : GlassContainer(
@@ -520,7 +510,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             if (_overlay == MapOverlay.sessionListExpanded)
               Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 420, maxWidth: 340),
+                  constraints: const BoxConstraints(
+                    maxHeight: 420,
+                    maxWidth: 340,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: ExpandedSessionList(onCollapse: _closeOverlay),
