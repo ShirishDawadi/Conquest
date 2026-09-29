@@ -57,7 +57,9 @@ class ExpandedSessionList extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.50),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.50),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
                 child: SingleChildScrollView(
@@ -68,6 +70,8 @@ class ExpandedSessionList extends ConsumerWidget {
                       ref.read(mapProvider.notifier).focusSession(session);
                       onCollapse();
                     },
+                    isLoading: state.isLoading,
+                    errorMessage: state.error,
                   ),
                 ),
               ),

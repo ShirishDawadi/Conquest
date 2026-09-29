@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:conquest/core/services/location_service.dart';
 import 'package:conquest/core/services/map_sync_service.dart';
+import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/data/models/map_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -79,6 +80,16 @@ class MapViewModel extends Notifier<MapState> {
     try {
       final gpsLog = await _syncService.getLog(date);
       if (gen != _loadGeneration) return;
+
+      if (gpsLog == null && !await ConnectivityUtils.isOnline()) {
+        state = state.copyWith(
+          clearDayLog: true,
+          isLoading: false,
+          error: 'No internet connection',
+        );
+        return;
+      }
+
       state = state.copyWith(
         dayLog: gpsLog,
         clearDayLog: gpsLog == null,
@@ -87,7 +98,10 @@ class MapViewModel extends Notifier<MapState> {
     } catch (e) {
       if (gen != _loadGeneration) return;
       log('MapViewModel _loadLog failed: $e', name: 'MapViewModel');
-      state = state.copyWith(isLoading: false, error: 'Failed to load map');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Couldn\'t load sessions',
+      );
     }
   }
 
@@ -97,6 +111,16 @@ class MapViewModel extends Notifier<MapState> {
     try {
       final gpsLog = await _syncService.getMonthLog(date);
       if (gen != _loadGeneration) return;
+
+      if (gpsLog == null && !await ConnectivityUtils.isOnline()) {
+        state = state.copyWith(
+          clearDayLog: true,
+          isLoading: false,
+          error: 'No internet connection',
+        );
+        return;
+      }
+
       state = state.copyWith(
         dayLog: gpsLog,
         clearDayLog: gpsLog == null,
@@ -105,7 +129,10 @@ class MapViewModel extends Notifier<MapState> {
     } catch (e) {
       if (gen != _loadGeneration) return;
       log('MapViewModel _loadLog failed: $e', name: 'MapViewModel');
-      state = state.copyWith(isLoading: false, error: 'Failed to load map');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Couldn\'t load sessions',
+      );
     }
   }
 

@@ -1,18 +1,23 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/views/shared_widgets/route_preview.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class SessionsExpanded extends StatelessWidget {
   final Color mutedColor;
   final List<GpsSession> sessions;
   final ValueChanged<GpsSession>? onSessionTap;
+  final bool isLoading;
+  final String? errorMessage;
 
   const SessionsExpanded({
     super.key,
     required this.mutedColor,
     required this.sessions,
     this.onSessionTap,
+    this.isLoading = false,
+    this.errorMessage,
   });
 
   String _formatDuration(Duration d) {
@@ -25,6 +30,25 @@ class SessionsExpanded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CupertinoActivityIndicator(radius: 10)),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Text(
+            errorMessage!,
+            style: TextStyle(fontSize: 12, color: AppColors.master_mid),
+          ),
+        ),
+      );
+    }
+
     if (sessions.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -84,17 +108,14 @@ class SessionsExpanded extends StatelessWidget {
         ...List.generate(sessions.length, (i) {
           final s = sessions[i];
           final isLast = i == sessions.length - 1;
-    
+
           final row = Padding(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
             child: Row(
               children: [
                 SizedBox(
                   width: 24,
-                  child: Text(
-                    '${i + 1}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
+                  child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
                 ),
                 Expanded(
                   child: Center(
@@ -130,7 +151,7 @@ class SessionsExpanded extends StatelessWidget {
               ],
             ),
           );
-    
+
           final tappableRow = onSessionTap != null
               ? GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -138,7 +159,7 @@ class SessionsExpanded extends StatelessWidget {
                   child: row,
                 )
               : row;
-    
+
           return Column(
             children: [
               tappableRow,
@@ -146,7 +167,9 @@ class SessionsExpanded extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.10),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.10),
                   indent: 10,
                   endIndent: 10,
                 ),

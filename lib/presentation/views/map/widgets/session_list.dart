@@ -1,7 +1,9 @@
+import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
@@ -78,32 +80,56 @@ class _SessionListState extends ConsumerState<SessionList> {
               constraints: const BoxConstraints(maxHeight: 100),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.50),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.50),
               ),
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemCount: len,
-                itemBuilder: (context, index) {
-                  final session = sessions[index];
-                  final isLast = index == len - 1;
-                  return Column(
-                    children: [
-                      _SessionTile(index: index + 1, session: session),
-                      if (!isLast)
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.10),
-                          indent: 10,
-                          endIndent: 10,
+              child: state.isLoading
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: CupertinoActivityIndicator(radius: 8),
+                      ),
+                    )
+                  : state.error != null
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          state.error!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.master_mid,
+                          ),
                         ),
-                    ],
-                  );
-                },
-              ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: len,
+                      itemBuilder: (context, index) {
+                        final session = sessions[index];
+                        final isLast = index == len - 1;
+                        return Column(
+                          children: [
+                            _SessionTile(index: index + 1, session: session),
+                            if (!isLast)
+                              Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.10),
+                                indent: 10,
+                                endIndent: 10,
+                              ),
+                          ],
+                        );
+                      },
+                    ),
             ),
-            if (sessions.isEmpty)
+            if (sessions.isEmpty && !state.isLoading && state.error == null)
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Center(
@@ -111,7 +137,9 @@ class _SessionListState extends ConsumerState<SessionList> {
                     'No sessions found',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.50)
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.50),
                     ),
                   ),
                 ),
