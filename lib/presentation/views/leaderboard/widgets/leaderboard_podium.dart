@@ -17,6 +17,7 @@ class LeaderboardPodium extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double maxWidth = MediaQuery.of(context).size.width / 4;
     if (top3.isEmpty) return const SizedBox();
     final order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
 
@@ -51,11 +52,36 @@ class LeaderboardPodium extends StatelessWidget {
                     ),
                   ),
                 ProfileAvatar(
-                  radius: isFirst ? 36 : 28,
+                  radius: isFirst ? 25 : 20,
                   photoUrl: e.profilePhoto,
                 ),
                 const SizedBox(height: 4),
-                Text(e.username, style: const TextStyle(fontSize: 12)),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Text(
+                    e.fullName ?? ' ',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Text(
+                    '@${e.username}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 Row(
                   children: [
                     if (leaderboardType == LeaderboardType.weekly)
@@ -67,24 +93,11 @@ class LeaderboardPodium extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
                         '${e.points}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
+                        style: TextStyle(fontSize: 11),
                       ),
                     ),
                     if (leaderboardType == LeaderboardType.steps)
-                      Text(
-                        'steps',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
+                      Text('steps', style: TextStyle(fontSize: 10)),
                     if (leaderboardType == LeaderboardType.allTime)
                       SvgPicture.asset('assets/icons/xp.svg', width: 10),
                   ],
