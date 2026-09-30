@@ -59,7 +59,7 @@ class LeaderboardPodium extends StatelessWidget {
                 ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxWidth),
                   child: Text(
-                    e.fullName ?? ' ',
+                    e.fullName,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,

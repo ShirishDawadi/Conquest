@@ -2,7 +2,7 @@ class LeaderboardEntry {
   final int rank;
   final int userId;
   final String username;
-  final String? fullName;
+  final String fullName;
   final String? profilePhoto;
   final int points;
 
@@ -10,7 +10,7 @@ class LeaderboardEntry {
     required this.rank,
     required this.userId,
     required this.username,
-    this.fullName,
+    required this.fullName,
     this.profilePhoto,
     required this.points,
   });

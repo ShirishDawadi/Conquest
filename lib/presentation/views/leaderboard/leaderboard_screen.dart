@@ -3,6 +3,7 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/jwt_utils.dart';
 import 'package:conquest/data/models/leaderboard_model.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
+import 'package:conquest/presentation/views/leaderboard/leaderboard_skeleton.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_podium.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tabs.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tile.dart';
@@ -63,12 +64,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             const SizedBox(height: 15),
             Expanded(
               child: leaderboardState.when(
-                loading: () => const Center(
-                  child: CupertinoActivityIndicator(
-                    color: AppColors.greenish_3,
-                    radius: 20,
-                  ),
-                ),
+                loading: () => const LeaderboardSkeleton(),
                 error: (e, _) {
                   if (e is DioException && e.response?.statusCode == 403) {
                     return Center(
@@ -155,6 +151,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   rank: 0,
                   userId: currentUserId ?? -1,
                   username: 'You',
+                  fullName: 'You',
                   points: 0,
                 ),
               ),

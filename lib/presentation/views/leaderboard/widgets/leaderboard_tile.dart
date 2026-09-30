@@ -44,7 +44,7 @@ class LeaderboardTile extends StatelessWidget {
                 Text(
                   isCurrentUser
                       ? '${entry.fullName} (YOU)'
-                      : entry.fullName ?? '',
+                      : entry.fullName,
                   style: TextStyle(
                     color: isCurrentUser ? Colors.white : textColor,
                     fontSize: 16,
