@@ -72,6 +72,7 @@ class ExpandedSessionList extends ConsumerWidget {
                     },
                     isLoading: state.isLoading,
                     errorMessage: state.error,
+                    onRetry: () => ref.read(mapProvider.notifier).refresh(),
                   ),
                 ),
               ),

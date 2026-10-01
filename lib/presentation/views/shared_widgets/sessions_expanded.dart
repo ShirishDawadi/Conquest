@@ -1,5 +1,6 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/gps_model.dart';
+import 'package:conquest/presentation/views/shared_widgets/error_state_view.dart';
 import 'package:conquest/presentation/views/shared_widgets/route_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ class SessionsExpanded extends StatelessWidget {
   final ValueChanged<GpsSession>? onSessionTap;
   final bool isLoading;
   final String? errorMessage;
+  final VoidCallback? onRetry;
 
   const SessionsExpanded({
     super.key,
@@ -18,6 +20,7 @@ class SessionsExpanded extends StatelessWidget {
     this.onSessionTap,
     this.isLoading = false,
     this.errorMessage,
+    this.onRetry,
   });
 
   String _formatDuration(Duration d) {
@@ -37,16 +40,11 @@ class SessionsExpanded extends StatelessWidget {
       );
     }
 
-    if (errorMessage != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Center(
-          child: Text(
-            errorMessage!,
-            style: TextStyle(fontSize: 12, color: AppColors.master_mid),
-          ),
-        ),
-      );
+    if (errorMessage == 'no internet connection' && onRetry != null) {
+      return NoInternetStateView(onRetry: onRetry!);
+    }
+    if (errorMessage != null && onRetry != null) {
+      return ErrorStateView(onRetry: onRetry!);
     }
 
     if (sessions.isEmpty) {

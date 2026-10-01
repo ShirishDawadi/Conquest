@@ -1,7 +1,7 @@
-import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
+import 'package:conquest/presentation/views/shared_widgets/error_state_view.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -91,18 +91,13 @@ class _SessionListState extends ConsumerState<SessionList> {
                         child: CupertinoActivityIndicator(radius: 8),
                       ),
                     )
+                  : state.error == 'no internet connection'
+                  ? NoInternetStateView(
+                      onRetry: () => ref.read(mapProvider.notifier).refresh(),
+                    )
                   : state.error != null
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          state.error!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.master_mid,
-                          ),
-                        ),
-                      ),
+                  ? ErrorStateView(
+                      onRetry: () => ref.read(mapProvider.notifier).refresh(),
                     )
                   : ListView.builder(
                       padding: EdgeInsets.zero,

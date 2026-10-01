@@ -7,8 +7,8 @@ import 'package:conquest/presentation/views/leaderboard/leaderboard_skeleton.dar
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_podium.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tabs.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tile.dart';
+import 'package:conquest/presentation/views/shared_widgets/error_state_view.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -45,10 +45,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             const SizedBox(height: 40),
             Text(
               'leader board',
-              style: TextStyle(
-                fontFamily: 'Vertigo',
-                fontSize: 24,
-              ),
+              style: TextStyle(fontFamily: 'Vertigo', fontSize: 24),
             ),
             const SizedBox(height: 15),
             LeaderboardTabs(
@@ -73,24 +70,33 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                         children: [
                           Text(
                             'You\'re in the waiting room',
-                            style: TextStyle(
-                              fontFamily: 'Gpkn',
-                              fontSize: 16,
-                            ),
+                            style: TextStyle(fontFamily: 'Gpkn', fontSize: 16),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'You\'ll be assigned to a group on Monday',
-                            style: TextStyle(
-                              fontFamily: 'Gpkn',
-                              fontSize: 12,
-                            ),
+                            style: TextStyle(fontFamily: 'Gpkn', fontSize: 12),
                           ),
                         ],
                       ),
                     );
                   }
-                  return const Center(child: Text('Failed to load'));
+
+                  final isOffline =
+                      e is DioException &&
+                      e.type == DioExceptionType.connectionError;
+
+                  return isOffline
+                      ? NoInternetStateView(
+                          onRetry: () => ref
+                              .read(leaderboardProvider.notifier)
+                              .reload(_selectedType),
+                        )
+                      : ErrorStateView(
+                          onRetry: () => ref
+                              .read(leaderboardProvider.notifier)
+                              .reload(_selectedType),
+                        );
                 },
                 data: (entries) => _buildList(entries),
               ),
@@ -107,7 +113,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
     return Column(
       children: [
-        LeaderboardPodium(top3: top3, leaderboardType: _selectedType,),
+        LeaderboardPodium(top3: top3, leaderboardType: _selectedType),
         const SizedBox(height: 16),
         Expanded(
           child: Container(
