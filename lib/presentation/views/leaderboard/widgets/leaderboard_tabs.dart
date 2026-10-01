@@ -6,23 +6,17 @@ import 'package:flutter/material.dart';
 class LeaderboardTabs extends StatelessWidget {
   final LeaderboardType selectedType;
   final ValueChanged<LeaderboardType> onTabChanged;
-  final ValueChanged<LeaderboardType> onTabReloaded;
 
   const LeaderboardTabs({
     super.key,
     required this.selectedType,
     required this.onTabChanged,
-    required this.onTabReloaded,
   });
 
   @override
   Widget build(BuildContext context) {
     final tabs = ['Weekly', 'Steps', 'XP'];
-    final types = [
-      LeaderboardType.weekly,
-      LeaderboardType.steps,
-      LeaderboardType.allTime,
-    ];
+    final types = [LeaderboardType.weekly, LeaderboardType.steps, LeaderboardType.allTime];
     final selectedIndex = types.indexOf(selectedType);
 
     return LayoutBuilder(
@@ -52,11 +46,7 @@ class LeaderboardTabs extends StatelessWidget {
                     return GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
-                        if (selectedType == types[i]) {
-                          onTabReloaded(types[i]);
-                        } else {
-                          onTabChanged(types[i]);
-                        }
+                        if (selectedType != types[i]) onTabChanged(types[i]);
                       },
                       child: SizedBox(
                         width: tabWidth,
@@ -65,12 +55,8 @@ class LeaderboardTabs extends StatelessWidget {
                           child: Text(
                             tabs[i],
                             style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                              color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               fontSize: 14,
                             ),
                           ),

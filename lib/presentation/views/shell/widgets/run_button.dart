@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/map_state.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
@@ -146,6 +147,7 @@ class _RunButtonState extends ConsumerState<RunButton> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
+          margin: EdgeInsets.symmetric(vertical: AppConstants.navBarBottomPadding(context), horizontal: 10),
           content: Center(
             child: Text(
               message,

@@ -9,6 +9,7 @@ import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tabs
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tile.dart';
 import 'package:conquest/presentation/views/shared_widgets/error_state_view.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,9 +55,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 setState(() => _selectedType = type);
                 ref.read(leaderboardProvider.notifier).load(type);
               },
-              onTabReloaded: (type) {
-                ref.read(leaderboardProvider.notifier).reload(type);
-              },
             ),
             const SizedBox(height: 15),
             Expanded(
@@ -98,7 +96,41 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                               .reload(_selectedType),
                         );
                 },
-                data: (entries) => _buildList(entries),
+                data: (entries) => Stack(
+                  children: [
+                    _buildList(entries),
+
+                    if (_selectedType == LeaderboardType.weekly)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: AppConstants.navBarBottomPadding(context),
+                        child: IntrinsicHeight(
+                          child: Container(
+                            margin: EdgeInsets.symmetric(horizontal: 16.0),
+                            decoration: BoxDecoration(
+                              color: AppColors.greenish_4,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: LeaderboardTile(
+                              entry: entries.firstWhere(
+                                (e) => e.userId == (currentUserId ?? -1),
+                                orElse: () => LeaderboardEntry(
+                                  rank: 0,
+                                  userId: currentUserId ?? -1,
+                                  username: 'You',
+                                  fullName: 'You',
+                                  points: 0,
+                                ),
+                              ),
+                              isCurrentUser: true,
+                              leaderboardType: _selectedType,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -111,61 +143,37 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final top3 = entries.take(3).toList();
     final rest = entries.skip(3).toList();
 
-    return Column(
-      children: [
-        LeaderboardPodium(top3: top3, leaderboardType: _selectedType),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: ListView.separated(
-              padding: EdgeInsets.only(
-                left: 8,
-                right: 8,
-                top: 8,
-                bottom: _selectedType == LeaderboardType.weekly
-                    ? 0
-                    : AppConstants.navBarBottomPadding(context),
-              ),
-              itemCount: rest.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (_, i) => LeaderboardTile(
-                entry: rest[i],
-                isCurrentUser: rest[i].userId == (currentUserId ?? -1),
-                leaderboardType: _selectedType,
-              ),
-            ),
-          ),
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        CupertinoSliverRefreshControl(
+          refreshTriggerPullDistance: 120,
+          onRefresh: () =>
+              ref.read(leaderboardProvider.notifier).reload(_selectedType),
         ),
-        if (_selectedType == LeaderboardType.weekly) ...[
-          const SizedBox(height: 8),
-          Container(
-            margin: EdgeInsets.fromLTRB(
-              16,
-              0,
-              16,
-              AppConstants.navBarBottomPadding(context),
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.greenish_4,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: LeaderboardTile(
-              entry: entries.firstWhere(
-                (e) => e.userId == (currentUserId ?? -1),
-                orElse: () => LeaderboardEntry(
-                  rank: 0,
-                  userId: currentUserId ?? -1,
-                  username: 'You',
-                  fullName: 'You',
-                  points: 0,
-                ),
-              ),
-              isCurrentUser: true,
+        SliverToBoxAdapter(
+          child: LeaderboardPodium(top3: top3, leaderboardType: _selectedType),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          sliver: SliverList.separated(
+            itemCount: rest.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (_, i) => LeaderboardTile(
+              entry: rest[i],
+              isCurrentUser: rest[i].userId == (currentUserId ?? -1),
               leaderboardType: _selectedType,
             ),
           ),
-        ],
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(height: AppConstants.navBarBottomPadding(context)),
+        ),
+        if (_selectedType == LeaderboardType.weekly)
+          SliverToBoxAdapter(
+            child: SizedBox(height: AppConstants.navBarBottomPadding(context)),
+          ),
       ],
     );
   }
