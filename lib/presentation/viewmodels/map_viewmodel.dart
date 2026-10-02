@@ -197,35 +197,44 @@ class MapViewModel extends Notifier<MapState> {
     _durationTimer?.cancel();
     _durationTimer = null;
 
-    final rawSession = await _locationService.stopTracking();
-    if (rawSession == null) {
-      state = state.copyWith(isTracking: false, clearFocusedSession: true);
-      return;
+    state = state.copyWith(isTracking: false);
+
+    try {
+      final rawSession = await _locationService.stopTracking();
+      if (rawSession == null) {
+        state = state.copyWith(clearFocusedSession: true);
+        return;
+      }
+
+      final session = rawSession.copyWith(
+        furthestDistanceKm: state.furthestDistanceKm,
+      );
+
+      final today = DateTime.now();
+      final todayDate = DateTime(today.year, today.month, today.day);
+
+      final savedSession = await _syncService.saveAndSync(todayDate, session);
+
+      final existingSessions = state.dayLog?.sessions ?? [];
+      final updatedSessions = [...existingSessions, savedSession];
+      final updatedLog = GpsLog(date: todayDate, sessions: updatedSessions);
+
+      state = state.copyWith(
+        currentPoints: [],
+        furthestDistanceKm: 0,
+        sessionStart: null,
+        dayLog: updatedLog,
+        focusedSession: savedSession,
+      );
+
+      ref.invalidate(daySummaryProvider(todayDate));
+    } catch (e) {
+      state = state.copyWith(isTracking: true);
+      _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        state = state.copyWith(sessionStart: _locationService.sessionStart);
+      });
+      rethrow;
     }
-
-    final session = rawSession.copyWith(
-      furthestDistanceKm: state.furthestDistanceKm,
-    );
-
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-
-    final savedSession = await _syncService.saveAndSync(todayDate, session);
-
-    final existingSessions = state.dayLog?.sessions ?? [];
-    final updatedSessions = [...existingSessions, savedSession];
-    final updatedLog = GpsLog(date: todayDate, sessions: updatedSessions);
-
-    state = state.copyWith(
-      isTracking: false,
-      currentPoints: [],
-      furthestDistanceKm: 0,
-      sessionStart: null,
-      dayLog: updatedLog,
-      focusedSession: savedSession,
-    );
-
-    ref.invalidate(daySummaryProvider(todayDate));
   }
 
   void navigateDate(int days) {

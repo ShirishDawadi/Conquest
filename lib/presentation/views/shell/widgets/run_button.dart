@@ -208,7 +208,8 @@ class _RunButtonState extends ConsumerState<RunButton> {
 
   @override
   Widget build(BuildContext context) {
-    final isTracking = ref.watch(mapProvider).isTracking;
+    final trackingState = ref.watch(mapProvider).isTracking;
+    final isTracking = trackingState || (_isBusy && !_busyIsStarting);
 
     final buttonWidth = 105.0;
     final buttonHeight = 35.0;
