@@ -11,6 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+enum StartTrackingResult { started, sessionLimit, permissionDenied, failed }
+
 class MapViewModel extends Notifier<MapState> {
   final _locationService = LocationService();
   final _syncService = MapSyncService();
@@ -141,30 +143,25 @@ class MapViewModel extends Notifier<MapState> {
     state = state.copyWith(permissionStatus: _mapResult(result));
   }
 
-  Future<bool> startTracking() async {
+  Future<StartTrackingResult> startTracking() async {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
 
-    final todaySessionCount = await _syncService.getSessionCountForDate(
-      todayDate,
-    );
-    if (todaySessionCount >= 10) {
-      state = state.copyWith(error: 'sessionLimitReached');
-      return false;
-    }
+    final count = await _syncService.getSessionCountForDate(todayDate);
+    if (count >= 10) return StartTrackingResult.sessionLimit;
 
     await Permission.notification.request();
 
     final permissionResult = await _locationService.requestPermissions();
     if (permissionResult != LocationPermissionResult.granted) {
       state = state.copyWith(permissionStatus: _mapResult(permissionResult));
-      return false;
+      return StartTrackingResult.permissionDenied;
     }
 
     final started = await _locationService.startTracking();
     if (!started) {
       state = state.copyWith(permissionStatus: LocationPermissionStatus.denied);
-      return false;
+      return StartTrackingResult.failed;
     }
 
     _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -180,7 +177,7 @@ class MapViewModel extends Notifier<MapState> {
       clearError: true,
     );
 
-    return true;
+    return StartTrackingResult.started;
   }
 
   LocationPermissionStatus _mapResult(LocationPermissionResult r) {

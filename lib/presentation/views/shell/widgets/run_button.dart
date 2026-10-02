@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/theme/app_colors.dart';
-import 'package:conquest/data/models/map_state.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/views/shell/widgets/location_permission_dialog.dart';
 import 'package:flutter/material.dart';
@@ -67,14 +66,16 @@ class _RunButtonState extends ConsumerState<RunButton> {
     _startDotAnimation();
   }
 
-  Future<Object?> _performTrackingAction(bool isTracking) async {
+  Future<({Object? error, StartTrackingResult? startResult})>
+  _performTrackingAction(bool isTracking) async {
     Object? error;
+    StartTrackingResult? startResult;
 
     try {
       final notifier = ref.read(mapProvider.notifier);
 
       if (!isTracking) {
-        await notifier.startTracking();
+        startResult = await notifier.startTracking();
       } else {
         await notifier.stopTracking();
       }
@@ -98,27 +99,29 @@ class _RunButtonState extends ConsumerState<RunButton> {
       }
     }
 
-    return error;
+    return (error: error, startResult: startResult);
   }
 
   Future<void> _handleResult({
     required bool isTracking,
     required Object? error,
+    required StartTrackingResult? startResult,
   }) async {
     if (!mounted) return;
 
-    final mapState = ref.read(mapProvider);
-
-    if (!isTracking && mapState.error == 'sessionLimitReached') {
+    if (startResult == StartTrackingResult.sessionLimit) {
       setState(() => _dragProgress = 0.0);
       _showSnackBar("You've reached the session limit for today.");
       return;
     }
 
-    final status = mapState.permissionStatus;
-    if (!isTracking && status != LocationPermissionStatus.granted) {
+    if (startResult == StartTrackingResult.permissionDenied ||
+        startResult == StartTrackingResult.failed) {
       setState(() => _dragProgress = 0.0);
-      LocationPermissionDialog.show(context, status);
+      LocationPermissionDialog.show(
+        context,
+        ref.read(mapProvider).permissionStatus,
+      );
       return;
     }
 
@@ -142,16 +145,23 @@ class _RunButtonState extends ConsumerState<RunButton> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          duration: Duration(milliseconds: 1200),
+          duration: const Duration(milliseconds: 1200),
           backgroundColor: AppColors.master_mid,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          margin: EdgeInsets.symmetric(vertical: AppConstants.navBarBottomPadding(context), horizontal: 10),
+          margin: EdgeInsets.symmetric(
+            vertical: AppConstants.navBarBottomPadding(context),
+            horizontal: 10,
+          ),
           content: Center(
             child: Text(
               message,
-              style: const TextStyle(fontFamily: 'Gpkn', color: Colors.white, fontSize: 10),
+              style: const TextStyle(
+                fontFamily: 'Gpkn',
+                color: Colors.white,
+                fontSize: 10,
+              ),
             ),
           ),
           behavior: SnackBarBehavior.floating,
@@ -163,8 +173,12 @@ class _RunButtonState extends ConsumerState<RunButton> {
     if (_isBusy) return;
 
     await _runBusyAnimation(isTracking);
-    final error = await _performTrackingAction(isTracking);
-    await _handleResult(isTracking: isTracking, error: error);
+    final r = await _performTrackingAction(isTracking);
+    await _handleResult(
+      isTracking: isTracking,
+      error: r.error,
+      startResult: r.startResult,
+    );
   }
 
   void _handleDragUpdate(DragUpdateDetails details, bool isTracking) {
@@ -209,15 +223,12 @@ class _RunButtonState extends ConsumerState<RunButton> {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-
       onHorizontalDragUpdate: _isBusy
           ? null
           : (details) {
               _handleDragUpdate(details, isTracking);
             },
-
       onHorizontalDragEnd: _isBusy ? null : (_) => _handleDragEnd(),
-
       child: AnimatedContainer(
         duration: _snapDuration,
         curve: Curves.easeInOut,
@@ -243,7 +254,6 @@ class _RunButtonState extends ConsumerState<RunButton> {
                   ),
                 ),
               ),
-
             AnimatedPositioned(
               duration: _dragProgress > 0 && !_isBusy
                   ? Duration.zero
