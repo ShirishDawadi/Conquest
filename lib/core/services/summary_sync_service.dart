@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/sources/local/activity_local_source.dart';
 import 'package:conquest/data/sources/local/map_local_source.dart';
@@ -6,6 +7,7 @@ import 'package:conquest/data/sources/local/summary_local_source.dart';
 import 'package:conquest/data/sources/remote/summary_remote_source.dart';
 import 'package:conquest/data/models/summary_model.dart';
 import 'package:conquest/data/models/quest_model.dart';
+import 'package:dio/dio.dart';
 
 class SummarySyncService {
   static final SummarySyncService _instance = SummarySyncService._internal();
@@ -47,11 +49,29 @@ class SummarySyncService {
       );
     }
 
+    if (!await ConnectivityUtils.isOnline()) {
+      throw const SocketException('offline');
+    }
+
+    final DaySummaryModel remoteSummary;
     try {
-      if (!await ConnectivityUtils.isOnline()) return null;
+      remoteSummary = await _remote.getDaySummary(date);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      log(
+        'SummarySyncService getDaySummary failed: $e',
+        name: 'SummarySyncService',
+      );
+      rethrow;
+    } catch (e) {
+      log(
+        'SummarySyncService getDaySummary failed: $e',
+        name: 'SummarySyncService',
+      );
+      rethrow;
+    }
 
-      final remoteSummary = await _remote.getDaySummary(date);
-
+    try {
       await _questLocal.upsertQuest(
         date: date,
         object1: remoteSummary.object1,
@@ -65,18 +85,14 @@ class SummarySyncService {
         steps: remoteSummary.stepsAchieved,
         goal: remoteSummary.stepGoal,
       );
-
-      final localSessions = await _mapLocal.getLog(date);
-      if (localSessions != null && localSessions.sessions.isNotEmpty) {
-        return remoteSummary.copyWith(gpsSessions: localSessions.sessions);
-      }
-      return remoteSummary;
     } catch (e) {
-      log(
-        'SummarySyncService getDaySummary failed: $e',
-        name: 'SummarySyncService',
-      );
-      return null;
+      log('SummarySyncService cache failed: $e', name: 'SummarySyncService');
     }
+
+    final localSessions = await _mapLocal.getLog(date);
+    if (localSessions != null && localSessions.sessions.isNotEmpty) {
+      return remoteSummary.copyWith(gpsSessions: localSessions.sessions);
+    }
+    return remoteSummary;
   }
 }

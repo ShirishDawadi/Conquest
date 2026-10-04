@@ -2,7 +2,8 @@ import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/summary_model.dart';
 import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:conquest/presentation/views/profile/cards/total_overview/total_overview_expanded.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:conquest/presentation/views/profile/cards/total_overview/total_overview_skeleton.dart';
+import 'package:conquest/presentation/views/shared_widgets/error_state_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -53,23 +54,18 @@ class _TotalOverviewState extends ConsumerState<TotalOverview> {
               ),
               const SizedBox(height: 15),
               summaryAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: CupertinoActivityIndicator(
-                      color: AppColors.greenish_3,
-                    ),
-                  ),
-                ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      'Failed to load this day',
-                      style: TextStyle(fontSize: 12, color: mutedColor),
-                    ),
-                  ),
-                ),
+                loading: () => TotalOverviewSkeleton(expanded: _isExpanded),
+                error: (e, _) {
+                  void retry() => ref
+                      .read(daySummaryProvider(widget.date).notifier)
+                      .refresh();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: e is NoInternetException
+                        ? NoInternetStateView(onRetry: retry)
+                        : ErrorStateView(onRetry: retry),
+                  );
+                },
                 data: (summary) {
                   if (summary == null) {
                     return Padding(
