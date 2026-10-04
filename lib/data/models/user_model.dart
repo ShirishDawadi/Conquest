@@ -49,4 +49,39 @@ class UserModel {
       createdAt: json['created_at'],
     );
   }
+  factory UserModel.fromMap(Map<String, dynamic> m) {
+    return UserModel(
+      id: m['id'],
+      username: m['username'],
+      fullName: m['full_name'],
+      profilePhoto: m['profile_photo'],
+      isPremium: m['is_premium'] == 1,
+      level: m['level'],
+      league: m['league'],
+      allTimeXp: m['all_time_xp'],
+      xpToNextLevel: m['xp_to_next_level'],
+      totalSteps: m['total_steps'],
+      weeklyPoints: m['weekly_points'],
+      currentStreak: m['current_streak'],
+      longestStreak: m['longest_streak'],
+      createdAt: m['created_at'],
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'username': username,
+    'full_name': fullName,
+    'profile_photo': profilePhoto,
+    'is_premium': isPremium ? 1 : 0,
+    'level': level,
+    'league': league,
+    'all_time_xp': allTimeXp,
+    'xp_to_next_level': xpToNextLevel,
+    'total_steps': totalSteps,
+    'weekly_points': weeklyPoints,
+    'current_streak': currentStreak,
+    'longest_streak': longestStreak,
+    'created_at': createdAt,
+  };
 }

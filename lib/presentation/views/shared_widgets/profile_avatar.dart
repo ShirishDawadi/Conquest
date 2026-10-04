@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +20,7 @@ class ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ImageProvider image;
+    var isNetwork = false;
 
     if (photoFile != null) {
       image = FileImage(photoFile!);
@@ -26,7 +28,11 @@ class ProfileAvatar extends StatelessWidget {
       image = assetImage!;
     } else if (photoUrl != null) {
       if (photoUrl!.startsWith('http')) {
-        image = NetworkImage(photoUrl!);
+        isNetwork = true;
+        image = CachedNetworkImageProvider(
+          photoUrl!,
+          cacheKey: photoUrl!.split('?').first,
+        );
       } else {
         image = AssetImage('assets/images/$photoUrl.png');
       }
@@ -38,6 +44,7 @@ class ProfileAvatar extends StatelessWidget {
       radius: radius,
       backgroundColor: AppColors.greenish_2,
       backgroundImage: image,
+      onBackgroundImageError: isNetwork ? (_, __) {} : null,
     );
   }
 }

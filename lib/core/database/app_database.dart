@@ -25,9 +25,29 @@ class AppDatabase {
         await db.execute(_dailyQuestsTableSql);
         await db.execute(_activityLogsTableSql);
         await db.execute(_userRewardsTableSql);
+        await db.execute(_userTableSql);
       },
     );
   }
+
+  static const _userTableSql = '''
+  CREATE TABLE user (
+    id INTEGER PRIMARY KEY,
+    username TEXT NOT NULL,
+    full_name TEXT,
+    profile_photo TEXT,
+    is_premium INTEGER NOT NULL DEFAULT 0,
+    level INTEGER NOT NULL DEFAULT 1,
+    league TEXT NOT NULL,
+    all_time_xp INTEGER NOT NULL DEFAULT 0,
+    xp_to_next_level INTEGER NOT NULL DEFAULT 0,
+    total_steps INTEGER NOT NULL DEFAULT 0,
+    weekly_points INTEGER NOT NULL DEFAULT 0,
+    current_streak INTEGER NOT NULL DEFAULT 0,
+    longest_streak INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  )
+  ''';
 
   static const _gpsSessionsTableSql = '''
   CREATE TABLE gps_sessions (
@@ -41,7 +61,7 @@ class AppDatabase {
     furthest_distance REAL NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'unsynced'
   )
-''';
+  ''';
 
   static const _objectCapturesTableSql = '''
     CREATE TABLE object_images (
@@ -89,7 +109,7 @@ class AppDatabase {
     xp_earned INTEGER NOT NULL DEFAULT 0,
     points_earned INTEGER NOT NULL DEFAULT 0
   )
-''';
+  ''';
 
   Future<void> deleteDb() async {
     await close();

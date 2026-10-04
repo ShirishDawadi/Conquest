@@ -1,14 +1,36 @@
 import 'dart:io';
 import 'package:conquest/data/models/user_model.dart';
+import 'package:conquest/data/sources/local/user_local_source.dart';
 import 'package:conquest/data/sources/remote/user_remote_source.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserViewModel extends AsyncNotifier<UserModel> {
   final _source = UserRemoteSource();
+  final _local = UserLocalSource();
   bool isSaving = false;
 
   @override
-  Future<UserModel> build() async => _source.getMe();
+  Future<UserModel> build() async {
+    final cached = await _local.getUser();
+
+    if (cached != null) {
+      _refreshFromServer();
+      return cached;
+    }
+
+    final fresh = await _source.getMe();
+    await _local.saveUser(fresh);
+    return fresh;
+  }
+
+  Future<void> _refreshFromServer() async {
+    try {
+      final fresh = await _source.getMe();
+      await _local.saveUser(fresh);
+      state = AsyncData(fresh);
+    } catch (_) {
+    }
+  }
 
   Future<String?> updateProfile({
     String? username,
@@ -17,7 +39,7 @@ class UserViewModel extends AsyncNotifier<UserModel> {
   }) async {
     isSaving = true;
     ref.notifyListeners();
-    
+
     try {
       final updated = await _source.updateProfile(
         username: username,
@@ -25,6 +47,7 @@ class UserViewModel extends AsyncNotifier<UserModel> {
         profilePhoto: profilePhoto,
       );
 
+      await _local.saveUser(updated);
       state = AsyncData(updated);
       return null;
     } catch (e) {
@@ -47,6 +70,7 @@ class UserViewModel extends AsyncNotifier<UserModel> {
     ref.notifyListeners();
     try {
       final updated = await _source.updateAvatar(imageFile);
+      await _local.saveUser(updated);
       state = AsyncData(updated);
       ref.notifyListeners();
       return null;
