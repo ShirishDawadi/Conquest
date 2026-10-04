@@ -59,6 +59,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          duration: const Duration(milliseconds: 1200),
+          backgroundColor: AppColors.master_mid,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: Center(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontFamily: 'Gpkn',
+                color: Colors.white,
+                fontSize: 10,
+              ),
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
   Future<void> _saveChanges() async {
     final username = _usernameController.text.trim();
     final fullName = _fullnameController.text.trim();
@@ -91,9 +116,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         if (!mounted) return;
 
         if (avatarError != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(avatarError), backgroundColor: Colors.red),
-          );
+          _showError(avatarError);
           return;
         }
       }
@@ -109,12 +132,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     if (!mounted) return;
 
-    if (error != null) {
-      setState(() {
-        _usernameError = error;
-      });
-    } else {
+    if (error == null) {
       Navigator.pop(context);
+    } else if (error.isFieldError) {
+      setState(() => _usernameError = error.message);
+    } else {
+      _showError(error.message);
     }
   }
 

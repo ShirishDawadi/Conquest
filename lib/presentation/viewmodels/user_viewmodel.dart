@@ -1,8 +1,16 @@
 import 'dart:io';
+import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/models/user_model.dart';
 import 'package:conquest/data/sources/local/user_local_source.dart';
 import 'package:conquest/data/sources/remote/user_remote_source.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class ProfileError {
+  final String message;
+  final bool isFieldError;
+  const ProfileError(this.message, {this.isFieldError = false});
+}
 
 class UserViewModel extends AsyncNotifier<UserModel> {
   final _source = UserRemoteSource();
@@ -32,7 +40,14 @@ class UserViewModel extends AsyncNotifier<UserModel> {
     }
   }
 
-  Future<String?> updateProfile({
+  Future<bool> _isOffline(Object e) async {
+    if (e is DioException && e.type == DioExceptionType.connectionError) {
+      return true;
+    }
+    return !await ConnectivityUtils.isOnline();
+  }
+
+  Future<ProfileError?> updateProfile({
     String? username,
     String? fullName,
     String? profilePhoto,
@@ -51,15 +66,32 @@ class UserViewModel extends AsyncNotifier<UserModel> {
       state = AsyncData(updated);
       return null;
     } catch (e) {
+      if (await _isOffline(e)) {
+        return const ProfileError('No internet connection');
+      }
+
       final msg = e.toString().toLowerCase();
 
-      if (msg.contains('spaces')) return 'Username cannot contain spaces';
-      if (msg.contains('3 characters')) {
-        return 'Username must be at least 3 characters';
+      if (msg.contains('spaces')) {
+        return const ProfileError(
+          'Username cannot contain spaces',
+          isFieldError: true,
+        );
       }
-      if (msg.contains('already taken')) return 'Username already taken';
+      if (msg.contains('3 characters')) {
+        return const ProfileError(
+          'Username must be at least 3 characters',
+          isFieldError: true,
+        );
+      }
+      if (msg.contains('already taken')) {
+        return const ProfileError(
+          'Username already taken',
+          isFieldError: true,
+        );
+      }
 
-      return 'Something went wrong';
+      return const ProfileError('Something went wrong');
     } finally {
       isSaving = false;
       ref.notifyListeners();
@@ -76,6 +108,8 @@ class UserViewModel extends AsyncNotifier<UserModel> {
       return null;
     } catch (e) {
       ref.notifyListeners();
+      if (await _isOffline(e)) return 'No internet connection';
+
       final msg = e.toString().toLowerCase();
       if (msg.contains('large')) return 'Image too large, max 5MB';
       if (msg.contains('valid image')) return 'File is not a valid image';
