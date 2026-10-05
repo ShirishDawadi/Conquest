@@ -8,13 +8,27 @@ class LeaderboardViewModel extends AsyncNotifier<List<LeaderboardEntry>> {
   LeaderboardType? _lastType;
 
   @override
-  Future<List<LeaderboardEntry>> build() async => [];
+  Future<List<LeaderboardEntry>> build() async {
+    _cache.clear();
+    _lastType = LeaderboardType.weekly;
+    return _fetch(LeaderboardType.weekly);
+  }
+
+  Future<List<LeaderboardEntry>> _fetch(LeaderboardType type) async {
+    final data = switch (type) {
+      LeaderboardType.weekly => await _source.getWeekly(),
+      LeaderboardType.steps => await _source.getHallOfFameSteps(),
+      LeaderboardType.allTime => await _source.getHallOfFameXp(),
+    };
+    _cache[type] = data;
+    return data;
+  }
 
   Future<void> refresh() {
-  _cache.clear();
-  if (_lastType != null) return load(_lastType!);
-  return load(LeaderboardType.weekly);
-}
+    _cache.clear();
+    if (_lastType != null) return load(_lastType!);
+    return load(LeaderboardType.weekly);
+  }
 
   Future<void> load(LeaderboardType type) async {
     _lastType = type;
@@ -23,15 +37,7 @@ class LeaderboardViewModel extends AsyncNotifier<List<LeaderboardEntry>> {
       return;
     }
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final data = switch (type) {
-        LeaderboardType.weekly => await _source.getWeekly(),
-        LeaderboardType.steps => await _source.getHallOfFameSteps(),
-        LeaderboardType.allTime => await _source.getHallOfFameXp(),
-      };
-      _cache[type] = data;
-      return data;
-    });
+    state = await AsyncValue.guard(() => _fetch(type));
   }
 
   Future<void> reload(LeaderboardType type) async {
