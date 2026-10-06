@@ -82,9 +82,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
+          physics: showSkeleton
+              ? const NeverScrollableScrollPhysics()
+              : const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
           slivers: [
             const SliverPersistentHeader(delegate: _GapDelegate(40)),
             SliverAppBar(

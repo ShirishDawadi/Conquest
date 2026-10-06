@@ -25,14 +25,48 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   int _currentIndex = 0;
+  bool _tapArmed = false;
 
   final List<GlobalKey> _pageKeys = List.generate(4, (_) => GlobalKey());
+  final List<ScrollController> _scrollControllers = List.generate(
+    4,
+    (_) => ScrollController(),
+  );
+
+  @override
+  void dispose() {
+    for (final c in _scrollControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   void _onNavTap(int index) {
-    if (index == _currentIndex) {
-      _refreshCurrentPage(index);
+    if (index != _currentIndex) {
+      _tapArmed = false;
+      setState(() => _currentIndex = index);
+      return;
     }
-    setState(() => _currentIndex = index);
+
+    final controller = _scrollControllers[index];
+    final position = controller.positions.isEmpty
+        ? null
+        : controller.positions.first;
+    final isScrolled = position != null && position.pixels > 1;
+
+    if (isScrolled) {
+      position.animateTo(
+        0,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+      );
+      _tapArmed = true;
+    } else if (_tapArmed) {
+      _tapArmed = false;
+      _refreshCurrentPage(index);
+    } else {
+      _tapArmed = true;
+    }
   }
 
   void _refreshCurrentPage(int index) {
@@ -64,6 +98,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     final isTracking = ref.watch(mapProvider).isTracking;
 
+    final pages = <Widget>[
+      HomeScreen(key: _pageKeys[0]),
+      MapScreen(key: _pageKeys[1]),
+      LeaderboardScreen(key: _pageKeys[2]),
+      ProfileScreen(key: _pageKeys[3]),
+    ];
+
     return Theme(
       data: _currentIndex == 1 ? ThemeData.light() : Theme.of(context),
       child: Scaffold(
@@ -74,10 +115,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             LazyIndexedStack(
               index: _currentIndex,
               children: [
-                HomeScreen(key: _pageKeys[0]),
-                MapScreen(key: _pageKeys[1]),
-                LeaderboardScreen(key: _pageKeys[2]),
-                ProfileScreen(key: _pageKeys[3]),
+                for (var i = 0; i < pages.length; i++)
+                  PrimaryScrollController(
+                    controller: _scrollControllers[i],
+                    child: pages[i],
+                  ),
               ],
             ),
 
@@ -86,7 +128,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               left: 0,
               right: 0,
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: Column(
                   children: [
                     if (isTracking) const TrackingBar(),
