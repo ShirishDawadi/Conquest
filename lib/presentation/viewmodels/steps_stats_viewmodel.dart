@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:conquest/data/models/activity_model.dart';
 import 'package:conquest/data/sources/local/activity_local_source.dart';
 import 'package:conquest/data/sources/remote/activity_remote_source.dart';
@@ -33,6 +34,9 @@ class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
   StatsPeriod _period = StatsPeriod.weekly;
   int _offset = 0;
 
+  Timer? _debounce;
+  int _gen = 0;
+
   StatsPeriod get period => _period;
   int get offset => _offset;
   bool get canGoNext => _offset < 0;
@@ -40,7 +44,10 @@ class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
       _rangeFor(_period, _offset);
 
   @override
-  Future<StepsStatsResponse> build() => _fetch();
+  Future<StepsStatsResponse> build() {
+    ref.onDispose(() => _debounce?.cancel());
+    return _fetch();
+  }
 
   ({DateTime start, DateTime end}) _rangeFor(StatsPeriod period, int offset) {
     final now = DateTime.now();
@@ -87,10 +94,13 @@ class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
     return remote;
   }
 
-
   Future<void> _reload() async {
+    final gen = ++_gen;
     ref.read(stepsStatsLoadingProvider.notifier).set(true);
     final result = await AsyncValue.guard(_fetch);
+
+    if (gen != _gen) return;
+
     ref.read(stepsStatsLoadingProvider.notifier).set(false);
 
     if (result.hasValue || !state.hasValue) {
@@ -98,23 +108,34 @@ class StepsStatsViewModel extends AsyncNotifier<StepsStatsResponse> {
     }
   }
 
+  void _scheduleReload() {
+    _gen++;
+    ref.read(stepsStatsLoadingProvider.notifier).set(true);
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), _reload);
+  }
+
   Future<void> load(StatsPeriod period) async {
+    _debounce?.cancel();
     _period = period;
     _offset = 0;
     await _reload();
   }
 
-  Future<void> refresh() => _reload();
-
-  Future<void> previous() async {
-    _offset -= 1;
-    await _reload();
+  Future<void> refresh() {
+    _debounce?.cancel();
+    return _reload();
   }
 
-  Future<void> next() async {
+  void previous() {
+    _offset -= 1;
+    _scheduleReload();
+  }
+
+  void next() {
     if (!canGoNext) return;
     _offset += 1;
-    await _reload();
+    _scheduleReload();
   }
 }
 

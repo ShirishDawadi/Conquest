@@ -6,6 +6,7 @@ import 'package:conquest/presentation/viewmodels/steps_stats_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/profile/cards/activity_overview/calendar_session_row.dart';
+import 'package:conquest/presentation/views/profile/cards/steps_overview/tabs.dart';
 import 'package:conquest/presentation/views/profile/cards/total_overview/total_overview.dart';
 import 'package:conquest/presentation/views/profile/edit_profile_screen.dart';
 import 'package:conquest/presentation/views/profile/cards/steps_overview/steps_overview_card.dart';
@@ -14,27 +15,6 @@ import 'package:conquest/presentation/views/shared_widgets/profile_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-class _GapDelegate extends SliverPersistentHeaderDelegate {
-  final double height;
-  const _GapDelegate(this.height);
-
-  @override
-  double get minExtent => height;
-
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) => SizedBox(height: height);
-
-  @override
-  bool shouldRebuild(covariant _GapDelegate old) => old.height != height;
-}
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -45,13 +25,37 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   DateTime _selectedDate = DateTime.now();
+  late DateTime _loadDate = _selectedDate;
+  Timer? _debounce;
   bool _refreshing = false;
 
-  Future<void> _onRefresh() async {
-    setState(() => _refreshing = true);
+  void _onDateSelected(DateTime date) {
+    setState(() => _selectedDate = date);
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _loadDate = date);
+    });
+  }
 
-    unawaited(ref.read(daySummaryProvider(_selectedDate).notifier).refresh());
-    ref.invalidate(stepsStatsProvider);
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _onRefresh() async {
+    _debounce?.cancel();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    setState(() {
+      _refreshing = true;
+      _selectedDate = today;
+      _loadDate = today;
+    });
+
+    ref.invalidate(daySummaryProvider);
+    unawaited(ref.read(stepsStatsProvider.notifier).load(StatsPeriod.weekly));
 
     try {
       await Future.wait([
@@ -69,7 +73,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final user = userState.value;
     final showSkeleton = _refreshing || userState.isLoading;
 
-    final summaryAsync = ref.watch(daySummaryProvider(_selectedDate));
+    final summaryAsync = ref.watch(daySummaryProvider(_loadDate));
     final sessionCount = summaryAsync.maybeWhen(
       data: (summary) => summary?.gpsSessions.length ?? 0,
       orElse: () => 0,
@@ -154,13 +158,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     StepsOverviewCard(),
                     CalendarSessionRow(
                       selectedDate: _selectedDate,
-                      onDateSelected: (date) {
-                        setState(() => _selectedDate = date);
-                      },
+                      onDateSelected: _onDateSelected,
                       sessions: sessionCount,
                     ),
                     const SizedBox(height: 10),
-                    TotalOverview(date: _selectedDate),
+                    TotalOverview(date: _selectedDate, loadDate: _loadDate),
                     const SizedBox(height: 40),
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -205,4 +207,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
   }
+}
+
+class _GapDelegate extends SliverPersistentHeaderDelegate {
+  final double height;
+  const _GapDelegate(this.height);
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => SizedBox(height: height);
+
+  @override
+  bool shouldRebuild(covariant _GapDelegate old) => old.height != height;
 }

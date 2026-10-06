@@ -17,7 +17,6 @@ class StepsOverviewCard extends ConsumerStatefulWidget {
 }
 
 class _StepsOverviewCardState extends ConsumerState<StepsOverviewCard> {
-  StatsPeriod _period = StatsPeriod.weekly;
   StepsStatsDay? _selectedDay;
 
   String _rangeLabel(DateTime start, DateTime end) {
@@ -27,10 +26,6 @@ class _StepsOverviewCardState extends ConsumerState<StepsOverviewCard> {
     return '${startFmt.format(start)} - ${endFmt.format(end)}';
   }
 
-  /// Picks which day to show when nothing's explicitly tapped:
-  /// - if today falls inside the visible range (current week/month), show today
-  /// - otherwise (viewing a past week/month), show the most recent day in
-  ///   that range instead of defaulting to "today" (which isn't in range).
   StepsStatsDay _defaultDay(
     List<StepsStatsDay> days,
     DateTime rangeStart,
@@ -57,8 +52,6 @@ class _StepsOverviewCardState extends ConsumerState<StepsOverviewCard> {
       );
     }
 
-    // Past range -> most recent day actually in that period (days is
-    // assumed ordered ascending by date, same as the bar chart expects).
     return days.last;
   }
 
@@ -93,12 +86,9 @@ class _StepsOverviewCardState extends ConsumerState<StepsOverviewCard> {
               ),
               const SizedBox(height: 10),
               WeeklyMonthlyToggle(
-                selected: _period,
+                selected: notifier.period,
                 onChanged: (p) {
-                  setState(() {
-                    _period = p;
-                    _selectedDay = null;
-                  });
+                  setState(() => _selectedDay = null);
                   notifier.load(p);
                 },
               ),

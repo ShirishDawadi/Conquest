@@ -11,7 +11,8 @@ import 'package:intl/intl.dart';
 
 class TotalOverview extends ConsumerStatefulWidget {
   final DateTime date;
-  const TotalOverview({super.key, required this.date});
+  final DateTime loadDate;
+  const TotalOverview({super.key, required this.date, required this.loadDate});
 
   @override
   ConsumerState<TotalOverview> createState() => _TotalOverviewState();
@@ -30,7 +31,8 @@ class _TotalOverviewState extends ConsumerState<TotalOverview> {
       context,
     ).colorScheme.onSurface.withValues(alpha: 0.10);
 
-    final summaryAsync = ref.watch(daySummaryProvider(widget.date));
+    final summaryAsync = ref.watch(daySummaryProvider(widget.loadDate));
+    final pending = widget.date != widget.loadDate;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -53,58 +55,65 @@ class _TotalOverviewState extends ConsumerState<TotalOverview> {
                 onTap: () => setState(() => _isExpanded = !_isExpanded),
               ),
               const SizedBox(height: 15),
-              summaryAsync.when(
-                loading: () => TotalOverviewSkeleton(expanded: _isExpanded),
-                error: (e, _) {
-                  void retry() => ref
-                      .read(daySummaryProvider(widget.date).notifier)
-                      .refresh();
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: e is NoInternetException
-                        ? NoInternetStateView(onRetry: retry)
-                        : ErrorStateView(onRetry: retry),
-                  );
-                },
-                data: (summary) {
-                  if (summary == null) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: Text(
-                          'No activity on this day',
-                          style: TextStyle(fontSize: 12, color: mutedColor),
-                        ),
-                      ),
-                    );
-                  }
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    switchInCurve: Curves.easeOut,
-                    switchOutCurve: Curves.easeIn,
-                    transitionBuilder: (child, animation) =>
-                        FadeTransition(opacity: animation, child: child),
-                    layoutBuilder: (currentChild, previousChildren) => Stack(
-                      alignment: Alignment.topCenter,
-                      children: [
-                        ...previousChildren,
-                        if (currentChild != null) currentChild,
-                      ],
+              pending
+                  ? TotalOverviewSkeleton(expanded: _isExpanded)
+                  : summaryAsync.when(
+                      loading: () =>
+                          TotalOverviewSkeleton(expanded: _isExpanded),
+                      error: (e, _) {
+                        void retry() => ref
+                            .read(daySummaryProvider(widget.loadDate).notifier)
+                            .refresh();
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: e is NoInternetException
+                              ? NoInternetStateView(onRetry: retry)
+                              : ErrorStateView(onRetry: retry),
+                        );
+                      },
+                      data: (summary) {
+                        if (summary == null) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: Text(
+                                'No activity on this day',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: mutedColor,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          layoutBuilder: (currentChild, previousChildren) =>
+                              Stack(
+                                alignment: Alignment.topCenter,
+                                children: [
+                                  ...previousChildren,
+                                  if (currentChild != null) currentChild,
+                                ],
+                              ),
+                          child: _isExpanded
+                              ? TotalOverviewExpanded(
+                                  summary: summary,
+                                  mutedColor: mutedColor,
+                                  borderColor: borderColor,
+                                )
+                              : _CompactBody(
+                                  summary: summary,
+                                  mutedColor: mutedColor,
+                                  borderColor: borderColor,
+                                ),
+                        );
+                      },
                     ),
-                    child: _isExpanded
-                        ? TotalOverviewExpanded(
-                            summary: summary,
-                            mutedColor: mutedColor,
-                            borderColor: borderColor,
-                          )
-                        : _CompactBody(
-                            summary: summary,
-                            mutedColor: mutedColor,
-                            borderColor: borderColor,
-                          ),
-                  );
-                },
-              ),
             ],
           ),
         ),
