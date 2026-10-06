@@ -21,7 +21,7 @@ class ObjectThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (object.imageUrl != null && object.imageUrl!.isNotEmpty) {
-      return _wrapWithLongPress(
+      return _wrapWithTap(
         context,
         _frame(
           Image.network(
@@ -37,16 +37,21 @@ class ObjectThumbnail extends StatelessWidget {
     }
 
     return FutureBuilder<String?>(
-      future: ObjectImageLocalSource().getPendingImagePath(object.id, questId: questId),
+      future: ObjectImageLocalSource().getPendingImagePath(
+        object.id,
+        questId: questId,
+      ),
       builder: (context, snapshot) {
         final path = snapshot.data;
         final file = path != null ? File(path) : null;
         final fileExists = file?.existsSync() ?? false;
 
         if (fileExists) {
-          return _wrapWithLongPress(
+          return _wrapWithTap(
             context,
-            _frame(Image.file(file!, width: size, height: size, fit: BoxFit.cover)),
+            _frame(
+              Image.file(file!, width: size, height: size, fit: BoxFit.cover),
+            ),
             imageProvider: FileImage(file),
           );
         }
@@ -56,13 +61,13 @@ class ObjectThumbnail extends StatelessWidget {
     );
   }
 
-  Widget _wrapWithLongPress(
+  Widget _wrapWithTap(
     BuildContext context,
     Widget child, {
     required ImageProvider imageProvider,
   }) {
     return GestureDetector(
-      onLongPress: () => _showPreview(context, imageProvider),
+      onTap: () => _showPreview(context, imageProvider),
       child: child,
     );
   }
@@ -88,10 +93,7 @@ class ObjectThumbnail extends StatelessWidget {
   }
 
   Widget _frame(Widget image) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: image,
-    );
+    return ClipRRect(borderRadius: BorderRadius.circular(8), child: image);
   }
 
   Widget _fallbackIcon() {

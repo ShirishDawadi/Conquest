@@ -1,5 +1,7 @@
 import 'package:conquest/core/theme/app_colors.dart';
+import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/data/models/summary_model.dart';
+import 'package:conquest/presentation/views/shared_widgets/object_thumbnail.dart';
 import 'package:conquest/presentation/views/shared_widgets/quest_reward.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -34,22 +36,20 @@ class ObjectsDetail extends StatelessWidget {
 
     final rawObjects = [
       (
-        name: summary.object1.label,
+        object: summary.object1,
         found: summary.object1Completed,
-        imageUrl: summary.object1.imageUrl,
         xp: summary.object1Completed ? xpForIndex(0) : null,
       ),
       (
-        name: summary.object2.label,
+        object: summary.object2,
         found: summary.object2Completed,
-        imageUrl: summary.object2.imageUrl,
         xp: summary.object2Completed
             ? xpForIndex(objectRewards.length > 1 ? 1 : 0)
             : null,
       ),
     ];
 
-    final objects = rawObjects.where((o) => o.name.isNotEmpty).toList();
+    final objects = rawObjects.where((o) => o.object.label.isNotEmpty).toList();
 
     final foundCount = objects.where((o) => o.found).length;
 
@@ -123,9 +123,9 @@ class ObjectsDetail extends StatelessWidget {
               }
               final o = objects[i ~/ 2];
               return _ObjectRow(
-                name: _capitalize(o.name),
+                name: _capitalize(o.object.label),
                 found: o.found,
-                imageUrl: o.imageUrl,
+                object: o.object,
                 xp: o.xp,
                 borderColor: borderColor,
                 mutedColor: mutedColor,
@@ -140,7 +140,7 @@ class ObjectsDetail extends StatelessWidget {
 class _ObjectRow extends StatelessWidget {
   final String name;
   final bool found;
-  final String? imageUrl;
+  final QuestObjectModel object;
   final int? xp;
   final Color borderColor;
   final Color mutedColor;
@@ -148,7 +148,7 @@ class _ObjectRow extends StatelessWidget {
   const _ObjectRow({
     required this.name,
     required this.found,
-    required this.imageUrl,
+    required this.object,
     required this.xp,
     required this.borderColor,
     required this.mutedColor,
@@ -194,14 +194,14 @@ class _ObjectRow extends StatelessWidget {
                 border: Border.all(color: borderColor),
               ),
               clipBehavior: Clip.antiAlias,
-              child: imageUrl != null
-                  ? Image.network(
-                      imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox.shrink(),
-                    )
-                  : null,
+              child: Center(
+                child: ObjectThumbnail(
+                  object: object,
+                  questId: null,
+                  iconColor: mutedColor,
+                  size: 50,
+                ),
+              ),
             )
           else
             Text(
