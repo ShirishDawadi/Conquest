@@ -36,8 +36,7 @@ class UserViewModel extends AsyncNotifier<UserModel> {
       final fresh = await _source.getMe();
       await _local.saveUser(fresh);
       state = AsyncData(fresh);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   Future<bool> _isOffline(Object e) async {
@@ -85,10 +84,7 @@ class UserViewModel extends AsyncNotifier<UserModel> {
         );
       }
       if (msg.contains('already taken')) {
-        return const ProfileError(
-          'Username already taken',
-          isFieldError: true,
-        );
+        return const ProfileError('Username already taken', isFieldError: true);
       }
 
       return const ProfileError('Something went wrong');
@@ -115,6 +111,12 @@ class UserViewModel extends AsyncNotifier<UserModel> {
       if (msg.contains('valid image')) return 'File is not a valid image';
       return 'Failed to upload image';
     }
+  }
+
+  Future<void> reload() async {
+    final fresh = await _source.getMe();
+    await _local.saveUser(fresh);
+    state = AsyncData(fresh);
   }
 
   void refresh() => ref.invalidateSelf();

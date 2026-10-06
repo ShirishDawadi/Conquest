@@ -1,3 +1,4 @@
+import 'package:conquest/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -7,11 +8,9 @@ class TotalOverviewSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-
     return Shimmer.fromColors(
-      baseColor: onSurface.withValues(alpha: 0.08),
-      highlightColor: onSurface.withValues(alpha: 0.03),
+      baseColor: AppColors.shimmerBase(context),
+      highlightColor: AppColors.shimmerHighlight(context),
       child: expanded ? const _ExpandedShape() : const _CompactShape(),
     );
   }
