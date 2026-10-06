@@ -42,7 +42,13 @@ class LeaderboardViewModel extends AsyncNotifier<List<LeaderboardEntry>> {
 
   Future<void> reload(LeaderboardType type) async {
     _cache.remove(type);
-    await load(type);
+    _lastType = type;
+    if (!state.hasValue) state = const AsyncLoading();
+
+    final result = await AsyncValue.guard(() => _fetch(type));
+    if (result.hasError && state.hasValue) return;
+
+    state = result;
   }
 }
 

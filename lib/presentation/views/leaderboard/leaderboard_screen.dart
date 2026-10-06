@@ -23,6 +23,7 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   LeaderboardType _selectedType = LeaderboardType.weekly;
   int? currentUserId;
+  bool _refreshing = false;
 
   @override
   void initState() {
@@ -33,6 +34,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(leaderboardProvider.notifier).load(LeaderboardType.weekly);
     });
+  }
+
+  Future<void> _onRefresh() async {
+    setState(() => _refreshing = true);
+    await Future.wait([
+      ref.read(leaderboardProvider.notifier).reload(_selectedType),
+      Future.delayed(const Duration(milliseconds: 500)),
+    ]);
+    if (mounted) setState(() => _refreshing = false);
   }
 
   @override
@@ -148,25 +158,36 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       slivers: [
         CupertinoSliverRefreshControl(
           refreshTriggerPullDistance: 120,
-          onRefresh: () =>
-              ref.read(leaderboardProvider.notifier).reload(_selectedType),
+          onRefresh: _onRefresh,
         ),
-        SliverToBoxAdapter(
-          child: LeaderboardPodium(top3: top3, leaderboardType: _selectedType),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          sliver: SliverList.separated(
-            itemCount: rest.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, i) => LeaderboardTile(
-              entry: rest[i],
-              isCurrentUser: rest[i].userId == (currentUserId ?? -1),
+        if (_refreshing)
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: const LeaderboardSkeleton(),
+            ),
+          )
+        else ...[
+          SliverToBoxAdapter(
+            child: LeaderboardPodium(
+              top3: top3,
               leaderboardType: _selectedType,
             ),
           ),
-        ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            sliver: SliverList.separated(
+              itemCount: rest.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (_, i) => LeaderboardTile(
+                entry: rest[i],
+                isCurrentUser: rest[i].userId == (currentUserId ?? -1),
+                leaderboardType: _selectedType,
+              ),
+            ),
+          ),
+        ],
         SliverToBoxAdapter(
           child: SizedBox(height: AppConstants.navBarBottomPadding(context)),
         ),
