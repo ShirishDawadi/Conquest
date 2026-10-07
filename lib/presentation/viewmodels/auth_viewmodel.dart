@@ -1,6 +1,7 @@
 import 'package:conquest/core/database/app_database.dart';
 import 'package:conquest/data/sources/remote/auth_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/steps_stats_viewmodel.dart';
@@ -37,20 +38,27 @@ class AuthViewModel extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
-  await _storage.deleteAll();
-  await AppDatabase().deleteDb();
+    try {
+      if (ref.read(mapProvider).isTracking) {
+        await ref.read(mapProvider.notifier).stopTracking();
+      }
+    } catch (_) {}
 
-  ref.invalidate(stepProvider);
-  ref.invalidate(questProvider);
-  ref.invalidate(userProvider);
-  ref.invalidate(leaderboardProvider);
-  ref.invalidate(stepsStatsProvider);
-  ref.invalidate(daySummaryProvider);
-  
-  if (ref.mounted) {
-    state = const AsyncData(false);
+    await _storage.deleteAll();
+    await AppDatabase().deleteDb();
+
+    ref.invalidate(stepProvider);
+    ref.invalidate(questProvider);
+    ref.invalidate(userProvider);
+    ref.invalidate(leaderboardProvider);
+    ref.invalidate(stepsStatsProvider);
+    ref.invalidate(daySummaryProvider);
+    ref.invalidate(mapProvider);
+
+    if (ref.mounted) {
+      state = const AsyncData(false);
+    }
   }
-}
 }
 
 final authViewModelProvider = AsyncNotifierProvider<AuthViewModel, bool>(
