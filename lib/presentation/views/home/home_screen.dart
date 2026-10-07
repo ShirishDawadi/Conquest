@@ -31,8 +31,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Timer? _walkTimer;
   StreamSubscription<StepCount>? _pedometerSubscription;
 
-  double _greetingHeight = 0;
-
   @override
   void initState() {
     super.initState();
@@ -107,18 +105,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: AppConstants.navBarBottomPadding(context),
+        child: CustomScrollView(
+          slivers: [
+            SliverFloatingHeader(
+              child: ColoredBox(
+                color: Colors.transparent,
+                child: userState.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (e, _) => const SizedBox.shrink(),
+                  data: (user) => Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                    child: GreetingLevel(user: user, greeting: _getGreeting()),
+                  ),
+                ),
               ),
+            ),
+            SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: _greetingHeight),
                     const SizedBox(height: 10),
                     if (stepAsync.hasValue)
                       Padding(
@@ -162,27 +169,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         ],
                       ),
                     ),
+                    SizedBox(
+                      height: AppConstants.navBarBottomPadding(context),
+                    ),
                   ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: 10,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: userState.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (e, _) => const SizedBox.shrink(),
-                  data: (user) => MeasureSize(
-                    onChange: (size) {
-                      if (size.height != _greetingHeight) {
-                        setState(() => _greetingHeight = size.height + 10);
-                      }
-                    },
-                    child: GreetingLevel(user: user, greeting: _getGreeting()),
-                  ),
                 ),
               ),
             ),
@@ -190,35 +180,5 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
       ),
     );
-  }
-}
-
-class MeasureSize extends StatefulWidget {
-  final Widget child;
-  final ValueChanged<Size> onChange;
-
-  const MeasureSize({super.key, required this.child, required this.onChange});
-
-  @override
-  State<MeasureSize> createState() => _MeasureSizeState();
-}
-
-class _MeasureSizeState extends State<MeasureSize> {
-  final _key = GlobalKey();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _notify());
-  }
-
-  void _notify() {
-    final box = _key.currentContext?.findRenderObject() as RenderBox?;
-    if (box != null) widget.onChange(box.size);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(key: _key, child: widget.child);
   }
 }
