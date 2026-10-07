@@ -14,8 +14,13 @@ class MapSyncService {
   final _remote = MapRemoteSource();
 
   Future<int> getSessionCountForDate(DateTime date) async {
-    final log = await getLog(date);
-    return log?.sessions.length ?? 0;
+    try {
+      final log = await getLog(date);
+      return log?.sessions.length ?? 0;
+    } catch (_) {
+      final local = await _local.getLog(date);
+      return local?.sessions.length ?? 0;
+    }
   }
 
   Future<GpsSession> saveAndSync(DateTime date, GpsSession session) async {
@@ -95,44 +100,51 @@ class MapSyncService {
 
   Future<GpsLog?> getLog(DateTime date) async {
     final local = await _local.getLog(date);
-    if (local != null) return local;
+    if (await _local.isDayChecked(date)) {
+      return local ?? GpsLog(date: date, sessions: const []);
+    }
+
+    if (!await ConnectivityUtils.isOnline()) return local;
 
     try {
-      final remoteSessions = await _remote.getDaySessions(date);
-      if (remoteSessions == null || remoteSessions.isEmpty) return null;
-      await _local.insertSyncedSessions(date, remoteSessions);
-      return GpsLog(date: date, sessions: remoteSessions);
+      return await _fetchDay(date);
     } catch (e) {
-      log('MapSyncService getLog remote failed: $e', name: 'MapSyncService');
-      return null;
+      if (local != null) return local;
+      rethrow;
     }
   }
 
+  Future<GpsLog> _fetchDay(DateTime date) async {
+    final remote = await _remote.getDaySessions(date);
+    if (remote.isNotEmpty) {
+      await _local.insertSyncedSessions(date, remote);
+    }
+    await _local.markDayChecked(date);
+    return await _local.getLog(date) ?? GpsLog(date: date, sessions: const []);
+  }
+
   Future<GpsLog?> getMonthLog(DateTime month) async {
+    final localSessions = await _local.getMonthSessions(month);
+    final localLog = localSessions.isEmpty
+        ? null
+        : GpsLog(date: month, sessions: localSessions);
+
+    if (!await ConnectivityUtils.isOnline()) return localLog;
+
     try {
       final sessions = await _remote.getMonthHistory(month);
-      return sessions.isEmpty ? null : GpsLog(date: month, sessions: sessions);
+      return sessions.isEmpty
+          ? localLog
+          : GpsLog(date: month, sessions: sessions);
     } catch (e) {
-      log('getMonthLog failed: $e', name: 'MapSyncService');
-      return null;
+      log('MapSyncService getMonthLog failed: $e', name: 'MapSyncService');
+      return localLog;
     }
   }
 
   Future<GpsLog?> refreshLog(DateTime date) async {
     if (!await ConnectivityUtils.isOnline()) return getLog(date);
-
-    try {
-      final remoteSessions = await _remote.getDaySessions(date);
-      if (remoteSessions == null || remoteSessions.isEmpty) return null;
-      await _local.insertSyncedSessions(date, remoteSessions);
-      return GpsLog(date: date, sessions: remoteSessions);
-    } catch (e) {
-      log(
-        'MapSyncService refreshLog failed, falling back to local: $e',
-        name: 'MapSyncService',
-      );
-      return getLog(date);
-    }
+    return _fetchDay(date);
   }
 
   Future<void> deleteSession(GpsSession session, DateTime date) async {

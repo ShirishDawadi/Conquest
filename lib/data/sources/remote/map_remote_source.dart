@@ -18,7 +18,7 @@ class MapRemoteSource {
     }
   }
 
-  Future<List<GpsSession>?> getDaySessions(DateTime date) async {
+  Future<List<GpsSession>> getDaySessions(DateTime date) async {
     try {
       final dateStr = date.toIso8601String().substring(0, 10);
       final response = await ApiClient.instance.get('/map/$dateStr');
@@ -27,13 +27,14 @@ class MapRemoteSource {
           .toList();
     } catch (e) {
       log('MapRemoteSource getDaySessions failed: $e', name: 'MapRemoteSource');
-      return null;
+      rethrow;
     }
   }
 
   Future<List<GpsSession>> getMonthHistory(DateTime month) async {
     try {
-      final monthStr = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+      final monthStr =
+          '${month.year}-${month.month.toString().padLeft(2, '0')}';
       final response = await ApiClient.instance.get(
         '/map/history',
         queryParameters: {'month': monthStr},
@@ -42,8 +43,11 @@ class MapRemoteSource {
           .map((e) => GpsSession.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      log('MapRemoteSource getMonthHistory failed: $e', name: 'MapRemoteSource');
-      return [];
+      log(
+        'MapRemoteSource getMonthHistory failed: $e',
+        name: 'MapRemoteSource',
+      );
+      rethrow;
     }
   }
 

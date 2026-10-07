@@ -23,6 +23,7 @@ class MapViewModel extends Notifier<MapState> {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   Timer? _durationTimer;
   int _loadGeneration = 0;
+  bool _isMonthView = false;
 
   @override
   MapState build() {
@@ -77,6 +78,7 @@ class MapViewModel extends Notifier<MapState> {
   }
 
   Future<void> _loadLog(DateTime date) async {
+    _isMonthView = false;
     final gen = ++_loadGeneration;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -108,6 +110,7 @@ class MapViewModel extends Notifier<MapState> {
   }
 
   Future<void> _loadMonthLog(DateTime date) async {
+    _isMonthView = true;
     final gen = ++_loadGeneration;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -301,11 +304,22 @@ class MapViewModel extends Notifier<MapState> {
   }
 
   Future<void> refresh() async {
+    if (_isMonthView) return _loadMonthLog(state.selectedDate);
     final gen = ++_loadGeneration;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final gpsLog = await _syncService.refreshLog(state.selectedDate);
       if (gen != _loadGeneration) return;
+
+      if (gpsLog == null && !await ConnectivityUtils.isOnline()) {
+        state = state.copyWith(
+          clearDayLog: true,
+          isLoading: false,
+          error: 'No internet connection',
+        );
+        return;
+      }
+
       state = state.copyWith(
         dayLog: gpsLog,
         clearDayLog: gpsLog == null,

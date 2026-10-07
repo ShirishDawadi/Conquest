@@ -26,6 +26,7 @@ class AppDatabase {
         await db.execute(_activityLogsTableSql);
         await db.execute(_userRewardsTableSql);
         await db.execute(_userTableSql);
+        await db.execute(_checkedDaysTableSql);
       },
     );
   }
@@ -108,6 +109,12 @@ class AppDatabase {
     tier TEXT,
     xp_earned INTEGER NOT NULL DEFAULT 0,
     points_earned INTEGER NOT NULL DEFAULT 0
+  )
+  ''';
+
+  static const _checkedDaysTableSql = '''
+  CREATE TABLE checked_days (
+    date TEXT PRIMARY KEY
   )
   ''';
 

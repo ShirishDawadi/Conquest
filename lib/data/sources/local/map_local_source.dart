@@ -49,7 +49,10 @@ class MapLocalSource {
         whereArgs: [localId],
       );
     } catch (e) {
-      log('MapLocalSource markSessionSynced failed: $e', name: 'MapLocalSource');
+      log(
+        'MapLocalSource markSessionSynced failed: $e',
+        name: 'MapLocalSource',
+      );
     }
   }
 
@@ -59,7 +62,10 @@ class MapLocalSource {
       final rows = await db.query(
         'gps_sessions',
         where: 'date = ? AND status != ?',
-        whereArgs: [date.toIso8601String().substring(0, 10), SessionStatus.pendingDelete],
+        whereArgs: [
+          date.toIso8601String().substring(0, 10),
+          SessionStatus.pendingDelete,
+        ],
         orderBy: 'started_at ASC',
       );
       if (rows.isEmpty) return null;
@@ -67,6 +73,23 @@ class MapLocalSource {
     } catch (e) {
       log('MapLocalSource getLog failed: $e', name: 'MapLocalSource');
       return null;
+    }
+  }
+
+  Future<List<GpsSession>> getMonthSessions(DateTime month) async {
+    try {
+      final db = await _db;
+      final prefix = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+      final rows = await db.query(
+        'gps_sessions',
+        where: 'date LIKE ? AND status != ?',
+        whereArgs: ['$prefix%', SessionStatus.pendingDelete],
+        orderBy: 'started_at ASC',
+      );
+      return rows.map(_rowToSession).toList();
+    } catch (e) {
+      log('MapLocalSource getMonthSessions failed: $e', name: 'MapLocalSource');
+      return [];
     }
   }
 
@@ -80,7 +103,10 @@ class MapLocalSource {
       );
       return rows.map(_rowToSession).toList();
     } catch (e) {
-      log('MapLocalSource getUnsyncedSessions failed: $e', name: 'MapLocalSource');
+      log(
+        'MapLocalSource getUnsyncedSessions failed: $e',
+        name: 'MapLocalSource',
+      );
       return [];
     }
   }
@@ -95,12 +121,18 @@ class MapLocalSource {
       );
       return rows.map(_rowToSession).toList();
     } catch (e) {
-      log('MapLocalSource getPendingDeleteSessions failed: $e', name: 'MapLocalSource');
+      log(
+        'MapLocalSource getPendingDeleteSessions failed: $e',
+        name: 'MapLocalSource',
+      );
       return [];
     }
   }
 
-  Future<void> insertSyncedSessions(DateTime date, List<GpsSession> sessions) async {
+  Future<void> insertSyncedSessions(
+    DateTime date,
+    List<GpsSession> sessions,
+  ) async {
     try {
       final db = await _db;
 
@@ -117,7 +149,8 @@ class MapLocalSource {
 
       final batch = db.batch();
       for (final session in sessions) {
-        if (session.backendId != null && existingBackendIds.contains(session.backendId)) {
+        if (session.backendId != null &&
+            existingBackendIds.contains(session.backendId)) {
           continue;
         }
         batch.insert('gps_sessions', {
@@ -133,14 +166,21 @@ class MapLocalSource {
       }
       await batch.commit(noResult: true);
     } catch (e) {
-      log('MapLocalSource insertSyncedSessions failed: $e', name: 'MapLocalSource');
+      log(
+        'MapLocalSource insertSyncedSessions failed: $e',
+        name: 'MapLocalSource',
+      );
     }
   }
 
   Future<void> deleteSession(int localId) async {
     try {
       final db = await _db;
-      final rows = await db.query('gps_sessions', where: 'id = ?', whereArgs: [localId]);
+      final rows = await db.query(
+        'gps_sessions',
+        where: 'id = ?',
+        whereArgs: [localId],
+      );
       if (rows.isEmpty) return;
 
       final backendId = rows.first['backend_id'] as int?;
@@ -164,7 +204,10 @@ class MapLocalSource {
       final db = await _db;
       await db.delete('gps_sessions', where: 'id = ?', whereArgs: [localId]);
     } catch (e) {
-      log('MapLocalSource hardDeleteSession failed: $e', name: 'MapLocalSource');
+      log(
+        'MapLocalSource hardDeleteSession failed: $e',
+        name: 'MapLocalSource',
+      );
     }
   }
 
@@ -177,17 +220,27 @@ class MapLocalSource {
         whereArgs: [date.toIso8601String().substring(0, 10)],
       );
     } catch (e) {
-      log('MapLocalSource deleteSessionsByDate failed: $e', name: 'MapLocalSource');
+      log(
+        'MapLocalSource deleteSessionsByDate failed: $e',
+        name: 'MapLocalSource',
+      );
     }
   }
 
   Future<void> deleteOldSessions() async {
     try {
       final db = await _db;
-      final cutoff = DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
+      final cutoff = DateTime.now()
+          .subtract(const Duration(days: 93))
+          .toIso8601String()
+          .substring(0, 10);
       await db.delete('gps_sessions', where: 'date < ?', whereArgs: [cutoff]);
+      await db.delete('checked_days', where: 'date < ?', whereArgs: [cutoff]);
     } catch (e) {
-      log('MapLocalSource deleteOldSessions failed: $e', name: 'MapLocalSource');
+      log(
+        'MapLocalSource deleteOldSessions failed: $e',
+        name: 'MapLocalSource',
+      );
     }
   }
 
@@ -196,12 +249,41 @@ class MapLocalSource {
       localId: row['id'] as int,
       backendId: row['backend_id'] as int?,
       startedAt: DateTime.parse(row['started_at'] as String),
-      endedAt: row['ended_at'] != null ? DateTime.parse(row['ended_at'] as String) : null,
+      endedAt: row['ended_at'] != null
+          ? DateTime.parse(row['ended_at'] as String)
+          : null,
       points: (jsonDecode(row['points'] as String) as List)
           .map((p) => GpsPoint.fromJson(p as Map<String, dynamic>))
           .toList(),
       distanceKm: (row['distance'] as num).toDouble(),
       furthestDistanceKm: (row['furthest_distance'] as num).toDouble(),
     );
+  }
+
+  Future<bool> isDayChecked(DateTime date) async {
+    try {
+      final db = await _db;
+      final rows = await db.query(
+        'checked_days',
+        where: 'date = ?',
+        whereArgs: [date.toIso8601String().substring(0, 10)],
+        limit: 1,
+      );
+      return rows.isNotEmpty;
+    } catch (e) {
+      log('MapLocalSource isDayChecked failed: $e', name: 'MapLocalSource');
+      return false;
+    }
+  }
+
+  Future<void> markDayChecked(DateTime date) async {
+    try {
+      final db = await _db;
+      await db.insert('checked_days', {
+        'date': date.toIso8601String().substring(0, 10),
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    } catch (e) {
+      log('MapLocalSource markDayChecked failed: $e', name: 'MapLocalSource');
+    }
   }
 }

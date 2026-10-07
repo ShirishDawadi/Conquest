@@ -91,7 +91,7 @@ class _SessionListState extends ConsumerState<SessionList> {
                         child: CupertinoActivityIndicator(radius: 8),
                       ),
                     )
-                  : state.error == 'no internet connection'
+                  : state.error == 'No internet connection'
                   ? NoInternetStateView(
                       onRetry: () => ref.read(mapProvider.notifier).refresh(),
                     )

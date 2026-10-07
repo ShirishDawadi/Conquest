@@ -40,7 +40,7 @@ class SessionsExpanded extends StatelessWidget {
       );
     }
 
-    if (errorMessage == 'no internet connection' && onRetry != null) {
+    if (errorMessage == 'No internet connection' && onRetry != null) {
       return NoInternetStateView(onRetry: onRetry!);
     }
     if (errorMessage != null && onRetry != null) {
