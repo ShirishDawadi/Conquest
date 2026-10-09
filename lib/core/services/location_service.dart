@@ -22,6 +22,8 @@ class LocationService {
   Timer? _notificationTimer;
   final List<GpsPoint> _currentPoints = [];
   DateTime? _sessionStart;
+  final Stopwatch _stopwatch = Stopwatch();
+  Duration get elapsed => _stopwatch.elapsed;
   bool _isTracking = false;
   double _lastSpeedKmh = 0.0;
 
@@ -81,6 +83,9 @@ class LocationService {
     _currentPoints.clear();
     _lastSpeedKmh = 0.0;
     _sessionStart = DateTime.now();
+    _stopwatch
+      ..reset()
+      ..start();
     _isTracking = true;
 
     await FlutterForegroundTask.startService(
@@ -106,7 +111,7 @@ class LocationService {
 
     _notificationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_isTracking) return;
-      final elapsed = DateTime.now().difference(_sessionStart!);
+      final elapsed = _stopwatch.elapsed;
       final distanceStr = TrackingUtils.distanceKm(
         _currentPoints,
       ).toStringAsFixed(2);
@@ -148,6 +153,8 @@ class LocationService {
   Future<GpsSession?> stopTracking() async {
     if (!_isTracking) return null;
 
+    _stopwatch.stop();
+    final elapsed = _stopwatch.elapsed;
     await _positionSubscription?.cancel();
     _positionSubscription = null;
     _notificationTimer?.cancel();
@@ -163,7 +170,7 @@ class LocationService {
 
     final session = GpsSession(
       startedAt: _sessionStart!,
-      endedAt: DateTime.now(),
+      endedAt: _sessionStart!.add(elapsed),
       points: List.from(_currentPoints),
       distanceKm: TrackingUtils.distanceKm(_currentPoints),
     );

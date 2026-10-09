@@ -25,6 +25,11 @@ class MapViewModel extends Notifier<MapState> {
   int _loadGeneration = 0;
   bool _isMonthView = false;
 
+  static const _maxSessionDuration = Duration(hours: 12);
+  bool _autoStopping = false;
+
+  Duration get elapsed => _locationService.elapsed;
+
   @override
   MapState build() {
     final today = DateTime.now();
@@ -167,9 +172,7 @@ class MapViewModel extends Notifier<MapState> {
       return StartTrackingResult.failed;
     }
 
-    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      state = state.copyWith(sessionStart: _locationService.sessionStart);
-    });
+    _startDurationTimer();
 
     state = state.copyWith(
       isTracking: true,
@@ -213,29 +216,35 @@ class MapViewModel extends Notifier<MapState> {
         furthestDistanceKm: state.furthestDistanceKm,
       );
 
-      final today = DateTime.now();
-      final todayDate = DateTime(today.year, today.month, today.day);
+      final started = session.startedAt;
+      final startDate = DateTime(started.year, started.month, started.day);
 
-      final savedSession = await _syncService.saveAndSync(todayDate, session);
+      final savedSession = await _syncService.saveAndSync(startDate, session);
 
-      final existingSessions = state.dayLog?.sessions ?? [];
-      final updatedSessions = [...existingSessions, savedSession];
-      final updatedLog = GpsLog(date: todayDate, sessions: updatedSessions);
+      final selected = state.selectedDate;
+      final sameMonth =
+          selected.year == startDate.year && selected.month == startDate.month;
+      final visible = _isMonthView
+          ? sameMonth
+          : sameMonth && selected.day == startDate.day;
 
       state = state.copyWith(
         currentPoints: [],
         furthestDistanceKm: 0,
         sessionStart: null,
-        dayLog: updatedLog,
-        focusedSession: savedSession,
+        dayLog: visible
+            ? GpsLog(
+                date: state.dayLog?.date ?? state.selectedDate,
+                sessions: [...(state.dayLog?.sessions ?? []), savedSession],
+              )
+            : null,
+        focusedSession: visible ? savedSession : null,
       );
 
-      ref.invalidate(daySummaryProvider(todayDate));
+      ref.invalidate(daySummaryProvider(startDate));
     } catch (e) {
       state = state.copyWith(isTracking: true);
-      _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        state = state.copyWith(sessionStart: _locationService.sessionStart);
-      });
+      _startDurationTimer();
       rethrow;
     }
   }
@@ -275,6 +284,30 @@ class MapViewModel extends Notifier<MapState> {
 
   void clearFocus() {
     state = state.copyWith(clearFocusedSession: true);
+  }
+
+  void _startDurationTimer() {
+    _durationTimer?.cancel();
+    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final start = _locationService.sessionStart;
+      if (start != null && _locationService.elapsed >= _maxSessionDuration) {
+        _autoStop();
+        return;
+      }
+      state = state.copyWith(sessionStart: start);
+    });
+  }
+
+  Future<void> _autoStop() async {
+    if (_autoStopping) return;
+    _autoStopping = true;
+    try {
+      await stopTracking();
+    } catch (e) {
+      log('MapViewModel auto-stop failed: $e', name: 'MapViewModel');
+    } finally {
+      _autoStopping = false;
+    }
   }
 
   Future<void> deleteSession(GpsSession session) async {

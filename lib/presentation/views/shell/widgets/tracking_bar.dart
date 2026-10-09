@@ -17,7 +17,6 @@ class TrackingBar extends ConsumerStatefulWidget {
 class _TrackingBarState extends ConsumerState<TrackingBar> {
   Timer? _timer;
   bool _dotVisible = true;
-  Duration _elapsed = Duration.zero;
 
   @override
   void initState() {
@@ -39,13 +38,13 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
     final distanceMeters = ref.watch(liveSessionDistanceMetersProvider);
     final distanceKm = distanceMeters / 1000;
 
-    if (mapState.sessionStart != null) {
-      _elapsed = DateTime.now().difference(mapState.sessionStart!);
-    }
+    final elapsed = mapState.sessionStart == null
+    ? Duration.zero
+    : ref.read(mapProvider.notifier).elapsed;
 
     final distanceStr = distanceKm.toStringAsFixed(2);
-    final pace = TrackingUtils.speedString(mapState.currentPoints, _elapsed);
-    final durationStr = TrackingUtils.formatDuration(_elapsed);
+    final pace = TrackingUtils.speedString(mapState.currentPoints, elapsed);
+    final durationStr = TrackingUtils.formatDuration(elapsed);
 
     return GlassContainer(
       borderRadius: 40,
