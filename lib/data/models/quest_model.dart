@@ -69,4 +69,29 @@ class QuestModel {
       pointsEarned: json['points_earned'],
     );
   }
+
+  factory QuestModel.fromLocal(Map<String, dynamic> row, {int? stepGoal}) {
+    return QuestModel(
+      date: row['date'],
+      stepGoal: stepGoal,
+      object1: row['object1_id'] != null
+          ? QuestObjectModel(
+              id: row['object1_id'],
+              label: row['object1_label'],
+              difficulty: row['object1_difficulty'],
+              imageUrl: row['object1_image_url'],
+            )
+          : null,
+      object2: row['object2_id'] != null
+          ? QuestObjectModel(
+              id: row['object2_id'],
+              label: row['object2_label'],
+              difficulty: row['object2_difficulty'],
+              imageUrl: row['object2_image_url'],
+            )
+          : null,
+      object1Completed: row['object1_completed'] == 1,
+      object2Completed: row['object2_completed'] == 1,
+    );
+  }
 }

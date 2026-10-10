@@ -1,18 +1,22 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/services/object_image_sync_service.dart';
-import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/presentation/viewmodels/connectivity_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
+import 'package:conquest/presentation/views/home/home_skeleton.dart';
 import 'package:conquest/presentation/views/home/steps_reset_screen.dart';
 import 'package:conquest/presentation/views/home/cards/greeting&arc/greeting_level.dart';
 import 'package:conquest/presentation/views/home/cards/quest_card/quest_card.dart';
 import 'package:conquest/presentation/views/home/cards/greeting&arc/step_arc.dart';
 import 'package:conquest/presentation/views/home/cards/tracking/tracking_banner.dart';
 import 'package:conquest/presentation/views/home/cards/activity_stats/activity_stats_card.dart';
+import 'package:conquest/presentation/views/shared_widgets/error_state_view.dart';
+import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +32,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
   bool _isWalking = false;
+  bool _refreshing = false;
   Timer? _walkTimer;
   StreamSubscription<StepCount>? _pedometerSubscription;
 
@@ -70,6 +75,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
+  Future<void> _onRefresh() async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    try {
+      CaptureSyncService().syncPending(ref);
+      await Future.wait([
+        ref.read(questProvider.notifier).reload(),
+        ref.read(userProvider.notifier).reload(),
+        Future.delayed(const Duration(milliseconds: 500)),
+      ]);
+    } catch (e) {
+      log('Home refresh failed: $e', name: 'HomeScreen');
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good Morning,';
@@ -77,22 +99,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return 'Good Evening,';
   }
 
+  Widget _buildError(Object e) {
+    final isOffline = e is DioException && e.response == null;
+
+    return Container(
+      width: double.infinity,
+      height: 250,
+      margin: EdgeInsets.all(10.0),
+      child: GlassContainer(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: isOffline
+              ? NoInternetStateView(onRetry: _onRefresh)
+              : ErrorStateView(onRetry: _onRefresh),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(userProvider);
     final questState = ref.watch(questProvider);
     final stepState = ref.watch(stepProvider);
-    final stepAsync = ref.watch(stepProvider);
     final trackingMode = ref.watch(trackingModeProvider);
     final isRunTracking = ref.watch(
       mapProvider.select((state) => state.isTracking),
     );
     final steps = stepState.value ?? 0;
     final isWalking = _isWalking || isRunTracking;
-
     final bestSessionKm = ref.watch(bestSessionTodayKmProvider);
 
-    if (questState.hasValue && questState.value!.needsReset) {
+    final quest = questState.value;
+    final showSkeleton = _refreshing || questState.isLoading;
+
+    final goal = quest == null ? null : (quest.stepGoal ?? 500);
+
+    if (quest != null && quest.needsReset) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.invalidate(questProvider);
 
@@ -106,6 +149,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
+          physics: showSkeleton
+              ? const NeverScrollableScrollPhysics()
+              : const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
           slivers: [
             SliverFloatingHeader(
               child: ColoredBox(
@@ -120,6 +168,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
               ),
             ),
+            CupertinoSliverRefreshControl(
+              refreshTriggerPullDistance: 120,
+              onRefresh: _onRefresh,
+            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -127,51 +179,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    if (stepAsync.hasValue)
+                    if (stepState.hasValue)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: TrackingBanner(mode: trackingMode),
                       ),
+                    const SizedBox(height: 48),
+                    Center(
+                      child: StepArc(
+                        steps: goal == null ? 0 : steps,
+                        goal: goal ?? 1,
+                        isWalking: isWalking,
+                      ),
+                    ),
                     const SizedBox(height: 24),
-                    questState.when(
-                      loading: () => const Center(
-                        child: CupertinoActivityIndicator(
-                          color: AppColors.greenish_3,
-                          radius: 20,
+                    if (showSkeleton)
+                      const HomeCardSkeleton()
+                    else if (questState.hasError && quest == null)
+                      _buildError(questState.error!)
+                    else if (quest != null)
+                      Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: QuestCard(quest: quest, steps: steps),
+                      ),
+                    if (showSkeleton)
+                      const HomeCardSkeleton()
+                    else
+                      Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: ActivityStatsCard(
+                          isSessionActive: isRunTracking,
+                          bestSessionKm: bestSessionKm,
                         ),
                       ),
-                      error: (e, _) =>
-                          const Center(child: Text('Failed to load quest')),
-                      data: (quest) => Column(
-                        children: [
-                          const SizedBox(height: 24),
-
-                          StepArc(
-                            steps: steps,
-                            goal: quest.stepGoal ?? 500,
-                            isWalking: isWalking,
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: QuestCard(quest: quest, steps: steps),
-                          ),
-
-                          Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: ActivityStatsCard(
-                              isSessionActive: isRunTracking,
-                              bestSessionKm: bestSessionKm,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: AppConstants.navBarBottomPadding(context),
-                    ),
+                    SizedBox(height: AppConstants.navBarBottomPadding(context)),
                   ],
                 ),
               ),
