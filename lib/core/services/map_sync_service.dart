@@ -4,6 +4,7 @@ import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/data/sources/local/map_local_source.dart';
 import 'package:conquest/data/sources/remote/map_remote_source.dart';
+import 'package:dio/dio.dart';
 
 class MapSyncService {
   static final MapSyncService _instance = MapSyncService._internal();
@@ -12,6 +13,12 @@ class MapSyncService {
 
   final _local = MapLocalSource();
   final _remote = MapRemoteSource();
+
+  bool _isPermanentReject(Object e) {
+    if (e is! DioException) return false;
+    final code = e.response?.statusCode;
+    return code == 400 || code == 422;
+  }
 
   Future<int> getSessionCountForDate(DateTime date) async {
     try {
@@ -67,10 +74,18 @@ class MapSyncService {
             name: 'MapSyncService',
           );
         } catch (e) {
-          log(
-            'MapSyncService retry failed for session ${session.localId}: $e',
-            name: 'MapSyncService',
-          );
+          if (_isPermanentReject(e) && session.localId != null) {
+            await _local.hardDeleteSession(session.localId!);
+            log(
+              'MapSyncService dropped rejected session ${session.localId}',
+              name: 'MapSyncService',
+            );
+          } else {
+            log(
+              'MapSyncService retry failed for session ${session.localId}: $e',
+              name: 'MapSyncService',
+            );
+          }
         }
       }
 

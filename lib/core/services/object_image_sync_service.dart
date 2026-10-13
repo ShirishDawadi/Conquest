@@ -4,11 +4,18 @@ import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/sources/local/object_image_local_source.dart';
 import 'package:conquest/data/sources/remote/object_image_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CaptureSyncService {
   final _captureLocalSource = ObjectImageLocalSource();
   final _objectImageSource = ObjectImageRemoteSource();
+
+  bool _isPermanentReject(Object e) {
+    if (e is! DioException) return false;
+    final code = e.response?.statusCode;
+    return code == 400 || code == 404 || code == 422;
+  }
 
   Future<void> syncPending(WidgetRef ref) async {
     if (!await ConnectivityUtils.isOnline()) return;
@@ -45,7 +52,15 @@ class CaptureSyncService {
         await file.delete();
         anySynced = true;
       } catch (e) {
-        log('Sync failed for capture $id: $e', name: 'CaptureSync');
+        if (_isPermanentReject(e)) {
+          await _captureLocalSource.deleteCapture(id);
+          try {
+            await file.delete();
+          } catch (_) {}
+          log('Dropped rejected capture $id: $e', name: 'CaptureSync');
+        } else {
+          log('Sync failed for capture $id: $e', name: 'CaptureSync');
+        }
       }
     }
 

@@ -11,6 +11,18 @@ class ObjectImageLocalSource {
     double? longitude,
   }) async {
     final db = await AppDatabase().database;
+
+    final existing = await db.query(
+      _table,
+      columns: ['id'],
+      where: questId != null
+          ? 'object_id = ? AND quest_id = ?'
+          : 'object_id = ? AND quest_id IS NULL',
+      whereArgs: questId != null ? [objectId, questId] : [objectId],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) return existing.first['id'] as int;
+
     return db.insert(_table, {
       'quest_id': questId,
       'object_id': objectId,
