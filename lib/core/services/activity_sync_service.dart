@@ -17,9 +17,14 @@ class ActivitySyncService {
 
   StreamSubscription<int>? _stepSubscription;
   Timer? _retrySyncTimer;
+  int _generation = 0;
 
   Future<void> start() async {
+    stop();
+    final gen = _generation;
+
     await _stepService.initialize();
+    if (gen != _generation) return;
 
     _stepSubscription = _stepService.stepStream.listen((steps) {
       _handleStepUpdate(steps);
@@ -30,6 +35,14 @@ class ActivitySyncService {
     });
 
     syncUnsyncedLogs();
+  }
+
+  void stop() {
+    _generation++;
+    _stepSubscription?.cancel();
+    _stepSubscription = null;
+    _retrySyncTimer?.cancel();
+    _retrySyncTimer = null;
   }
 
   Future<void> _handleStepUpdate(int steps) async {
@@ -44,7 +57,7 @@ class ActivitySyncService {
     try {
       if (!await ConnectivityUtils.isOnline()) return;
 
-      final result = await _remote.syncActivity(
+      await _remote.syncActivity(
         ActivitySyncRequest(
           date: date.toIso8601String().substring(0, 10),
           steps: steps,
@@ -52,10 +65,11 @@ class ActivitySyncService {
       );
 
       await _local.markSynced(date);
-
-      log('Synced activity for ${result.date}: ${result.steps} steps', name: 'ActivitySyncService');
     } catch (e) {
-      log('ActivitySyncService _syncDay failed: $e', name: 'ActivitySyncService');
+      log(
+        'ActivitySyncService _syncDay failed: $e',
+        name: 'ActivitySyncService',
+      );
     }
   }
 
@@ -70,23 +84,23 @@ class ActivitySyncService {
 
         try {
           await _remote.syncActivity(
-            ActivitySyncRequest(
-              date: row['date'] as String,
-              steps: steps,
-            ),
+            ActivitySyncRequest(date: row['date'] as String, steps: steps),
           );
           await _local.markSynced(date);
         } catch (e) {
-          log('Retry sync failed for ${row['date']}: $e', name: 'ActivitySyncService');
+          log(
+            'Retry sync failed for ${row['date']}: $e',
+            name: 'ActivitySyncService',
+          );
         }
       }
     } catch (e) {
-      log('ActivitySyncService syncUnsyncedLogs failed: $e', name: 'ActivitySyncService');
+      log(
+        'ActivitySyncService syncUnsyncedLogs failed: $e',
+        name: 'ActivitySyncService',
+      );
     }
   }
 
-  void dispose() {
-    _stepSubscription?.cancel();
-    _retrySyncTimer?.cancel();
-  }
+  void dispose() => stop();
 }

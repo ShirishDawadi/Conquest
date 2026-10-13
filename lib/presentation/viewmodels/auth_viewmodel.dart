@@ -1,4 +1,5 @@
 import 'package:conquest/core/database/app_database.dart';
+import 'package:conquest/core/services/activity_sync_service.dart';
 import 'package:conquest/data/sources/remote/auth_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
@@ -43,6 +44,8 @@ class AuthViewModel extends AsyncNotifier<bool> {
         await ref.read(mapProvider.notifier).stopTracking();
       }
     } catch (_) {}
+
+    ActivitySyncService().stop();
 
     await _storage.deleteAll();
     await AppDatabase().deleteDb();
