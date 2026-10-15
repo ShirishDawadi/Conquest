@@ -1,6 +1,7 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/presentation/views/home/cards/quest_card/object_card.dart';
+import 'package:conquest/presentation/views/home/cards/tracking/next_week_note.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:conquest/presentation/views/shared_widgets/quest_reward.dart';
 import 'package:flutter/material.dart';
@@ -161,6 +162,7 @@ class QuestCard extends StatelessWidget {
                   ),
               ],
             ),
+            const NextWeekNote(),
           ],
         ),
       ),

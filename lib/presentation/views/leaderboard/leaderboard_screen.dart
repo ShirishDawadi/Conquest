@@ -4,6 +4,7 @@ import 'package:conquest/core/utils/jwt_utils.dart';
 import 'package:conquest/data/models/leaderboard_model.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/views/leaderboard/leaderboard_skeleton.dart';
+import 'package:conquest/presentation/views/leaderboard/week_info_bar.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_podium.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tabs.dart';
 import 'package:conquest/presentation/views/leaderboard/widgets/leaderboard_tile.dart';
@@ -175,6 +176,13 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          if (_selectedType == LeaderboardType.weekly)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 8, right: 8),
+                child: WeekInfoBar(),
+              ),
+            ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 28),
             sliver: SliverList.separated(
