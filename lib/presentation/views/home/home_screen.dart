@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/services/object_image_sync_service.dart';
+import 'package:conquest/core/services/timezone_service.dart';
 import 'package:conquest/presentation/viewmodels/connectivity_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
@@ -40,6 +41,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    TimezoneService.sync();
 
     _pedometerSubscription = Pedometer.stepCountStream.listen((event) {
       if (!_isWalking) setState(() => _isWalking = true);
@@ -72,6 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.read(stepProvider.notifier).retryHealthConnect();
+      TimezoneService.sync();
     }
   }
 
