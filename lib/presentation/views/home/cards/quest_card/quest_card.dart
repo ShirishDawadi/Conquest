@@ -1,21 +1,24 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/quest_model.dart';
+import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/views/home/cards/quest_card/object_card.dart';
 import 'package:conquest/presentation/views/home/cards/tracking/next_week_note.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
 import 'package:conquest/presentation/views/shared_widgets/quest_reward.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class QuestCard extends StatelessWidget {
+class QuestCard extends ConsumerWidget {
   final QuestModel quest;
   final int steps;
 
   const QuestCard({super.key, required this.quest, required this.steps});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final goal = quest.stepGoal ?? 1;
+    final stepsXp = ref.watch(rulesProvider).xp('steps_completed');
     final progress = (steps / goal).clamp(0.0, 1.0);
 
     return GlassContainer(
@@ -81,7 +84,7 @@ class QuestCard extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 QuestReward(
-                                  amount: '10',
+                                  amount: '$stepsXp',
                                   isXp: true,
                                   isWeekly: true,
                                   width: 10,

@@ -1,12 +1,14 @@
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/data/sources/local/object_image_local_source.dart';
+import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/views/object_scan/scan_screen.dart';
 import 'package:conquest/presentation/views/shared_widgets/object_thumbnail.dart';
 import 'package:conquest/presentation/views/shared_widgets/quest_reward.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class ObjectCard extends StatefulWidget {
+class ObjectCard extends ConsumerStatefulWidget {
   final QuestObjectModel object;
   final bool completed;
   final int? questId;
@@ -19,38 +21,43 @@ class ObjectCard extends StatefulWidget {
   });
 
   @override
-  State<ObjectCard> createState() => _ObjectCardState();
+  ConsumerState<ObjectCard> createState() => _ObjectCardState();
 }
 
-class _ObjectCardState extends State<ObjectCard> {
+class _ObjectCardState extends ConsumerState<ObjectCard> {
   @override
   Widget build(BuildContext context) {
-    final difficultyXP = widget.object.difficulty == 'easy'
-        ? 10
-        : widget.object.difficulty == 'medium'
-        ? 15
-        : 20;
+    final rules = ref.watch(rulesProvider);
+    final difficultyXP = rules.xp('object_completed', widget.object.difficulty);
     final iconColor = Theme.of(context).iconTheme.color!;
 
     return FutureBuilder<bool>(
       future: widget.completed
           ? Future.value(true)
-          : ObjectImageLocalSource().hasPending(widget.object.id, questId: widget.questId),
+          : ObjectImageLocalSource().hasPending(
+              widget.object.id,
+              questId: widget.questId,
+            ),
       builder: (context, snapshot) {
-        final effectivelyCompleted = widget.completed || (snapshot.data ?? false);
+        final effectivelyCompleted =
+            widget.completed || (snapshot.data ?? false);
 
         return IconButton(
           onPressed: effectivelyCompleted
               ? null
               : () async {
                   await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => ScanScreen(object: widget.object)),
+                    MaterialPageRoute(
+                      builder: (_) => ScanScreen(object: widget.object),
+                    ),
                   );
                   if (mounted) setState(() {});
                 },
           style: IconButton.styleFrom(
             padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
           icon: Container(
             padding: EdgeInsets.all(16),
@@ -98,7 +105,10 @@ class _ObjectCardState extends State<ObjectCard> {
                           'assets/icons/scan.svg',
                           width: 30,
                           height: 30,
-                          colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                          colorFilter: ColorFilter.mode(
+                            iconColor,
+                            BlendMode.srcIn,
+                          ),
                         ),
                 ),
               ],

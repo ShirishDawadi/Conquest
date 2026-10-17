@@ -6,6 +6,7 @@ import 'package:conquest/core/services/timezone_service.dart';
 import 'package:conquest/presentation/viewmodels/connectivity_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/home/home_skeleton.dart';
@@ -42,6 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     TimezoneService.sync();
+    ref.read(rulesProvider.notifier).checkForUpdates();
 
     _pedometerSubscription = Pedometer.stepCountStream.listen((event) {
       if (!_isWalking) setState(() => _isWalking = true);

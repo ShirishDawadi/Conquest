@@ -1,4 +1,5 @@
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/views/home/cards/activity_stats/milestone_ring_group.dart';
 import 'package:conquest/presentation/views/home/cards/activity_stats/session_avatar_card.dart';
 import 'package:conquest/presentation/views/shared_widgets/glass_container.dart';
@@ -18,6 +19,7 @@ class ActivityStatsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
+    final rules = ref.watch(rulesProvider);
 
     final effectiveDistanceKm = isSessionActive
         ? ref.watch(liveSessionDistanceMetersProvider) / 1000
@@ -65,6 +67,9 @@ class ActivityStatsCard extends ConsumerWidget {
                     child: MilestoneRingGroup(
                       distanceMeters: effectiveDistanceKm * 1000,
                       highestMeter: (bestSessionKm ?? 0) * 1000,
+                      xp500: rules.xp('distance_done', '500m'),
+                      xp1km: rules.xp('distance_done', '1km'),
+                      xp2km: rules.xp('distance_done', '2km'),
                     ),
                   ),
                 ),

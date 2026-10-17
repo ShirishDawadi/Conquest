@@ -12,13 +12,17 @@ final Offset _ringCenter = const Offset(85, 90);
 class MilestoneRingGroup extends StatelessWidget {
   final double distanceMeters;
   final double highestMeter;
-  final int xpPerMilestone;
+  final int xp500;
+  final int xp1km;
+  final int xp2km;
 
   const MilestoneRingGroup({
     super.key,
     required this.distanceMeters,
     this.highestMeter = 0,
-    this.xpPerMilestone = 10,
+    required this.xp500,
+    required this.xp1km,
+    required this.xp2km,
   });
 
   @override
@@ -31,6 +35,7 @@ class MilestoneRingGroup extends StatelessWidget {
         radius: SessionDistanceRadius.innerRadius(_ringDiameter),
         color: AppColors.greenish_1,
         completed: distanceMeters >= 500 || highestMeter >= 500,
+        xp: xp500,
       ),
       _MilestoneSpec(
         label: '1km',
@@ -39,6 +44,7 @@ class MilestoneRingGroup extends StatelessWidget {
         radius: SessionDistanceRadius.middleRadius(_ringDiameter),
         color: AppColors.greenish_2,
         completed: distanceMeters >= 1000 || highestMeter >= 1000,
+        xp: xp1km,
       ),
       _MilestoneSpec(
         label: '2km',
@@ -47,6 +53,7 @@ class MilestoneRingGroup extends StatelessWidget {
         radius: SessionDistanceRadius.outerRadius(_ringDiameter),
         color: AppColors.greenish_3,
         completed: distanceMeters >= 2000 || highestMeter >= 2000,
+        xp: xp2km,
       ),
     ];
 
@@ -95,7 +102,7 @@ class MilestoneRingGroup extends StatelessWidget {
                   child: _MilestoneLabel(
                     label: m.label,
                     completed: m.completed,
-                    xp: xpPerMilestone,
+                    xp: m.xp,
                   ),
                 ),
             ],
@@ -113,6 +120,7 @@ class _MilestoneSpec {
   final double radius;
   final Color color;
   final bool completed;
+  final int xp;
 
   _MilestoneSpec({
     required this.label,
@@ -121,6 +129,7 @@ class _MilestoneSpec {
     required this.radius,
     required this.color,
     required this.completed,
+    required this.xp,
   });
 }
 
@@ -159,7 +168,7 @@ class _MilestoneLabel extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            QuestReward(amount: '10', isXp: true, isWeekly: false, width: 10),
+            QuestReward(amount: '$xp', isXp: true, isWeekly: false, width: 10),
           ],
         ),
       ],
