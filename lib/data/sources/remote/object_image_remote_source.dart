@@ -1,17 +1,20 @@
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:conquest/core/network/api_client.dart';
+import 'package:conquest/data/models/user_progress_model.dart';
 import 'package:dio/dio.dart';
 
 class ObjectUploadResult {
   final String? photoUrl;
   final int xpEarned;
   final int pointsEarned;
+  final UserProgress? user;
 
   ObjectUploadResult({
     required this.photoUrl,
     required this.xpEarned,
     required this.pointsEarned,
+    this.user,
   });
 }
 
@@ -45,6 +48,7 @@ class ObjectImageRemoteSource {
           photoUrl: data['photo_url'] as String?,
           xpEarned: data['xp_earned'] as int? ?? 0,
           pointsEarned: data['points_earned'] as int? ?? 0,
+          user: UserProgress.tryParse(data['user']),
         );
       }
       return ObjectUploadResult(photoUrl: null, xpEarned: 0, pointsEarned: 0);

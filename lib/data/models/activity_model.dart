@@ -1,3 +1,5 @@
+import 'package:conquest/data/models/user_progress_model.dart';
+
 class ActivitySyncRequest {
   final String date;
   final int steps;
@@ -13,6 +15,7 @@ class ActivityLog {
   final int steps;
   final int xpEarned;
   final int pointsEarned;
+  final UserProgress? user;
 
   ActivityLog({
     required this.id,
@@ -20,6 +23,7 @@ class ActivityLog {
     required this.steps,
     required this.xpEarned,
     required this.pointsEarned,
+    this.user,
   });
 
   factory ActivityLog.fromJson(Map<String, dynamic> json) => ActivityLog(
@@ -28,6 +32,7 @@ class ActivityLog {
     steps: json['steps'],
     xpEarned: json['xp_earned'] as int? ?? 0,
     pointsEarned: json['points_earned'] as int? ?? 0,
+    user: UserProgress.tryParse(json['user']),
   );
 }
 

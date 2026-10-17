@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:conquest/core/services/reward_applier.dart';
 import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
@@ -44,11 +45,12 @@ class MapSyncService {
   Future<int?> _trySync(DateTime date, GpsSession session) async {
     try {
       if (!await ConnectivityUtils.isOnline()) return null;
-      final backendId = await _remote.syncSession(date, session);
+      final result = await _remote.syncSession(date, session);
+      await RewardApplier.applyProgress(result.user);
       if (session.localId != null) {
-        await _local.markSessionSynced(session.localId!, backendId);
+        await _local.markSessionSynced(session.localId!, result.id);
       }
-      return backendId;
+      return result.id;
     } catch (e) {
       log('MapSyncService sync failed: $e', name: 'MapSyncService');
       return null;
@@ -65,9 +67,10 @@ class MapSyncService {
           final date = DateTime.parse(
             session.startedAt.toIso8601String().substring(0, 10),
           );
-          final backendId = await _remote.syncSession(date, session);
+          final result = await _remote.syncSession(date, session);
+          await RewardApplier.applyProgress(result.user);
           if (session.localId != null) {
-            await _local.markSessionSynced(session.localId!, backendId);
+            await _local.markSessionSynced(session.localId!, result.id);
           }
           log(
             'MapSyncService synced session ${session.localId}',

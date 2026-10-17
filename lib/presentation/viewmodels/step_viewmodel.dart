@@ -76,6 +76,7 @@ class StepViewModel extends AsyncNotifier<int> {
             actionType: 'steps_completed',
             xpEarned: result.xpEarned,
             pointsEarned: result.pointsEarned,
+            progress: result.user,
             invalidate: (d) => ref.invalidate(daySummaryProvider(d)),
           );
         })
@@ -85,7 +86,10 @@ class StepViewModel extends AsyncNotifier<int> {
   }
 
   Future<void> refresh() async {
-    log('StepViewModel refresh called, mode=${_service.mode}, state=$state', name: 'StepViewModel');
+    log(
+      'StepViewModel refresh called, mode=${_service.mode}, state=$state',
+      name: 'StepViewModel',
+    );
     if (_service.mode == StepTrackingMode.unavailable) return;
     if (state is AsyncLoading) return;
     await _service.retryHealthConnect();

@@ -1,3 +1,5 @@
+import 'package:conquest/data/models/user_progress_model.dart';
+
 class UserModel {
   final int id;
   final String username;
@@ -30,6 +32,23 @@ class UserModel {
     required this.longestStreak,
     required this.createdAt,
   });
+
+    UserModel applyProgress(UserProgress p) => UserModel(
+    id: id,
+    username: username,
+    fullName: fullName,
+    profilePhoto: profilePhoto,
+    isPremium: isPremium,
+    level: p.level,
+    league: p.league,
+    allTimeXp: p.allTimeXp,
+    xpToNextLevel: p.xpToNextLevel,
+    totalSteps: totalSteps,
+    weeklyPoints: p.weeklyPoints,
+    currentStreak: p.currentStreak,
+    longestStreak: p.longestStreak,
+    createdAt: createdAt,
+  );
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(

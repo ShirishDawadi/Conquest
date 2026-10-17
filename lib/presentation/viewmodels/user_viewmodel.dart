@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:conquest/core/services/reward_applier.dart';
 import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/models/user_model.dart';
+import 'package:conquest/data/models/user_progress_model.dart';
 import 'package:conquest/data/sources/local/user_local_source.dart';
 import 'package:conquest/data/sources/remote/user_remote_source.dart';
 import 'package:dio/dio.dart';
@@ -19,6 +21,9 @@ class UserViewModel extends AsyncNotifier<UserModel> {
 
   @override
   Future<UserModel> build() async {
+    RewardApplier.onProgress = applyProgress;
+    ref.onDispose(() => RewardApplier.onProgress = null);
+
     final cached = await _local.getUser();
 
     if (cached != null) {
@@ -111,6 +116,14 @@ class UserViewModel extends AsyncNotifier<UserModel> {
       if (msg.contains('valid image')) return 'File is not a valid image';
       return 'Failed to upload image';
     }
+  }
+
+  Future<void> applyProgress(UserProgress p) async {
+    final current = state.value;
+    if (current == null) return;
+    final updated = current.applyProgress(p);
+    await _local.saveUser(updated);
+    state = AsyncData(updated);
   }
 
   Future<void> reload() async {

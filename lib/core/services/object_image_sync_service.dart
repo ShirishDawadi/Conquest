@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'package:conquest/core/services/reward_applier.dart';
 import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/sources/local/object_image_local_source.dart';
 import 'package:conquest/data/sources/remote/object_image_remote_source.dart';
@@ -41,13 +42,14 @@ class CaptureSyncService {
 
       try {
         final bytes = await file.readAsBytes();
-        await _objectImageSource.uploadObjectImage(
+        final result = await _objectImageSource.uploadObjectImage(
           questId: questId,
           objectId: objectId,
           latitude: latitude,
           longitude: longitude,
           imageBytes: bytes,
         );
+        await RewardApplier.applyProgress(result.user);
         await _captureLocalSource.deleteCapture(id);
         await file.delete();
         anySynced = true;

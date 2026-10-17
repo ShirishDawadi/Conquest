@@ -444,6 +444,7 @@ class ScanViewModel extends ChangeNotifier {
           tier: object.difficulty,
           xpEarned: result.xpEarned,
           pointsEarned: result.pointsEarned,
+          progress: result.user,
           invalidate: (d) => ref.invalidate(daySummaryProvider(d)),
         );
 
