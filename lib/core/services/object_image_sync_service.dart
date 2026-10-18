@@ -4,6 +4,7 @@ import 'package:conquest/core/services/reward_applier.dart';
 import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/sources/local/object_image_local_source.dart';
 import 'package:conquest/data/sources/remote/object_image_remote_source.dart';
+import 'package:conquest/presentation/viewmodels/pending_rewards_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -69,5 +70,6 @@ class CaptureSyncService {
     if (anySynced) {
       ref.invalidate(questProvider);
     }
+    ref.invalidate(pendingRewardsProvider);
   }
 }

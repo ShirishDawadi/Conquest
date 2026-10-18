@@ -59,17 +59,24 @@ class StepViewModel extends AsyncNotifier<int> {
   }
 
   void _syncToBackend(int steps, DateTime now) {
-    if (_lastSync != null &&
-        now.difference(_lastSync!) < const Duration(minutes: 5)) {
-      return;
-    }
-    _lastSync = now;
-
     final today = now.toIso8601String().substring(0, 10);
+
+    final goal = ref.read(questProvider).value?.stepGoal;
+    final goalUnconfirmed =
+        goal != null &&
+        steps >= goal &&
+        ref.read(stepsSyncedProvider.notifier).valueFor(today) < goal;
+    final minGap = goalUnconfirmed
+        ? const Duration(seconds: 20)
+        : const Duration(minutes: 5);
+
+    if (_lastSync != null && now.difference(_lastSync!) < minGap) return;
+    _lastSync = now;
 
     _activitySource
         .syncActivity(ActivitySyncRequest(date: today, steps: steps))
         .then((result) async {
+          ref.read(stepsSyncedProvider.notifier).record(today, steps);
           ref.invalidate(questProvider);
           await RewardApplier.apply(
             date: now,
@@ -105,6 +112,28 @@ class StepViewModel extends AsyncNotifier<int> {
 
   StepTrackingMode get trackingMode => _service.mode;
 }
+
+class StepsSyncedNotifier extends Notifier<int> {
+  String _day = '';
+
+  @override
+  int build() => 0;
+
+  void record(String day, int steps) {
+    if (day != _day) {
+      _day = day;
+      state = steps;
+    } else if (steps > state) {
+      state = steps;
+    }
+  }
+
+  int valueFor(String day) => day == _day ? state : 0;
+}
+
+final stepsSyncedProvider = NotifierProvider<StepsSyncedNotifier, int>(
+  StepsSyncedNotifier.new,
+);
 
 final stepProvider = AsyncNotifierProvider<StepViewModel, int>(
   StepViewModel.new,

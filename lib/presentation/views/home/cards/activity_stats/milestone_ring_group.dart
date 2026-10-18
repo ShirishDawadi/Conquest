@@ -44,7 +44,7 @@ class MilestoneRingGroup extends StatelessWidget {
         radius: SessionDistanceRadius.middleRadius(_ringDiameter),
         color: AppColors.greenish_2,
         completed: distanceMeters >= 1000 || highestMeter >= 1000,
-        xp: xp1km,
+        xp: xp1km - xp500,
       ),
       _MilestoneSpec(
         label: '2km',
@@ -53,7 +53,7 @@ class MilestoneRingGroup extends StatelessWidget {
         radius: SessionDistanceRadius.outerRadius(_ringDiameter),
         color: AppColors.greenish_3,
         completed: distanceMeters >= 2000 || highestMeter >= 2000,
-        xp: xp2km,
+        xp: xp2km - xp1km,
       ),
     ];
 

@@ -4,6 +4,7 @@ import 'package:conquest/data/sources/local/summary_local_source.dart';
 import 'package:conquest/data/sources/remote/quest_remote_source.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QuestViewModel extends AsyncNotifier<QuestModel> {
   final _source = QuestRemoteSource();
@@ -44,6 +45,9 @@ class QuestViewModel extends AsyncNotifier<QuestModel> {
     });
   }
 
+  String _dayKey() =>
+      'quest_meta_${DateTime.now().toIso8601String().substring(0, 10)}';
+
   Future<void> _cache(QuestModel quest) async {
     final o1 = quest.object1;
     final o2 = quest.object2;
@@ -64,16 +68,29 @@ class QuestViewModel extends AsyncNotifier<QuestModel> {
       object1Completed: (quest.object1Completed ?? false) || localDone1,
       object2Completed: (quest.object2Completed ?? false) || localDone2,
     );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _dayKey(),
+      '${quest.id ?? ''}|${quest.stepGoal ?? ''}',
+    );
   }
 
   Future<QuestModel?> _readCached() async {
     final now = DateTime.now();
     final row = await _local.getQuest(now);
     if (row == null) return null;
-    final goal = (await ActivityLocalSource().getLog(now))?['steps_goal'];
+
+    final prefs = await SharedPreferences.getInstance();
+    final parts = (prefs.getString(_dayKey()) ?? '|').split('|');
+    final id = int.tryParse(parts[0]);
+    final savedGoal = parts.length > 1 ? int.tryParse(parts[1]) : null;
+
+    final logGoal = (await ActivityLocalSource().getLog(now))?['steps_goal'];
     return QuestModel.fromLocal(
       row,
-      stepGoal: (goal is int && goal > 0) ? goal : null,
+      id: id,
+      stepGoal: savedGoal ?? ((logGoal is int && logGoal > 0) ? logGoal : null),
     );
   }
 }

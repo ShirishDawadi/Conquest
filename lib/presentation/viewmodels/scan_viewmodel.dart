@@ -11,6 +11,7 @@ import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/data/sources/local/object_image_local_source.dart';
 import 'package:conquest/data/sources/local/summary_local_source.dart';
 import 'package:conquest/data/sources/remote/object_image_remote_source.dart';
+import 'package:conquest/presentation/viewmodels/pending_rewards_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -466,6 +467,7 @@ class ScanViewModel extends ChangeNotifier {
       latitude: position?.latitude,
       longitude: position?.longitude,
     );
+    ref.invalidate(pendingRewardsProvider);
   }
 
   Future<void> _onLiveObjectConfirmed() async {

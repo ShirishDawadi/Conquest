@@ -9,6 +9,7 @@ import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
+import 'package:conquest/presentation/views/home/cards/tracking/sync_pending_bar.dart';
 import 'package:conquest/presentation/views/home/home_skeleton.dart';
 import 'package:conquest/presentation/views/home/steps_reset_screen.dart';
 import 'package:conquest/presentation/views/home/cards/greeting&arc/greeting_level.dart';
@@ -183,6 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SyncPendingBar(),
                     const SizedBox(height: 10),
                     if (stepState.hasValue)
                       Padding(

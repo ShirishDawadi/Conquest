@@ -6,6 +6,7 @@ import 'package:conquest/core/utils/connectivity_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
 import 'package:conquest/data/models/map_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:conquest/presentation/viewmodels/pending_rewards_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -39,9 +40,10 @@ class MapViewModel extends Notifier<MapState> {
 
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
       result,
-    ) {
+    ) async {
       if (!result.contains(ConnectivityResult.none)) {
-        _syncService.retryUnsynced();
+        await _syncService.retryUnsynced();
+        if (ref.mounted) ref.invalidate(pendingRewardsProvider);
       }
     });
 
@@ -220,6 +222,7 @@ class MapViewModel extends Notifier<MapState> {
       final startDate = DateTime(started.year, started.month, started.day);
 
       final savedSession = await _syncService.saveAndSync(startDate, session);
+      ref.invalidate(pendingRewardsProvider);
 
       final selected = state.selectedDate;
       final sameMonth =

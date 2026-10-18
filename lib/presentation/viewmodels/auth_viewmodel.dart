@@ -3,6 +3,7 @@ import 'package:conquest/core/services/activity_sync_service.dart';
 import 'package:conquest/data/sources/remote/auth_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/pending_rewards_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/steps_stats_viewmodel.dart';
@@ -10,6 +11,7 @@ import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthViewModel extends AsyncNotifier<bool> {
   final _storage = const FlutterSecureStorage();
@@ -45,6 +47,11 @@ class AuthViewModel extends AsyncNotifier<bool> {
       }
     } catch (_) {}
 
+    final prefs = await SharedPreferences.getInstance();
+    for (final k in prefs.getKeys().where((k) => k.startsWith('quest_meta_'))) {
+      await prefs.remove(k);
+    }
+
     ActivitySyncService().stop();
 
     await _storage.deleteAll();
@@ -57,6 +64,8 @@ class AuthViewModel extends AsyncNotifier<bool> {
     ref.invalidate(stepsStatsProvider);
     ref.invalidate(daySummaryProvider);
     ref.invalidate(mapProvider);
+    ref.invalidate(pendingRewardsProvider);
+    ref.invalidate(stepsSyncedProvider);
 
     if (ref.mounted) {
       state = const AsyncData(false);

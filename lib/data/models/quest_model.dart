@@ -70,8 +70,13 @@ class QuestModel {
     );
   }
 
-  factory QuestModel.fromLocal(Map<String, dynamic> row, {int? stepGoal}) {
+  factory QuestModel.fromLocal(
+    Map<String, dynamic> row, {
+    int? stepGoal,
+    int? id,
+  }) {
     return QuestModel(
+      id: id ?? row['quest_id'],
       date: row['date'],
       stepGoal: stepGoal,
       object1: row['object1_id'] != null
