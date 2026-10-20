@@ -66,6 +66,7 @@ class AuthViewModel extends AsyncNotifier<bool> {
     ref.invalidate(mapProvider);
     ref.invalidate(pendingRewardsProvider);
     ref.invalidate(stepsSyncedProvider);
+    ref.invalidate(progressEventProvider);
 
     if (ref.mounted) {
       state = const AsyncData(false);

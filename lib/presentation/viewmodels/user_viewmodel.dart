@@ -14,6 +14,15 @@ class ProfileError {
   const ProfileError(this.message, {this.isFieldError = false});
 }
 
+enum ProgressEventType { levelUp, leagueUp }
+
+class ProgressEvent {
+  final ProgressEventType type;
+  final int level;
+  final String league;
+  const ProgressEvent(this.type, this.level, this.league);
+}
+
 class UserViewModel extends AsyncNotifier<UserModel> {
   final _source = UserRemoteSource();
   final _local = UserLocalSource();
@@ -121,9 +130,20 @@ class UserViewModel extends AsyncNotifier<UserModel> {
   Future<void> applyProgress(UserProgress p) async {
     final current = state.value;
     if (current == null) return;
+
     final updated = current.applyProgress(p);
     await _local.saveUser(updated);
     state = AsyncData(updated);
+
+    if (p.league != current.league) {
+      ref
+          .read(progressEventProvider.notifier)
+          .fire(ProgressEvent(ProgressEventType.leagueUp, p.level, p.league));
+    } else if (p.level > current.level) {
+      ref
+          .read(progressEventProvider.notifier)
+          .fire(ProgressEvent(ProgressEventType.levelUp, p.level, p.league));
+    }
   }
 
   Future<void> reload() async {
@@ -145,3 +165,16 @@ final otherUserProvider = FutureProvider.autoDispose.family<UserModel, int>((
 ) {
   return UserRemoteSource().getUserById(userId);
 });
+
+class ProgressEventNotifier extends Notifier<ProgressEvent?> {
+  @override
+  ProgressEvent? build() => null;
+
+  void fire(ProgressEvent e) => state = e;
+  void clear() => state = null;
+}
+
+final progressEventProvider =
+    NotifierProvider<ProgressEventNotifier, ProgressEvent?>(
+      ProgressEventNotifier.new,
+    );

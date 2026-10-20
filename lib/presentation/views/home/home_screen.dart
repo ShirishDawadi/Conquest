@@ -11,6 +11,7 @@ import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/home/cards/tracking/sync_pending_bar.dart';
 import 'package:conquest/presentation/views/home/home_skeleton.dart';
+import 'package:conquest/presentation/views/home/progress_celebration.dart';
 import 'package:conquest/presentation/views/home/steps_reset_screen.dart';
 import 'package:conquest/presentation/views/home/cards/greeting&arc/greeting_level.dart';
 import 'package:conquest/presentation/views/home/cards/quest_card/quest_card.dart';
@@ -38,6 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool _refreshing = false;
   Timer? _walkTimer;
   StreamSubscription<StepCount>? _pedometerSubscription;
+  ProgressEvent? _pendingEvent;
 
   @override
   void initState() {
@@ -63,6 +65,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         CaptureSyncService().syncPending(ref);
       }
     });
+
+    ref.listenManual(progressEventProvider, (_, event) {
+      if (event == null) return;
+      _pendingEvent = event;
+      _showPendingEvent();
+    });
   }
 
   @override
@@ -79,6 +87,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ref.read(stepProvider.notifier).retryHealthConnect();
       TimezoneService.sync();
     }
+  }
+
+  void _showPendingEvent() {
+    final event = _pendingEvent;
+    if (event == null || !mounted) return;
+
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return;
+
+    _pendingEvent = null;
+    ref.read(progressEventProvider.notifier).clear();
+    ProgressCelebration.show(context, event);
   }
 
   Future<void> _onRefresh() async {
@@ -111,7 +131,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Container(
       width: double.infinity,
       height: 250,
-      margin: EdgeInsets.all(10.0),
+      margin: const EdgeInsets.all(10.0),
       child: GlassContainer(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -143,6 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     if (quest != null && quest.needsReset) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         ref.invalidate(questProvider);
 
         Navigator.pushReplacement(
@@ -150,6 +171,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           MaterialPageRoute(builder: (_) => const StepsResetScreen()),
         );
       });
+    }
+
+    if (_pendingEvent != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showPendingEvent());
     }
 
     return Scaffold(
