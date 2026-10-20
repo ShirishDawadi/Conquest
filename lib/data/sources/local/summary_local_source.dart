@@ -180,4 +180,28 @@ class SummaryLocalSource {
       return [];
     }
   }
+
+  Future<void> replaceRewards(
+    DateTime date,
+    List<UserRewardModel> rewards,
+  ) async {
+    try {
+      final db = await _db;
+      await db.transaction((txn) async {
+        await txn.delete(
+          'user_rewards',
+          where: 'date = ?',
+          whereArgs: [_fmt(date)],
+        );
+        for (final r in rewards) {
+          await txn.insert('user_rewards', r.toDbMap(date));
+        }
+      });
+    } catch (e) {
+      log(
+        'SummaryLocalSource replaceRewards failed: $e',
+        name: 'SummaryLocalSource',
+      );
+    }
+  }
 }

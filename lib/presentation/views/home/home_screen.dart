@@ -157,7 +157,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final bestSessionKm = ref.watch(bestSessionTodayKmProvider);
 
     final quest = questState.value;
-    final showSkeleton = _refreshing || questState.isLoading;
+    final showSkeleton =
+        _refreshing || (questState.isLoading && !questState.hasValue);
 
     final goal = quest == null ? null : (quest.stepGoal ?? 500);
 

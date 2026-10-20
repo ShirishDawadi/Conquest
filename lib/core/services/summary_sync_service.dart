@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:conquest/core/utils/connectivity_utils.dart';
+import 'package:conquest/data/models/reward_model.dart';
 import 'package:conquest/data/sources/local/activity_local_source.dart';
 import 'package:conquest/data/sources/local/map_local_source.dart';
 import 'package:conquest/data/sources/local/summary_local_source.dart';
@@ -19,13 +20,18 @@ class SummarySyncService {
   final _mapLocal = MapLocalSource();
   final _remote = SummaryRemoteSource();
 
+  final _lastRewardFetch = <String, DateTime>{};
+
   Future<DaySummaryModel?> getDaySummary(DateTime date) async {
     final questRow = await _questLocal.getQuest(date);
     final activityRow = await _activityLocal.getLog(date);
 
     if (questRow != null && activityRow != null) {
       final sessions = await _mapLocal.getLog(date);
-      final rewards = await _questLocal.getRewards(date);
+      final rewards = await _refreshRewards(
+        date,
+        await _questLocal.getRewards(date),
+      );
       return DaySummaryModel(
         date: date,
         stepGoal: activityRow['steps_goal'] as int,
@@ -85,6 +91,7 @@ class SummarySyncService {
         steps: remoteSummary.stepsAchieved,
         goal: remoteSummary.stepGoal,
       );
+      await _questLocal.replaceRewards(date, remoteSummary.rewards);
     } catch (e) {
       log('SummarySyncService cache failed: $e', name: 'SummarySyncService');
     }
@@ -94,5 +101,28 @@ class SummarySyncService {
       return remoteSummary.copyWith(gpsSessions: localSessions.sessions);
     }
     return remoteSummary;
+  }
+
+  Future<List<UserRewardModel>> _refreshRewards(
+    DateTime date,
+    List<UserRewardModel> local,
+  ) async {
+    final key = date.toIso8601String().substring(0, 10);
+    final last = _lastRewardFetch[key];
+    if (last != null &&
+        DateTime.now().difference(last) < const Duration(seconds: 30)) {
+      return local;
+    }
+    if (!await ConnectivityUtils.isOnline()) return local;
+
+    _lastRewardFetch[key] = DateTime.now();
+    try {
+      final remote = await _remote.getDaySummary(date);
+      await _questLocal.replaceRewards(date, remote.rewards);
+      return remote.rewards;
+    } catch (e) {
+      log('Rewards refresh failed: $e', name: 'SummarySyncService');
+      return local;
+    }
   }
 }
