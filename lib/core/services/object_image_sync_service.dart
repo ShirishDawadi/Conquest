@@ -50,7 +50,15 @@ class CaptureSyncService {
           longitude: longitude,
           imageBytes: bytes,
         );
-        await RewardApplier.applyProgress(result.user);
+        await RewardApplier.apply(
+          date: DateTime.now(),
+          actionType: 'object_completed',
+          objectId: objectId,
+          xpEarned: result.xpEarned,
+          pointsEarned: result.pointsEarned,
+          progress: result.user,
+          invalidate: (_) {},
+        );
         await _captureLocalSource.deleteCapture(id);
         await file.delete();
         anySynced = true;

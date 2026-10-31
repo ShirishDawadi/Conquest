@@ -1,5 +1,6 @@
 import 'package:conquest/data/models/quest_model.dart';
 import 'package:conquest/data/sources/local/object_image_local_source.dart';
+import 'package:conquest/presentation/viewmodels/reward_fly_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/views/object_scan/scan_screen.dart';
 import 'package:conquest/presentation/views/shared_widgets/object_thumbnail.dart';
@@ -42,76 +43,79 @@ class _ObjectCardState extends ConsumerState<ObjectCard> {
         final effectivelyCompleted =
             widget.completed || (snapshot.data ?? false);
 
-        return IconButton(
-          onPressed: effectivelyCompleted
-              ? null
-              : () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ScanScreen(object: widget.object),
-                    ),
-                  );
-                  if (mounted) setState(() {});
-                },
-          style: IconButton.styleFrom(
-            padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          icon: Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                SizedBox(width: 5),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.object.label[0].toUpperCase() +
-                            widget.object.label.substring(1).toLowerCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+        return KeyedSubtree(
+          key: RewardFlyKeys.object(widget.object.id),
+          child: IconButton(
+            onPressed: effectivelyCompleted
+                ? null
+                : () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ScanScreen(object: widget.object),
                       ),
-                      QuestReward(
-                        amount: '$difficultyXP',
-                        isXp: true,
-                        isWeekly: true,
-                        width: 9,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 8),
-                SizedBox(
-                  width: 34,
-                  height: 34,
-                  child: effectivelyCompleted
-                      ? ObjectThumbnail(
-                          object: widget.object,
-                          questId: widget.questId,
-                          iconColor: iconColor,
-                        )
-                      : SvgPicture.asset(
-                          'assets/icons/scan.svg',
-                          width: 30,
-                          height: 30,
-                          colorFilter: ColorFilter.mode(
-                            iconColor,
-                            BlendMode.srcIn,
+                    );
+                    if (mounted) setState(() {});
+                  },
+            style: IconButton.styleFrom(
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            icon: Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.object.label[0].toUpperCase() +
+                              widget.object.label.substring(1).toLowerCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
-                ),
-              ],
+                        QuestReward(
+                          amount: '$difficultyXP',
+                          isXp: true,
+                          isWeekly: true,
+                          width: 9,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  SizedBox(
+                    width: 34,
+                    height: 34,
+                    child: effectivelyCompleted
+                        ? ObjectThumbnail(
+                            object: widget.object,
+                            questId: widget.questId,
+                            iconColor: iconColor,
+                          )
+                        : SvgPicture.asset(
+                            'assets/icons/scan.svg',
+                            width: 30,
+                            height: 30,
+                            colorFilter: ColorFilter.mode(
+                              iconColor,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

@@ -5,6 +5,7 @@ import 'package:conquest/presentation/viewmodels/leaderboard_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/pending_rewards_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/reward_fly_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/steps_stats_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
@@ -67,6 +68,7 @@ class AuthViewModel extends AsyncNotifier<bool> {
     ref.invalidate(pendingRewardsProvider);
     ref.invalidate(stepsSyncedProvider);
     ref.invalidate(progressEventProvider);
+    ref.invalidate(rewardFlyProvider);
 
     if (ref.mounted) {
       state = const AsyncData(false);

@@ -2,16 +2,19 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:conquest/core/constants/app_constants.dart';
 import 'package:conquest/core/services/object_image_sync_service.dart';
+import 'package:conquest/core/services/reward_applier.dart';
 import 'package:conquest/core/services/timezone_service.dart';
 import 'package:conquest/presentation/viewmodels/connectivity_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/reward_fly_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/step_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/user_viewmodel.dart';
 import 'package:conquest/presentation/views/home/cards/tracking/sync_pending_bar.dart';
 import 'package:conquest/presentation/views/home/home_skeleton.dart';
-import 'package:conquest/presentation/views/home/progress_celebration.dart';
+import 'package:conquest/presentation/views/home/cards/progress_reward/progress_celebration.dart';
+import 'package:conquest/presentation/views/home/cards/progress_reward/reward_fly_overlay.dart';
 import 'package:conquest/presentation/views/home/steps_reset_screen.dart';
 import 'package:conquest/presentation/views/home/cards/greeting&arc/greeting_level.dart';
 import 'package:conquest/presentation/views/home/cards/quest_card/quest_card.dart';
@@ -71,6 +74,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _pendingEvent = event;
       _showPendingEvent();
     });
+
+    RewardApplier.onReward = (xp, points, type, objectId, offline) {
+      if (!mounted) return;
+      final source = type == 'steps_completed'
+          ? RewardFlyKeys.stepsQuest
+          : type == 'object_completed'
+          ? RewardFlyKeys.objectOrNull(objectId)
+          : type == 'distance_done'
+          ? RewardFlyKeys.distance
+          : null;
+      ref
+          .read(rewardFlyProvider.notifier)
+          .push(xp, points, source, offline: offline);
+    };
+
+    ref.listenManual(
+      rewardFlyProvider.select((s) => s.queue.length),
+      (_, _) => _showPendingEvent(),
+    );
   }
 
   @override
@@ -78,6 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     WidgetsBinding.instance.removeObserver(this);
     _walkTimer?.cancel();
     _pedometerSubscription?.cancel();
+    RewardApplier.onReward = null;
     super.dispose();
   }
 
@@ -95,6 +118,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     final route = ModalRoute.of(context);
     if (route != null && !route.isCurrent) return;
+
+    if (ref.read(rewardFlyProvider).queue.isNotEmpty) return;
 
     _pendingEvent = null;
     ref.read(progressEventProvider.notifier).clear();
@@ -179,78 +204,90 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: showSkeleton
-              ? const NeverScrollableScrollPhysics()
-              : const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-          slivers: [
-            SliverFloatingHeader(
-              child: ColoredBox(
-                color: Colors.transparent,
-                child: userState.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (e, _) => const SizedBox.shrink(),
-                  data: (user) => Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                    child: GreetingLevel(user: user, greeting: _getGreeting()),
+      body: RewardFlyOverlay(
+        child: SafeArea(
+          child: CustomScrollView(
+            physics: showSkeleton
+                ? const NeverScrollableScrollPhysics()
+                : const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+            slivers: [
+              SliverFloatingHeader(
+                child: ColoredBox(
+                  color: Colors.transparent,
+                  child: userState.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, _) => const SizedBox.shrink(),
+                    data: (user) => Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                      child: GreetingLevel(
+                        user: user,
+                        greeting: _getGreeting(),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            CupertinoSliverRefreshControl(
-              refreshTriggerPullDistance: 120,
-              onRefresh: _onRefresh,
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SyncPendingBar(),
-                    const SizedBox(height: 10),
-                    if (stepState.hasValue)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: TrackingBanner(mode: trackingMode),
+              CupertinoSliverRefreshControl(
+                refreshTriggerPullDistance: 120,
+                onRefresh: _onRefresh,
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      KeyedSubtree(
+                        key: RewardFlyKeys.pending,
+                        child: const SyncPendingBar(),
                       ),
-                    const SizedBox(height: 48),
-                    Center(
-                      child: StepArc(
-                        steps: goal == null ? 0 : steps,
-                        goal: goal ?? 1,
-                        isWalking: isWalking,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    if (showSkeleton)
-                      const HomeCardSkeleton()
-                    else if (questState.hasError && quest == null)
-                      _buildError(questState.error!)
-                    else if (quest != null)
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: QuestCard(quest: quest, steps: steps),
-                      ),
-                    if (showSkeleton)
-                      const HomeCardSkeleton()
-                    else
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: ActivityStatsCard(
-                          isSessionActive: isRunTracking,
-                          bestSessionKm: bestSessionKm,
+                      const SizedBox(height: 10),
+                      if (stepState.hasValue)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                          ),
+                          child: TrackingBanner(mode: trackingMode),
+                        ),
+                      const SizedBox(height: 48),
+                      Center(
+                        child: StepArc(
+                          steps: goal == null ? 0 : steps,
+                          goal: goal ?? 1,
+                          isWalking: isWalking,
                         ),
                       ),
-                    SizedBox(height: AppConstants.navBarBottomPadding(context)),
-                  ],
+                      const SizedBox(height: 24),
+                      if (showSkeleton)
+                        const HomeCardSkeleton()
+                      else if (questState.hasError && quest == null)
+                        _buildError(questState.error!)
+                      else if (quest != null)
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: QuestCard(quest: quest, steps: steps),
+                        ),
+                      if (showSkeleton)
+                        const HomeCardSkeleton()
+                      else
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: ActivityStatsCard(
+                            isSessionActive: isRunTracking,
+                            bestSessionKm: bestSessionKm,
+                          ),
+                        ),
+                      SizedBox(
+                        height: AppConstants.navBarBottomPadding(context),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

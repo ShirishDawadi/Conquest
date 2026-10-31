@@ -1,5 +1,6 @@
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/data/models/quest_model.dart';
+import 'package:conquest/presentation/viewmodels/reward_fly_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/views/home/cards/quest_card/object_card.dart';
 import 'package:conquest/presentation/views/home/cards/quest_card/next_week_note.dart';
@@ -60,51 +61,54 @@ class QuestCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      SvgPicture.asset(
-                        'assets/icons/steps.svg',
-                        width: 30,
-                        height: 30,
-                        colorFilter: ColorFilter.mode(
-                          Theme.of(context).iconTheme.color!,
-                          BlendMode.srcIn,
+                  KeyedSubtree(
+                    key: RewardFlyKeys.stepsQuest,
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(
+                          'assets/icons/steps.svg',
+                          width: 30,
+                          height: 30,
+                          colorFilter: ColorFilter.mode(
+                            Theme.of(context).iconTheme.color!,
+                            BlendMode.srcIn,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${quest.stepGoal} Steps Goal',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                QuestReward(
-                                  amount: '$stepsXp',
-                                  isXp: true,
-                                  isWeekly: true,
-                                  width: 10,
-                                ),
-                                Text(
-                                  '${(progress * 100).toInt()}% Completed',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.5),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${quest.stepGoal} Steps Goal',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  QuestReward(
+                                    amount: '$stepsXp',
+                                    isXp: true,
+                                    isWeekly: true,
+                                    width: 10,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                  Text(
+                                    '${(progress * 100).toInt()}% Completed',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(height: 5),
                   Stack(

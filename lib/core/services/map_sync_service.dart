@@ -46,7 +46,14 @@ class MapSyncService {
     try {
       if (!await ConnectivityUtils.isOnline()) return null;
       final result = await _remote.syncSession(date, session);
-      await RewardApplier.applyProgress(result.user);
+      await RewardApplier.apply(
+        date: DateTime.now(),
+        actionType: 'distance_done',
+        xpEarned: result.xpEarned,
+        pointsEarned: result.pointsEarned,
+        progress: result.user,
+        invalidate: (_) {},
+      );
       if (session.localId != null) {
         await _local.markSessionSynced(session.localId!, result.id);
       }
@@ -68,7 +75,14 @@ class MapSyncService {
             session.startedAt.toIso8601String().substring(0, 10),
           );
           final result = await _remote.syncSession(date, session);
-          await RewardApplier.applyProgress(result.user);
+          await RewardApplier.apply(
+            date: DateTime.now(),
+            actionType: 'distance_done',
+            xpEarned: result.xpEarned,
+            pointsEarned: result.pointsEarned,
+            progress: result.user,
+            invalidate: (_) {},
+          );
           if (session.localId != null) {
             await _local.markSessionSynced(session.localId!, result.id);
           }

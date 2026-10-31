@@ -13,6 +13,7 @@ import 'package:conquest/data/sources/local/summary_local_source.dart';
 import 'package:conquest/data/sources/remote/object_image_remote_source.dart';
 import 'package:conquest/presentation/viewmodels/pending_rewards_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/quest_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/summary_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -442,6 +443,7 @@ class ScanViewModel extends ChangeNotifier {
         await RewardApplier.apply(
           date: today,
           actionType: 'object_completed',
+          objectId: object.id,
           tier: object.difficulty,
           xpEarned: result.xpEarned,
           pointsEarned: result.pointsEarned,
@@ -468,6 +470,14 @@ class ScanViewModel extends ChangeNotifier {
       longitude: position?.longitude,
     );
     ref.invalidate(pendingRewardsProvider);
+
+    final rules = ref.read(rulesProvider);
+    RewardApplier.animateOnly(
+      rules.xp('object_completed', object.difficulty),
+      rules.points('object_completed', object.difficulty),
+      'object_completed',
+      objectId: object.id,
+    );
   }
 
   Future<void> _onLiveObjectConfirmed() async {

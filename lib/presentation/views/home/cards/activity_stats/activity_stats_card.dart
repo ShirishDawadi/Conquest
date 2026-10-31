@@ -1,4 +1,5 @@
 import 'package:conquest/presentation/viewmodels/map_viewmodel.dart';
+import 'package:conquest/presentation/viewmodels/reward_fly_viewmodel.dart';
 import 'package:conquest/presentation/viewmodels/rules_viewmodel.dart';
 import 'package:conquest/presentation/views/home/cards/activity_stats/milestone_ring_group.dart';
 import 'package:conquest/presentation/views/home/cards/activity_stats/session_avatar_card.dart';
@@ -25,66 +26,69 @@ class ActivityStatsCard extends ConsumerWidget {
         ? ref.watch(liveSessionDistanceMetersProvider) / 1000
         : 0.0;
 
-    return GlassContainer(
-      blur: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Text(
-                'Activity Stats',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return KeyedSubtree(
+      key: RewardFlyKeys.distance,
+      child: GlassContainer(
+        blur: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Text(
+                  'Activity Stats',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Center(
-              child: Text(
-                'Walk further from where you started to earn XP',
-                textAlign: TextAlign.center,
+              const SizedBox(height: 4),
+              Center(
+                child: Text(
+                  'Walk further from where you started to earn XP',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: 120),
+                    child: SessionAvatarCard(
+                      isSessionActive: isSessionActive,
+                      currentDistanceKm: effectiveDistanceKm,
+                      bestSessionKm: bestSessionKm,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Center(
+                      child: MilestoneRingGroup(
+                        distanceMeters: effectiveDistanceKm * 1000,
+                        highestMeter: (bestSessionKm ?? 0) * 1000,
+                        xp500: rules.xp('distance_done', '500m'),
+                        xp1km: rules.xp('distance_done', '1km'),
+                        xp2km: rules.xp('distance_done', '2km'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Note: rewards granted once per day for your best session',
+                textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 10,
                   color: onSurface.withValues(alpha: 0.5),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: 120),
-                  child: SessionAvatarCard(
-                    isSessionActive: isSessionActive,
-                    currentDistanceKm: effectiveDistanceKm,
-                    bestSessionKm: bestSessionKm,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Center(
-                    child: MilestoneRingGroup(
-                      distanceMeters: effectiveDistanceKm * 1000,
-                      highestMeter: (bestSessionKm ?? 0) * 1000,
-                      xp500: rules.xp('distance_done', '500m'),
-                      xp1km: rules.xp('distance_done', '1km'),
-                      xp2km: rules.xp('distance_done', '2km'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Note: rewards granted once per day for your best session',
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 10,
-                color: onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
