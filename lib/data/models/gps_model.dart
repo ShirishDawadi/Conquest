@@ -24,6 +24,10 @@ class GpsSession {
   final List<GpsPoint> points;
   final double distanceKm;
   final double furthestDistanceKm;
+  final int movingSeconds;
+  final int steps;
+  final double elevationGain;
+  final double elevationLoss;
 
   const GpsSession({
     this.localId,
@@ -33,6 +37,10 @@ class GpsSession {
     required this.points,
     required this.distanceKm,
     this.furthestDistanceKm = 0,
+    this.movingSeconds = 0,
+    this.steps = 0,
+    this.elevationGain = 0,
+    this.elevationLoss = 0,
   });
 
   GpsSession copyWith({
@@ -43,6 +51,10 @@ class GpsSession {
     List<GpsPoint>? points,
     double? distanceKm,
     double? furthestDistanceKm,
+    int? movingSeconds,
+    int? steps,
+    double? elevationGain,
+    double? elevationLoss,
   }) {
     return GpsSession(
       localId: localId ?? this.localId,
@@ -52,6 +64,10 @@ class GpsSession {
       points: points ?? this.points,
       distanceKm: distanceKm ?? this.distanceKm,
       furthestDistanceKm: furthestDistanceKm ?? this.furthestDistanceKm,
+      movingSeconds: movingSeconds ?? this.movingSeconds,
+      steps: steps ?? this.steps,
+      elevationGain: elevationGain ?? this.elevationGain,
+      elevationLoss: elevationLoss ?? this.elevationLoss,
     );
   }
 
@@ -74,6 +90,10 @@ class GpsSession {
     'points': points.map((p) => p.toJson()).toList(),
     'distance': distanceKm,
     'furthest_distance': furthestDistanceKm,
+    'moving_seconds': movingSeconds,
+    'steps': steps,
+    'elevation_gain': elevationGain,
+    'elevation_loss': elevationLoss,
   };
 
   factory GpsSession.fromJson(Map<String, dynamic> json) => GpsSession(
@@ -87,6 +107,10 @@ class GpsSession {
         .toList(),
     distanceKm: (json['distance'] as num).toDouble(),
     furthestDistanceKm: (json['furthest_distance'] as num?)?.toDouble() ?? 0.0,
+    movingSeconds: (json['moving_seconds'] as num?)?.toInt() ?? 0,
+    steps: (json['steps'] as num?)?.toInt() ?? 0,
+    elevationGain: (json['elevation_gain'] as num?)?.toDouble() ?? 0.0,
+    elevationLoss: (json['elevation_loss'] as num?)?.toDouble() ?? 0.0,
   );
 }
 

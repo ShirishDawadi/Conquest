@@ -30,6 +30,10 @@ class MapLocalSource {
         'points': jsonEncode(session.points.map((p) => p.toJson()).toList()),
         'distance': session.distanceKm,
         'furthest_distance': session.furthestDistanceKm,
+        'moving_seconds': session.movingSeconds,
+        'steps': session.steps,
+        'elevation_gain': session.elevationGain,
+        'elevation_loss': session.elevationLoss,
         'status': SessionStatus.unsynced,
       });
       return generatedId;
@@ -257,6 +261,10 @@ class MapLocalSource {
           .toList(),
       distanceKm: (row['distance'] as num).toDouble(),
       furthestDistanceKm: (row['furthest_distance'] as num).toDouble(),
+      movingSeconds: (row['moving_seconds'] as num?)?.toInt() ?? 0,
+      steps: (row['steps'] as num?)?.toInt() ?? 0,
+      elevationGain: (row['elevation_gain'] as num?)?.toDouble() ?? 0.0,
+      elevationLoss: (row['elevation_loss'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

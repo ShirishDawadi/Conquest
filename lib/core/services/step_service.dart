@@ -22,6 +22,8 @@ class StepService {
   bool _initialized = false;
   Completer<void>? _baselineCompleter;
 
+  bool _retrying = false;
+
   StepTrackingMode get mode => _mode;
   int get todaySteps => _todaySteps;
 
@@ -172,6 +174,8 @@ class StepService {
   }
 
   Future<void> retryHealthConnect() async {
+    if (_retrying) return;
+    _retrying = true;
     try {
       final types = [HealthDataType.STEPS];
       final permissions = [HealthDataAccess.READ];

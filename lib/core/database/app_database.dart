@@ -60,6 +60,10 @@ class AppDatabase {
     points TEXT NOT NULL,
     distance REAL NOT NULL DEFAULT 0,
     furthest_distance REAL NOT NULL DEFAULT 0,
+    moving_seconds INTEGER NOT NULL DEFAULT 0,
+    steps INTEGER NOT NULL DEFAULT 0,
+    elevation_gain REAL NOT NULL DEFAULT 0,
+    elevation_loss REAL NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'unsynced'
   )
   ''';

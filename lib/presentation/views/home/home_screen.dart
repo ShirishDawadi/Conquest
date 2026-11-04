@@ -43,6 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Timer? _walkTimer;
   StreamSubscription<StepCount>? _pedometerSubscription;
   ProgressEvent? _pendingEvent;
+  DateTime? _lastResume;
 
   @override
   void initState() {
@@ -106,10 +107,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(stepProvider.notifier).retryHealthConnect();
-      TimezoneService.sync();
+    if (state != AppLifecycleState.resumed) return;
+
+    final now = DateTime.now();
+    if (_lastResume != null &&
+        now.difference(_lastResume!) < const Duration(minutes: 1)) {
+      return;
     }
+    _lastResume = now;
+
+    ref.read(stepProvider.notifier).retryHealthConnect();
+    TimezoneService.sync();
   }
 
   void _showPendingEvent() {
@@ -246,9 +254,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       const SizedBox(height: 10),
                       if (stepState.hasValue)
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: TrackingBanner(mode: trackingMode),
                         ),
                       const SizedBox(height: 48),

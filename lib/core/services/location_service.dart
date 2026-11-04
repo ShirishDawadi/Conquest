@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:math' as math;
+import 'package:conquest/core/services/step_service.dart';
 import 'package:conquest/core/theme/app_colors.dart';
 import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:conquest/data/models/gps_model.dart';
@@ -26,6 +28,13 @@ class LocationService {
   Duration get elapsed => _stopwatch.elapsed;
   bool _isTracking = false;
   double _lastSpeedKmh = 0.0;
+  double _movingSeconds = 0;
+  DateTime? _lastEventTime;
+  int _startSteps = 0;
+  final List<double> _altWindow = [];
+  double? _refAlt;
+  double _elevGain = 0;
+  double _elevLoss = 0;
 
   bool get isTracking => _isTracking;
   List<GpsPoint> get currentPoints => List.unmodifiable(_currentPoints);
@@ -82,6 +91,13 @@ class LocationService {
 
     _currentPoints.clear();
     _lastSpeedKmh = 0.0;
+    _movingSeconds = 0;
+    _lastEventTime = null;
+    _startSteps = StepService().todaySteps;
+    _altWindow.clear();
+    _refAlt = null;
+    _elevGain = 0;
+    _elevLoss = 0;
     _sessionStart = DateTime.now();
     _stopwatch
       ..reset()
@@ -127,8 +143,42 @@ class LocationService {
     return true;
   }
 
+  void _trackMoving(Position position) {
+    final t = position.timestamp;
+    final last = _lastEventTime;
+    if (last != null) {
+      final dt = t.difference(last).inMilliseconds / 1000;
+      if (dt > 0 && dt <= 15 && position.speed >= 0.5) _movingSeconds += dt;
+    }
+    _lastEventTime = t;
+  }
+
+  void _trackElevation(Position position) {
+    if (position.altitude == 0.0) return;
+    _altWindow.add(position.altitude);
+    if (_altWindow.length > 5) _altWindow.removeAt(0);
+    final avg = _altWindow.reduce((a, b) => a + b) / _altWindow.length;
+
+    final ref = _refAlt;
+    if (ref == null) {
+      _refAlt = avg;
+      return;
+    }
+    final diff = avg - ref;
+    if (diff >= 3) {
+      _elevGain += diff;
+      _refAlt = avg;
+    } else if (diff <= -3) {
+      _elevLoss += -diff;
+      _refAlt = avg;
+    }
+  }
+
   void _onPosition(Position position) {
     if (position.accuracy > 20.0) return;
+
+    _trackMoving(position);
+    _trackElevation(position);
 
     if (_currentPoints.isNotEmpty) {
       final last = _currentPoints.last;
@@ -168,11 +218,19 @@ class LocationService {
       return null;
     }
 
+    final steps = StepService().mode == StepTrackingMode.unavailable
+        ? 0
+        : math.max(0, StepService().todaySteps - _startSteps);
+
     final session = GpsSession(
       startedAt: _sessionStart!,
       endedAt: _sessionStart!.add(elapsed),
       points: List.from(_currentPoints),
       distanceKm: TrackingUtils.distanceKm(_currentPoints),
+      movingSeconds: math.min(_movingSeconds.round(), elapsed.inSeconds),
+      steps: steps,
+      elevationGain: _elevGain,
+      elevationLoss: _elevLoss,
     );
 
     _currentPoints.clear();

@@ -13,7 +13,16 @@ class TimezoneService {
     }
   }
 
+  static DateTime? _lastSync;
+
   static Future<void> sync() async {
+    final now = DateTime.now();
+    if (_lastSync != null &&
+        now.difference(_lastSync!) < const Duration(hours: 1)) {
+      return;
+    }
+    _lastSync = now;
+
     try {
       final name = await current();
       if (name == null) return;
