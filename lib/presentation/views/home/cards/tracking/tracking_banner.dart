@@ -24,9 +24,11 @@ class _TrackingBannerState extends State<TrackingBanner> {
     final isPedometer = widget.mode == StepTrackingMode.pedometer;
 
     final bgColor = isPedometer
-        ? AppColors.greenish_1
+        ? AppColors.greenish_1.withValues(alpha: 0.08)
         : Colors.red.withValues(alpha: 0.08);
+
     final iconColor = isPedometer ? AppColors.greenish_3 : Colors.red;
+
     final title = isPedometer
         ? 'Background Step Tracking'
         : 'Step Tracking Unavailable';
@@ -40,18 +42,12 @@ class _TrackingBannerState extends State<TrackingBanner> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: BoxBorder.all(
-          color: iconColor.withValues(alpha: 0.4)
-        )
+        border: BoxBorder.all(color: iconColor.withValues(alpha: 0.4)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.warning_rounded,
-            color: iconColor,
-            size: 24,
-          ),
+          Icon(Icons.warning_rounded, color: iconColor, size: 24),
           SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -62,7 +58,6 @@ class _TrackingBannerState extends State<TrackingBanner> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
                   ),
                 ),
                 SizedBox(height: 5),
@@ -70,7 +65,9 @@ class _TrackingBannerState extends State<TrackingBanner> {
                   body,
                   style: TextStyle(
                     fontSize: 10,
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                     height: 1.2,
                   ),
                 ),
@@ -89,7 +86,9 @@ class _TrackingBannerState extends State<TrackingBanner> {
                           'Remind Me Later',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.black38,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.8),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -105,15 +104,13 @@ class _TrackingBannerState extends State<TrackingBanner> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: iconColor.withValues(alpha: 0.3),
+                            color: iconColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Text(
                             'Setup',
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
                             ),
                           ),
                         ),
