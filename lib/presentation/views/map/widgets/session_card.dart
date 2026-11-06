@@ -16,7 +16,7 @@ class SessionCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final distStr = session.distanceKm.toStringAsFixed(2);
     final durStr = TrackingUtils.formatDuration(session.duration);
-    final pace = session.speedString;
+    final pace = session.paceString;
 
     return GlassContainer(
       borderRadius: 10,
@@ -51,7 +51,7 @@ class SessionCard extends ConsumerWidget {
               ],
             ),
             Text(
-              '$pace km/hr',
+              '$pace/km',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             SvgPicture.asset('assets/icons/distance.svg', width: 20),

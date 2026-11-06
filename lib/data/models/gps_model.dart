@@ -1,3 +1,4 @@
+import 'package:conquest/core/utils/tracking_utils.dart';
 import 'package:latlong2/latlong.dart';
 
 class GpsPoint {
@@ -80,6 +81,11 @@ class GpsSession {
     if (duration.inSeconds == 0) return '0.0';
     final hours = duration.inSeconds / 3600;
     return (distanceKm / hours).toStringAsFixed(1);
+  }
+
+  String get paceString {
+    final secs = movingSeconds > 0 ? movingSeconds : duration.inSeconds;
+    return TrackingUtils.paceString(distanceKm, secs);
   }
 
   List<LatLng> get latLngs => points.map((p) => p.toLatLng()).toList();

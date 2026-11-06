@@ -81,7 +81,7 @@ class SessionsExpanded extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                'Speed',
+                'Pace',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 10, color: mutedColor),
               ),
@@ -127,7 +127,7 @@ class SessionsExpanded extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    '${s.speedString}km/hr',
+                    '${s.paceString}/km',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 12),
                   ),

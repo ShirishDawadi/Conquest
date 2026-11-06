@@ -30,6 +30,7 @@ class MapViewModel extends Notifier<MapState> {
   bool _autoStopping = false;
 
   Duration get elapsed => _locationService.elapsed;
+  int get movingSeconds => _locationService.movingSeconds;
 
   @override
   MapState build() {

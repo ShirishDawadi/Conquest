@@ -8,7 +8,10 @@ class LocationPermissionDialog extends StatelessWidget {
 
   const LocationPermissionDialog({super.key, required this.status});
 
-  static Future<void> show(BuildContext context, LocationPermissionStatus status) {
+  static Future<void> show(
+    BuildContext context,
+    LocationPermissionStatus status,
+  ) {
     return showDialog(
       context: context,
       builder: (_) => LocationPermissionDialog(status: status),
@@ -17,19 +20,20 @@ class LocationPermissionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     String message;
     String actionLabel;
     VoidCallback onAction;
 
     switch (status) {
       case LocationPermissionStatus.serviceDisabled:
-        message = 'Location services are turned off. Turn them on to start tracking.';
+        message =
+            'Location services are turned off. Turn them on to start tracking.';
         actionLabel = 'Open Settings';
         onAction = () => Geolocator.openLocationSettings();
         break;
       case LocationPermissionStatus.deniedForever:
-        message = 'Location permission was denied. Enable it in app settings to start tracking.';
+        message =
+            'Location permission was denied. Enable it in app settings to start tracking.';
         actionLabel = 'Open Settings';
         onAction = () => Geolocator.openAppSettings();
         break;
@@ -44,7 +48,7 @@ class LocationPermissionDialog extends StatelessWidget {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20,20,20,10),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,7 +81,10 @@ class LocationPermissionDialog extends StatelessWidget {
                     backgroundColor: AppColors.greenish_3,
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                   ),
-                  child: Text(actionLabel, style: const TextStyle(fontSize: 12)),
+                  child: Text(
+                    actionLabel,
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
                 ),
               ],
             ),

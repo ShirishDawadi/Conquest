@@ -21,7 +21,7 @@ class ExpandedCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final distStr = session.distanceKm.toStringAsFixed(2);
     final durStr = TrackingUtils.formatDuration(session.duration);
-    final pace = session.speedString;
+    final pace = session.paceString;
     final startTime = _formatTime(session.startedAt);
     final endTime = session.endedAt != null
         ? _formatTime(session.endedAt!)
@@ -75,7 +75,7 @@ class ExpandedCard extends ConsumerWidget {
             const SizedBox(height: 12),
 
             Text(
-              '$pace km/hr',
+              '$pace/km',
               style: const TextStyle(fontFamily: 'Gpkn', fontSize: 24),
             ),
             const SizedBox(height: 12),

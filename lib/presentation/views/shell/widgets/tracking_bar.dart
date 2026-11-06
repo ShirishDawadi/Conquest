@@ -39,11 +39,14 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
     final distanceKm = distanceMeters / 1000;
 
     final elapsed = mapState.sessionStart == null
-    ? Duration.zero
-    : ref.read(mapProvider.notifier).elapsed;
+        ? Duration.zero
+        : ref.read(mapProvider.notifier).elapsed;
 
     final distanceStr = distanceKm.toStringAsFixed(2);
-    final pace = TrackingUtils.speedString(mapState.currentPoints, elapsed);
+    final pace = TrackingUtils.paceString(
+      distanceKm,
+      ref.read(mapProvider.notifier).movingSeconds,
+    );
     final durationStr = TrackingUtils.formatDuration(elapsed);
 
     return GlassContainer(
@@ -67,7 +70,7 @@ class _TrackingBarState extends ConsumerState<TrackingBar> {
             const SizedBox(width: 10),
 
             Text(
-              '${pace}km/hr',
+              '$pace/km',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(width: 15),

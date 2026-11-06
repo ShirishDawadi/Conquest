@@ -26,8 +26,9 @@ class LocationService {
   DateTime? _sessionStart;
   final Stopwatch _stopwatch = Stopwatch();
   Duration get elapsed => _stopwatch.elapsed;
+  int get movingSeconds => _movingSeconds.round();
   bool _isTracking = false;
-  double _lastSpeedKmh = 0.0;
+  // double _lastSpeedKmh = 0.0;
   double _movingSeconds = 0;
   DateTime? _lastEventTime;
   int _startSteps = 0;
@@ -90,7 +91,7 @@ class LocationService {
     if (result != LocationPermissionResult.granted) return false;
 
     _currentPoints.clear();
-    _lastSpeedKmh = 0.0;
+    // _lastSpeedKmh = 0.0;
     _movingSeconds = 0;
     _lastEventTime = null;
     _startSteps = StepService().todaySteps;
@@ -135,7 +136,7 @@ class LocationService {
       FlutterForegroundTask.updateService(
         notificationTitle: 'Conquest',
         notificationText:
-            '${_lastSpeedKmh.toStringAsFixed(1)}km/h • ${distanceStr}km • $timeStr',
+            '${TrackingUtils.paceString(TrackingUtils.distanceKm(_currentPoints), _movingSeconds.round())}/km • ${distanceStr}km • $timeStr',
       );
     });
 
@@ -195,7 +196,7 @@ class LocationService {
     }
 
     final point = GpsPoint(lat: position.latitude, lng: position.longitude);
-    _lastSpeedKmh = (position.speed * 3.6).clamp(0.0, double.infinity);
+    // _lastSpeedKmh = (position.speed * 3.6).clamp(0.0, double.infinity);
     _currentPoints.add(point);
     _pointController.add(List.unmodifiable(_currentPoints));
   }
@@ -234,7 +235,7 @@ class LocationService {
     );
 
     _currentPoints.clear();
-    _lastSpeedKmh = 0.0;
+    // _lastSpeedKmh = 0.0;
     _sessionStart = null;
 
     log(

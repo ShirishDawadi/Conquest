@@ -20,6 +20,14 @@ class TrackingUtils {
     return (km / hours).toStringAsFixed(1);
   }
 
+    static String paceString(double distanceKm, int seconds) {
+    if (distanceKm < 0.05 || seconds <= 0) return '--:--';
+    final perKm = (seconds / distanceKm).round();
+    final m = perKm ~/ 60;
+    final s = perKm % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
   static bool isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year &&
